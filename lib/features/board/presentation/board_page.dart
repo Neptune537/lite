@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
 import 'dart:math' as math;
 import 'package:go_router/go_router.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../../../app/theme.dart';
 import '../../notifications/presentation/notifications_button.dart';
@@ -504,28 +505,118 @@ class _ContractTile extends StatelessWidget {
   }
 }
 
-// ── Local Tab (Radius Selection Mockup) ───────────────────────────────────────
-class _LocalTab extends StatefulWidget {
+// ── Local Tab (Proximity Radar & Distance Filtering) ─────────────────────────
+class _LocalTab extends ConsumerStatefulWidget {
   const _LocalTab();
 
   @override
-  State<_LocalTab> createState() => _LocalTabState();
+  ConsumerState<_LocalTab> createState() => _LocalTabState();
 }
 
-class _LocalTabState extends State<_LocalTab> {
-  double _radius = 10.0;
+class _LocalTabState extends ConsumerState<_LocalTab> {
+  double _radius = 25.0; // 25 miles default search radius
+  Position? _userPosition;
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserLocation();
+  }
+
+  Future<void> _getUserLocation() async {
+    try {
+      final lastPos = await Geolocator.getLastKnownPosition();
+      if (lastPos != null && mounted) {
+        setState(() => _userPosition = lastPos);
+      }
+      final pos = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium),
+      ).timeout(const Duration(seconds: 5));
+      if (mounted) {
+        setState(() => _userPosition = pos);
+      }
+    } catch (_) {}
+  }
+
+  double _calculateDistanceMiles(double lat1, double lon1, double lat2, double lon2) {
+    const p = 0.017453292519943295;
+    final a = 0.5 - math.cos((lat2 - lat1) * p) / 2 +
+        math.cos(lat1 * p) * math.cos(lat2 * p) *
+        (1 - math.cos((lon2 - lon1) * p)) / 2;
+    return 12742 * math.asin(math.sqrt(a)) * 0.621371;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final userLat = _userPosition?.latitude ?? 29.6549; // Houston default
+    final userLng = _userPosition?.longitude ?? -95.2285;
+
+    final offerings = ref.watch(localOfferingsProvider);
+
+    // Calculate distance in miles for each task
+    final List<Map<String, dynamic>> nearbyOfferings = [];
+
+    for (var offering in offerings) {
+      final dataStr = offering['data'] as String? ?? '{}';
+      double taskLat = userLat;
+      double taskLng = userLng;
+      String zip = '78701';
+
+      try {
+        final decoded = jsonDecode(dataStr) as Map<String, dynamic>;
+        zip = decoded['zipCode']?.toString() ?? '78701';
+        
+        if (decoded['lat'] != null && decoded['lng'] != null) {
+          taskLat = (decoded['lat'] as num).toDouble();
+          taskLng = (decoded['lng'] as num).toDouble();
+        } else {
+          // Offsets based on ZIP code
+          final zipHash = zip.hashCode;
+          taskLat = userLat + ((zipHash % 100) - 50) * 0.002;
+          taskLng = userLng + (((zipHash ~/ 100) % 100) - 50) * 0.002;
+        }
+      } catch (_) {}
+
+      final distMiles = _calculateDistanceMiles(userLat, userLng, taskLat, taskLng);
+
+      if (distMiles <= _radius) {
+        final offeringCopy = Map<String, dynamic>.from(offering);
+        offeringCopy['_distanceMiles'] = distMiles;
+        nearbyOfferings.add(offeringCopy);
+      }
+    }
+
+    nearbyOfferings.sort((a, b) => (a['_distanceMiles'] as double).compareTo(b['_distanceMiles'] as double));
+
     return Column(
       children: [
-        Padding(
+        // Search Radius Slider Header
+        Container(
           padding: const EdgeInsets.all(16.0),
+          color: HBColors.neutral,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Search Radius: ${_radius.toInt()} miles',
-                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.radar, color: HBColors.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        'LOCAL PROXIMITY RADAR: ${_radius.toInt()} MILES',
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1.1),
+                      ),
+                    ],
+                  ),
+                  Text(
+                    '${nearbyOfferings.length} Nearby Tasks',
+                    style: const TextStyle(color: HBColors.secondary, fontWeight: FontWeight.bold, fontSize: 12),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               Slider(
                 value: _radius,
                 min: 1.0,
@@ -538,23 +629,66 @@ class _LocalTabState extends State<_LocalTab> {
                   setState(() => _radius = val);
                 },
               ),
+              Text(
+                'GPS Lock: ${userLat.toStringAsFixed(3)}°, ${userLng.toStringAsFixed(3)}°',
+                style: const TextStyle(color: Colors.white54, fontSize: 11, fontFamily: 'monospace'),
+              ),
             ],
           ),
         ),
-        const Expanded(
-          child: Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.location_on_outlined, size: 64, color: Colors.grey),
-                SizedBox(height: 16.0),
-                Text(
-                  'Local offerings in your radius will appear here',
-                  style: TextStyle(color: Colors.white70, fontSize: 16),
+
+        const Divider(color: HBColors.primary, height: 1),
+
+        // Nearby Task List
+        Expanded(
+          child: nearbyOfferings.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.radar_outlined, size: 64, color: Colors.grey),
+                      const SizedBox(height: 16.0),
+                      Text(
+                        'No local tasks found within ${_radius.toInt()} miles.',
+                        style: const TextStyle(color: Colors.white70, fontSize: 15),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Try expanding your radius slider above.',
+                        style: TextStyle(color: Colors.white38, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16.0),
+                  itemCount: nearbyOfferings.length,
+                  itemBuilder: (context, index) {
+                    final offering = nearbyOfferings[index];
+                    final dist = offering['_distanceMiles'] as double;
+                    return Stack(
+                      children: [
+                        OfferingCard(offering: offering),
+                        Positioned(
+                          top: 12,
+                          right: 48,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: HBColors.secondary.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: HBColors.secondary),
+                            ),
+                            child: Text(
+                              '${dist.toStringAsFixed(1)} mi away',
+                              style: const TextStyle(color: HBColors.secondary, fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'monospace'),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
-              ],
-            ),
-          ),
         ),
       ],
     );

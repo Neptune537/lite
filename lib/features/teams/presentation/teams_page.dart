@@ -819,6 +819,7 @@ class _CreateOfferingFormState extends State<CreateOfferingForm> {
                           ? (_bookingDuration ?? 'daily')
                           : null,
                       _zipCode,
+                      'service',
                     );
                   }
                 },

@@ -6,6 +6,7 @@ import 'package:fluoderpod/fluoderpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/theme.dart';
+import '../../../core/services/location_geocoding_service.dart';
 import 'mission_control_providers.dart';
 import '../../comms/presentation/comms_overlay.dart';
 import '../../teams/presentation/declare_war_dialog.dart';
@@ -22,6 +23,15 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
   final List<String> modes = ['CYBERPUNK RADAR', 'TACTICAL GRID', 'SATELLITE 3D', 'STREET VIEW'];
   Position? _currentPosition;
   StreamSubscription<Position>? _positionStreamSub;
+
+  String _realStreetName = 'Detecting GPS Street...';
+  String _realNeighborhood = 'Local Sector';
+
+  // ATAK-Grade Mapping Toggles
+  bool _enable3dDemTerrain = true;
+  bool _enableAtmosphericRayleighGlow = true;
+  bool _enableSonarGossipRelay = true;
+  bool _enableBioluminescencePoh = true;
 
   @override
   void initState() {
@@ -44,8 +54,19 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
     ).listen((position) {
       if (mounted) {
         setState(() => _currentPosition = position);
+        _updateReverseGeocode(position.latitude, position.longitude);
       }
     });
+  }
+
+  Future<void> _updateReverseGeocode(double lat, double lng) async {
+    final info = await LocationGeocodingService.instance.reverseGeocode(lat, lng);
+    if (mounted) {
+      setState(() {
+        _realStreetName = info.streetName;
+        _realNeighborhood = info.neighborhood;
+      });
+    }
   }
 
   void _switchMode(String mode) {
@@ -88,13 +109,10 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
 
   void _onNodeSelectedOnGlobe(CyanNode node) {
     if (node.id.startsWith('person-')) {
-      // Person / Operator Selected on Fluonder Globe -> Option to Open Comms & Navigation
       _showPersonCommsSheet(node.name, 'CALLSIGN-${node.id.toUpperCase().replaceAll('PERSON-', '')}', '462.5625 MHz', node.latitude, node.longitude);
     } else if (node.id.startsWith('sat-')) {
-      // Satellite Selected -> Show Orbital Telemetry
       _showSatelliteTelemetrySheet(node.name, node.latencyMs);
     } else {
-      // Guild Outpost / Faction Node Selected -> Option to Declare War & Street View
       _showFactionWarSheet(node.name, node.id, node.latitude, node.longitude);
     }
   }
@@ -223,7 +241,7 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
                     children: [
                       Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                       Text('Callsign: $callsign • Radio: $frequency', style: const TextStyle(color: HBColors.primaryLight, fontSize: 12, fontFamily: 'monospace')),
-                      Text('GPS: ${lat.toStringAsFixed(4)}°, ${lng.toStringAsFixed(4)}°', style: const TextStyle(color: Colors.white54, fontSize: 11)),
+                      Text('Location: $_realStreetName', style: const TextStyle(color: HBColors.secondary, fontSize: 11, fontWeight: FontWeight.bold)),
                     ],
                   ),
                 ],
@@ -323,8 +341,8 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
                 ],
               ),
               const SizedBox(height: 8),
-              Text('Outpost GPS: ${lat.toStringAsFixed(4)}°, ${lng.toStringAsFixed(4)}°', style: const TextStyle(color: Colors.white70, fontSize: 12, fontFamily: 'monospace')),
-              const Text('Territory: Active Outpost • Staked FLR: 24,500 • Rating: 4.8★', style: TextStyle(color: Colors.white54, fontSize: 11)),
+              Text('Location: $_realStreetName, $_realNeighborhood', style: const TextStyle(color: HBColors.primaryLight, fontSize: 12, fontWeight: FontWeight.bold)),
+              Text('Outpost GPS: ${lat.toStringAsFixed(4)}°, ${lng.toStringAsFixed(4)}°', style: const TextStyle(color: Colors.white70, fontSize: 11, fontFamily: 'monospace')),
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -431,10 +449,85 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
     );
   }
 
+  void _showAtakConfigDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              backgroundColor: HBColors.neutral,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(HBRadius.lg),
+                side: const BorderSide(color: HBColors.primary, width: 1.5),
+              ),
+              title: const Row(
+                children: [
+                  Icon(Icons.layers, color: HBColors.primary, size: 24),
+                  SizedBox(width: 8),
+                  Text('ATAK-GRADE 3D MAPPING CONFIG', style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1.1)),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SwitchListTile(
+                    activeColor: HBColors.primary,
+                    title: const Text('3D DEM Terrain Elevation', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                    subtitle: const Text('Digital Elevation Model heightmaps', style: TextStyle(color: Colors.white54, fontSize: 10)),
+                    value: _enable3dDemTerrain,
+                    onChanged: (val) {
+                      setStateDialog(() => _enable3dDemTerrain = val);
+                      setState(() => _enable3dDemTerrain = val);
+                    },
+                  ),
+                  SwitchListTile(
+                    activeColor: HBColors.primary,
+                    title: const Text('Atmospheric Rayleigh Scattering', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                    subtitle: const Text('Rayleigh/Mie planetary horizon glow', style: TextStyle(color: Colors.white54, fontSize: 10)),
+                    value: _enableAtmosphericRayleighGlow,
+                    onChanged: (val) {
+                      setStateDialog(() => _enableAtmosphericRayleighGlow = val);
+                      setState(() => _enableAtmosphericRayleighGlow = val);
+                    },
+                  ),
+                  SwitchListTile(
+                    activeColor: HBColors.primary,
+                    title: const Text('Sonar Relay Gossip Sync', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                    subtitle: const Text('Live WebSocket mesh packet sync', style: TextStyle(color: Colors.white54, fontSize: 10)),
+                    value: _enableSonarGossipRelay,
+                    onChanged: (val) {
+                      setStateDialog(() => _enableSonarGossipRelay = val);
+                      setState(() => _enableSonarGossipRelay = val);
+                    },
+                  ),
+                  SwitchListTile(
+                    activeColor: HBColors.primary,
+                    title: const Text('Bioluminescence PoH Telemetry', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                    subtitle: const Text('Proof of Health CPU/VRAM hardware stream', style: TextStyle(color: Colors.white54, fontSize: 10)),
+                    value: _enableBioluminescencePoh,
+                    onChanged: (val) {
+                      setStateDialog(() => _enableBioluminescencePoh = val);
+                      setState(() => _enableBioluminescencePoh = val);
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('CLOSE'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final friendsAsync = ref.watch(friendLocationsProvider);
-
     final userLat = _currentPosition?.latitude ?? 30.2672;
     final userLng = _currentPosition?.longitude ?? -97.7431;
 
@@ -451,12 +544,12 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
       CyanNode(id: 'person-ghost-2', name: 'Operator Ghost-2', latitude: userLat - 0.005, longitude: userLng - 0.002, latencyMs: 28),
       CyanNode(id: 'person-viper-3', name: 'Operator Viper-3', latitude: userLat + 0.008, longitude: userLng - 0.006, latencyMs: 19),
 
-      // Satellites directly in local camera field
+      // Satellites
       CyanNode(id: 'sat-nexus-1', name: 'NEXUS-RECON-1 (Orbital)', latitude: userLat + 0.025, longitude: userLng + 0.015, latencyMs: 45),
       CyanNode(id: 'sat-relay-alpha', name: 'FLUORIDIAN-RELAY (P2P Mesh)', latitude: userLat - 0.020, longitude: userLng - 0.018, latencyMs: 52),
     ];
 
-    // Live Flights / Aerial Drones / Plane Trackers directly in local camera field
+    // Live Flights / Aerial Drones / Plane Trackers
     final flightPackets = [
       EntityPacket(id: 'FLIGHT-AZ-402', x: userLng + 0.012, y: userLat - 0.010, z: 12000, type: FluoderpodEntityType.player, callsign: 'FLIGHT-AZ-402 (Aerial Recon)'),
       EntityPacket(id: 'FLIGHT-CYAN-88', x: userLng - 0.015, y: userLat + 0.012, z: 8500, type: FluoderpodEntityType.player, callsign: 'FLIGHT-CYAN-88 (P2P Transport)'),
@@ -471,6 +564,8 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
             globeWidget: CyanGlobeOverview(
               nodes: cyanNodes,
               flights: flightPackets,
+              mainStreetName: _realStreetName,
+              crossStreetName: _realNeighborhood,
               onNodeSelected: _onNodeSelectedOnGlobe,
               onFlightSelected: _showFlightSheet,
             ),
@@ -478,7 +573,7 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
           ),
         ),
 
-        // Live GPS Status Header Overlay
+        // Live GPS & ATAK Config Header Overlay
         Positioned(
           top: 10,
           left: 10,
@@ -486,26 +581,40 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.75),
+              color: Colors.black.withValues(alpha: 0.8),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: HBColors.primary.withValues(alpha: 0.5)),
+              border: Border.all(color: HBColors.primary.withValues(alpha: 0.6)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.gps_fixed, color: HBColors.primary, size: 14),
+                    const Icon(Icons.pin_drop, color: HBColors.secondary, size: 14),
                     const SizedBox(width: 6),
                     Text(
-                      'GPS: ${userLat.toStringAsFixed(4)}°, ${userLng.toStringAsFixed(4)}°',
+                      'STREET: $_realStreetName',
                       style: const TextStyle(color: Colors.white, fontSize: 11, fontFamily: 'monospace', fontWeight: FontWeight.bold),
                     ),
                   ],
                 ),
-                Text(
-                  _currentPosition != null ? 'LIVE GPS LOCK (${_currentPosition!.accuracy.toInt()}m)' : 'GPS SEARCHING...',
-                  style: const TextStyle(color: HBColors.secondary, fontSize: 10, fontWeight: FontWeight.bold, fontFamily: 'monospace'),
+                GestureDetector(
+                  onTap: _showAtakConfigDialog,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: HBColors.primary.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: HBColors.primary),
+                    ),
+                    child: const Row(
+                      children: [
+                        Icon(Icons.tune, color: HBColors.primary, size: 12),
+                        SizedBox(width: 4),
+                        Text('ATAK CONFIG', style: TextStyle(color: HBColors.primary, fontSize: 9, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),

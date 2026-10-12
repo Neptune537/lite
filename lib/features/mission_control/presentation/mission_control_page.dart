@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../app/theme.dart';
+import '../../../core/services/location_geocoding_service.dart';
 import '../data/weather_service.dart';
 import '../domain/weather_data.dart';
 import 'game_map_overlay.dart';
@@ -21,10 +22,11 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
   final WeatherService _weatherService = WeatherService();
   late Future<WeatherData?> _weatherFuture;
   
-  double lat = 30.2672; // Default Austin Central Command
-  double lng = -97.7431;
+  double lat = 29.6549; // Default user area (Houston)
+  double lng = -95.2285;
   bool _isLoadingLocation = true;
   String _userGuild = 'Water Clan';
+  String _realStreet = 'Detecting Street...';
 
   @override
   void initState() {
@@ -49,20 +51,20 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
           permission = await Geolocator.requestPermission();
         }
         if (permission == LocationPermission.always || permission == LocationPermission.whileInUse) {
+          // 1. Fast last-known position
+          final lastPos = await Geolocator.getLastKnownPosition();
+          if (lastPos != null && mounted) {
+            setState(() {
+              lat = lastPos.latitude;
+              lng = lastPos.longitude;
+            });
+            _fetchWeatherAndAddress();
+          }
+
+          // 2. High accuracy fresh GPS fix
           Position position = await Geolocator.getCurrentPosition(
-            locationSettings: const LocationSettings(accuracy: LocationAccuracy.medium),
-          ).timeout(const Duration(seconds: 3), onTimeout: () => Geolocator.getLastKnownPosition().then((p) => p ?? Position(
-            latitude: 30.2672,
-            longitude: -97.7431,
-            timestamp: DateTime.now(),
-            accuracy: 100,
-            altitude: 0,
-            altitudeAccuracy: 1,
-            heading: 0,
-            headingAccuracy: 1,
-            speed: 0,
-            speedAccuracy: 1,
-          )));
+            locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+          ).timeout(const Duration(seconds: 8));
           
           if (mounted) {
             setState(() {
@@ -77,14 +79,21 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
     } finally {
       if (mounted) {
         setState(() => _isLoadingLocation = false);
-        _fetchWeather();
+        _fetchWeatherAndAddress();
       }
     }
   }
   
-  void _fetchWeather() {
+  void _fetchWeatherAndAddress() {
     setState(() {
       _weatherFuture = _weatherService.fetchWeather(lat, lng);
+    });
+    LocationGeocodingService.instance.reverseGeocode(lat, lng).then((info) {
+      if (mounted) {
+        setState(() {
+          _realStreet = info.streetName;
+        });
+      }
     });
   }
   
@@ -157,7 +166,7 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            '${current.cityName} METEOROLOGY',
+                            '${current.cityName.toUpperCase()} METEOROLOGY',
                             style: const TextStyle(
                               color: HBColors.primary,
                               fontWeight: FontWeight.bold,
@@ -167,7 +176,7 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'GPS: ${lat.toStringAsFixed(2)}°, ${lng.toStringAsFixed(2)}°',
+                            'Street: $_realStreet • GPS: ${lat.toStringAsFixed(3)}°, ${lng.toStringAsFixed(3)}°',
                             style: const TextStyle(color: Colors.white54, fontSize: 11, fontFamily: 'monospace'),
                           ),
                         ],
@@ -318,7 +327,7 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
                     icon: '01d',
                     humidity: 62,
                     windSpeed: 8.5,
-                    cityName: 'Austin Command',
+                    cityName: 'Houston',
                   );
 
                   return InkWell(
@@ -343,7 +352,7 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
                                     Text(data.cityName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: HBColors.primary)),
-                                    const Text('Tap for Forecast >', style: TextStyle(fontSize: 10, color: HBColors.secondary)),
+                                    Text(_realStreet, style: const TextStyle(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.bold)),
                                   ],
                                 ),
                               ],
