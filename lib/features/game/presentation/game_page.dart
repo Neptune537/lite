@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluoderpod/fluoderpod.dart';
 
 import '../../../app/theme.dart';
@@ -740,9 +739,12 @@ class _Arcade3DView extends StatelessWidget {
           Expanded(
             child: ClipRRect(
               borderRadius: BorderRadius.circular(12),
-              child: CyanDashboard(
-                globeWidget: const CyanGlobeOverview(),
-                immersiveAppWidget: const CyanImmersiveView(),
+              child: const CyanDashboard(
+                showControlBar: false,
+                globeWidget: FluonderGlobe(
+                  nodes: CyanGlobeOverview.defaultNodes,
+                ),
+                immersiveAppWidget: CyanImmersiveView(),
               ),
             ),
           ),

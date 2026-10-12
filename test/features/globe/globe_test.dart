@@ -1,42 +1,55 @@
-import 'dart:math' as math;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:fluoderpod/fluoderpod.dart';
 
 void main() {
-  group('Cyan Globe 3D Spherical Projection Tests', () {
-    test('projectToVector produces unit vector on sphere surface', () {
-      final v = projectToVector(0.0, 0.0, 0.0, 0.0);
-      final len = math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
-      expect(len, closeTo(1.0, 1e-4));
-      // At (0, 0) facing forward, z should be 1.0 (towards camera)
-      expect(v.z, closeTo(1.0, 1e-4));
-      expect(v.x, closeTo(0.0, 1e-4));
-      expect(v.y, closeTo(0.0, 1e-4));
+  group('Fluonder Planetary Coordinates & Globe Tests', () {
+    test('FluonderGeodetic to FluonderEcef converts equator point accurately', () {
+      const geo = FluonderGeodetic(latitude: 0.0, longitude: 0.0, altitudeMeters: 0.0);
+      final ecef = geo.toEcef();
+
+      // At (0, 0), x should be approximately equatorial radius (6,378,137 m)
+      expect(ecef.x, closeTo(Wgs84.a, 1.0));
+      expect(ecef.y, closeTo(0.0, 1.0));
+      expect(ecef.z, closeTo(0.0, 1.0));
     });
 
-    test('project3dSphere front-facing point projects inside viewport', () {
-      const center = Offset(100.0, 100.0);
-      const radius = 80.0;
-      final pt = project3dSphere(0.0, 0.0, center, radius, 0.0, 0.0);
-      expect(pt, isNotNull);
-      expect(pt!.dx, closeTo(100.0, 1.0));
-      expect(pt.dy, closeTo(100.0, 1.0));
+    test('FluonderEcef roundtrips back to FluonderGeodetic', () {
+      const original = FluonderGeodetic(latitude: 37.7749, longitude: -122.4194, altitudeMeters: 100.0);
+      final ecef = original.toEcef();
+      final roundtrip = ecef.toGeodetic();
+
+      expect(roundtrip.latitude, closeTo(original.latitude, 1e-4));
+      expect(roundtrip.longitude, closeTo(original.longitude, 1e-4));
+      expect(roundtrip.altitudeMeters, closeTo(original.altitudeMeters, 1.0));
     });
 
-    test('project3dSphere back-facing point is correctly culled (null)', () {
-      const center = Offset(100.0, 100.0);
-      const radius = 80.0;
-      // 180 degrees longitude is on the back side of the sphere
-      final pt = project3dSphere(0.0, 180.0, center, radius, 0.0, 0.0);
-      expect(pt, isNull);
+    test('FluonderAstronomy computes solar position', () {
+      final now = DateTime.utc(2026, 6, 21, 12, 0, 0); // Summer solstice noon UTC
+      final subsolar = FluonderAstronomy.calculateSubsolarPoint(now);
+
+      // In late June, subsolar latitude is near +23.4 degrees (Tropic of Cancer)
+      expect(subsolar.latitude, closeTo(23.44, 1.0));
+      // At 12:00 UTC, subsolar longitude is near 0 degrees
+      expect(subsolar.longitude, closeTo(0.0, 2.0));
     });
 
-    test('SphereVector3 normalization handles edge points', () {
-      const vec = SphereVector3(3.0, 4.0, 0.0);
-      final norm = vec.normalized();
-      expect(norm.x, closeTo(0.6, 1e-4));
-      expect(norm.y, closeTo(0.8, 1e-4));
-      expect(norm.z, closeTo(0.0, 1e-4));
+    test('CyanNode correctly exposes geodetic and ECEF coordinates', () {
+      const node = CyanNode(
+        id: 'test-node',
+        name: 'Test Node',
+        latitude: 40.7,
+        longitude: -74.0,
+        latencyMs: 15,
+      );
+
+      expect(node.geodetic.latitude, 40.7);
+      expect(node.geodetic.longitude, -74.0);
+      expect(node.ecef.magnitude, closeTo(Wgs84.a, 50000.0));
+    });
+
+    test('Natural Earth vector dataset is populated', () {
+      final dataset = NaturalEarth110mData.dataset;
+      expect(dataset.features.isNotEmpty, isTrue);
     });
   });
 }

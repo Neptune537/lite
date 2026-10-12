@@ -559,15 +559,20 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
 
     return Stack(
       children: [
-        // High-Performance Interactive Fluonder Globe via Fluoderpod
+        // High-Performance Canonical Fluonder Globe via Fluoderpod
         Positioned.fill(
           child: CyanDashboard(
-            globeWidget: CyanGlobeOverview(
+            showControlBar: false,
+            globeWidget: FluonderGlobe(
               nodes: cyanNodes,
-              flights: flightPackets,
+              entities: flightPackets,
               mainStreetName: _realStreetName,
               crossStreetName: _realNeighborhood,
-              onNodeSelected: _onNodeSelectedOnGlobe,
+              onNodeSelected: (node) {
+                if (node is CyanNode) {
+                  _onNodeSelectedOnGlobe(node);
+                }
+              },
               onFlightSelected: _showFlightSheet,
             ),
             immersiveAppWidget: const CyanImmersiveView(),

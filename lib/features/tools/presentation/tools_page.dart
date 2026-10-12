@@ -13,7 +13,7 @@ class ToolsPage extends StatelessWidget {
         children: [
           Expanded(
             flex: 2,
-            child: CyanGlobeOverview(),
+            child: FluonderGlobe(),
           ),
           Expanded(
             child: Center(

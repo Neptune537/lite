@@ -27,7 +27,7 @@ dependencies:
 
   # ── Models (code-gen) ────────────────────────────────────────────────────────
   freezed_annotation: ^3.0.0
-  json_annotation: ^4.9.0
+  json_annotation: ^4.12.0
 
   # ── Maps & Location ──────────────────────────────────
   google_maps_flutter: ^2.9.0
@@ -65,7 +65,7 @@ dependencies:
   fluorescent_flame:
     path: third_party/fluorescent/fluorescent/packages/fluorescent_flame
   flame: ^1.38.2
-  google_fonts: ^8.2.1
+  google_fonts: ^9.0.0
   shared_preferences: ^2.5.5
   package_info_plus: ^10.2.1
   fluoderpod:
