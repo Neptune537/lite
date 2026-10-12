@@ -1,13 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluoderpod/fluoderpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/theme.dart';
 import '../../../core/services/location_geocoding_service.dart';
-import 'mission_control_providers.dart';
 import '../../comms/presentation/comms_overlay.dart';
 import '../../teams/presentation/declare_war_dialog.dart';
 
@@ -472,7 +470,7 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SwitchListTile(
-                    activeColor: HBColors.primary,
+                    activeThumbColor: HBColors.primary,
                     title: const Text('3D DEM Terrain Elevation', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                     subtitle: const Text('Digital Elevation Model heightmaps', style: TextStyle(color: Colors.white54, fontSize: 10)),
                     value: _enable3dDemTerrain,
@@ -482,7 +480,7 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
                     },
                   ),
                   SwitchListTile(
-                    activeColor: HBColors.primary,
+                    activeThumbColor: HBColors.primary,
                     title: const Text('Atmospheric Rayleigh Scattering', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                     subtitle: const Text('Rayleigh/Mie planetary horizon glow', style: TextStyle(color: Colors.white54, fontSize: 10)),
                     value: _enableAtmosphericRayleighGlow,
@@ -492,7 +490,7 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
                     },
                   ),
                   SwitchListTile(
-                    activeColor: HBColors.primary,
+                    activeThumbColor: HBColors.primary,
                     title: const Text('Sonar Relay Gossip Sync', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                     subtitle: const Text('Live WebSocket mesh packet sync', style: TextStyle(color: Colors.white54, fontSize: 10)),
                     value: _enableSonarGossipRelay,
@@ -502,7 +500,7 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
                     },
                   ),
                   SwitchListTile(
-                    activeColor: HBColors.primary,
+                    activeThumbColor: HBColors.primary,
                     title: const Text('Bioluminescence PoH Telemetry', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                     subtitle: const Text('Proof of Health CPU/VRAM hardware stream', style: TextStyle(color: Colors.white54, fontSize: 10)),
                     value: _enableBioluminescencePoh,
@@ -533,27 +531,30 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
 
     // Rich Fluonder Globe Node Roster centered over live GPS camera view
     final cyanNodes = [
-      // Factions / Outposts
-      CyanNode(id: 'node-water-hq', name: 'Water Clan HQ', latitude: userLat - 0.008, longitude: userLng - 0.005, latencyMs: 12, isHomebase: true),
-      CyanNode(id: 'node-fire-depot', name: 'Fire Tribe Depot', latitude: userLat + 0.006, longitude: userLng + 0.008, latencyMs: 18),
-      CyanNode(id: 'node-earth-citadel', name: 'Earth Guild Citadel', latitude: userLat + 0.012, longitude: userLng - 0.002, latencyMs: 22),
-      CyanNode(id: 'node-wind-spire', name: 'Wind Order Sky Spire', latitude: userLat - 0.004, longitude: userLng + 0.010, latencyMs: 15),
+      // Player Base (Centered on User GPS)
+      CyanNode(id: 'node-water-hq', name: 'Water Clan HQ (Command Post)', latitude: userLat, longitude: userLng, latencyMs: 12, isHomebase: true),
 
-      // Persons / Squad Operators
-      CyanNode(id: 'person-titan-1', name: 'Operator Titan-1', latitude: userLat + 0.002, longitude: userLng + 0.003, latencyMs: 14),
-      CyanNode(id: 'person-ghost-2', name: 'Operator Ghost-2', latitude: userLat - 0.005, longitude: userLng - 0.002, latencyMs: 28),
-      CyanNode(id: 'person-viper-3', name: 'Operator Viper-3', latitude: userLat + 0.008, longitude: userLng - 0.006, latencyMs: 19),
+      // Regional Tactical Factions & Outposts
+      CyanNode(id: 'node-fire-depot', name: 'Fire Tribe Depot', latitude: userLat + 6.5, longitude: userLng - 10.0, latencyMs: 18),
+      CyanNode(id: 'node-earth-citadel', name: 'Earth Guild Citadel', latitude: userLat - 8.2, longitude: userLng + 12.4, latencyMs: 22),
+      CyanNode(id: 'node-wind-spire', name: 'Wind Order Sky Spire', latitude: userLat + 14.0, longitude: userLng + 18.0, latencyMs: 15),
 
-      // Satellites
-      CyanNode(id: 'sat-nexus-1', name: 'NEXUS-RECON-1 (Orbital)', latitude: userLat + 0.025, longitude: userLng + 0.015, latencyMs: 45),
-      CyanNode(id: 'sat-relay-alpha', name: 'FLUORIDIAN-RELAY (P2P Mesh)', latitude: userLat - 0.020, longitude: userLng - 0.018, latencyMs: 52),
+      // Global Strategic Backbone Hubs
+      const CyanNode(id: 'node-frankfurt', name: 'Frankfurt Central Core', latitude: 50.11, longitude: 8.68, latencyMs: 28),
+      const CyanNode(id: 'node-tokyo', name: 'Tokyo Quantum Gateway', latitude: 35.68, longitude: 139.69, latencyMs: 44),
+      const CyanNode(id: 'node-singapore', name: 'Singapore Cyber Bastion', latitude: 1.35, longitude: 103.82, latencyMs: 38),
+      const CyanNode(id: 'node-saopaulo', name: 'São Paulo Southern Edge', latitude: -23.55, longitude: -46.63, latencyMs: 65),
+
+      // Orbital Satellites
+      CyanNode(id: 'sat-nexus-1', name: 'NEXUS-RECON-1 (Orbital)', latitude: userLat + 28.0, longitude: userLng - 35.0, latencyMs: 45),
+      CyanNode(id: 'sat-relay-alpha', name: 'FLUORIDIAN-RELAY (P2P Mesh)', latitude: userLat - 32.0, longitude: userLng + 45.0, latencyMs: 52),
     ];
 
     // Live Flights / Aerial Drones / Plane Trackers
     final flightPackets = [
-      EntityPacket(id: 'FLIGHT-AZ-402', x: userLng + 0.012, y: userLat - 0.010, z: 12000, type: FluoderpodEntityType.player, callsign: 'FLIGHT-AZ-402 (Aerial Recon)'),
-      EntityPacket(id: 'FLIGHT-CYAN-88', x: userLng - 0.015, y: userLat + 0.012, z: 8500, type: FluoderpodEntityType.player, callsign: 'FLIGHT-CYAN-88 (P2P Transport)'),
-      EntityPacket(id: 'SAT-STARLINK-88', x: userLng + 0.022, y: userLat + 0.018, z: 55000, type: FluoderpodEntityType.player, callsign: 'STARLINK-FLR-88 (Broadband)'),
+      EntityPacket(id: 'FLIGHT-AZ-402', x: userLng + 12.0, y: userLat - 8.0, z: 12000, type: FluoderpodEntityType.player, callsign: 'FLIGHT-AZ-402 (Aerial Recon)'),
+      EntityPacket(id: 'FLIGHT-CYAN-88', x: userLng - 22.0, y: userLat + 14.0, z: 24500, type: FluoderpodEntityType.player, callsign: 'FLIGHT-CYAN-88 (Suborbital Transport)'),
+      EntityPacket(id: 'SAT-STARLINK-88', x: userLng + 45.0, y: userLat + 30.0, z: 550000, type: FluoderpodEntityType.player, callsign: 'STARLINK-FLR-88 (Broadband)'),
     ];
 
     return Stack(

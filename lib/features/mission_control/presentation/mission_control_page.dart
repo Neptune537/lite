@@ -44,7 +44,7 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
 
   Future<void> _determinePositionAndWeather() async {
     try {
-      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (serviceEnabled) {
         LocationPermission permission = await Geolocator.checkPermission();
         if (permission == LocationPermission.denied) {
@@ -62,7 +62,7 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
           }
 
           // 2. High accuracy fresh GPS fix
-          Position position = await Geolocator.getCurrentPosition(
+          final position = await Geolocator.getCurrentPosition(
             locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
           ).timeout(const Duration(seconds: 8));
           
