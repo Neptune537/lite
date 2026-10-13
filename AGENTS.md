@@ -8,6 +8,11 @@ This document tracks the AI agents working on this repository, their roles, and 
 > * **Android:** Uses Android NDK, Vulkan rendering (`fluoderpod_render` / `android_vulkan.rs`), and Android SDK APIs.
 > * **Web:** Uses Flutter Web, WebAssembly (Wasm), and WebGPU / CanvasKit.
 > * Other platforms (iOS, macOS, Windows/Linux desktop) are deprioritized and out of scope.
+>
+> **MAPPING & PLANETARY ENGINE: ONLY USE FLUONDER**
+> All mapping, geospatial rendering, globes, radar surfaces, and planetary tactical views in this project must strictly and exclusively use **Fluonder** (`FluonderGlobe`, `FluonderVectorMap`, `FluonderCoordinates`, and `package:fluoderpod`).
+> * Do NOT use external map tile engines, MapLibre, Google Maps, Cesium, or external iframes for globes/maps in this repository.
+> * All spatial visualization is driven procedurally and mathematically by Fluonder's vector map pipeline, spherical unit vectors, and culling architecture.
 
 ---
 
@@ -48,6 +53,7 @@ This project is part of a 3-pillar ecosystem. Agents working on this repository 
   * Linux/macOS/Bash: `./scripts/init.sh`
   * Direct Git command: `git submodule update --init --recursive --remote && flutter pub get && dart run build_runner build --delete-conflicting-outputs`
 * **Platform Adherence:** Strictly test and optimize code for Android and Web.
+* **Fluonder Exclusive Mapping:** Only use **Fluonder** (`FluonderGlobe`, `FluonderVectorMap`, `FluonderCoordinates`) for all planetary, map, globe, and geospatial navigation views. Do not introduce or use other map/globe frameworks.
 * **Cross-Pillar Alignment:** When interacting with 3D views (Constellation, Mission Control, Neural Board) or blockchain/relay streams, refer directly to Pillar 2 (`third_party/fluorescent/AGENTS.md`) and Pillar 3 (`third_party/fluorescent/third_party/tithX/AGENTS.md`).
 * When picking up or concluding a task, update this file to reflect your latest assignment and status.
 * Follow the architectural blueprints in `docs/DOCUMENTATION.md`, `docs/BUILD_PLAN.md`, and `docs/ENGINE_ARCHITECTURE.md`.

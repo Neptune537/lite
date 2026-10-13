@@ -1,15 +1,14 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fluoderpod/fluoderpod.dart';
 
 import '../../../../core/fluoderpod/fluoderpod_bridge.dart';
 import '../../../../core/fluoderpod/fluoderpod_view.dart';
-import '../../../../core/mapping/cesium_map_view.dart';
 import '../team_providers.dart';
 
 enum ConstellationViewportMode {
   tactical3d,
-  macroCesium,
+  macroFluonder,
   splitTactical,
 }
 
@@ -22,8 +21,6 @@ class ConstellationMapPage extends ConsumerStatefulWidget {
 
 class _ConstellationMapPageState extends ConsumerState<ConstellationMapPage> {
   ConstellationViewportMode _currentMode = ConstellationViewportMode.tactical3d;
-  final double _centerLat = 30.2672;
-  final double _centerLng = -97.7431;
 
   Widget _buildFluoderpod3D(List<dynamic> teams) {
     return FluoderpodView(
@@ -40,11 +37,31 @@ class _ConstellationMapPageState extends ConsumerState<ConstellationMapPage> {
     );
   }
 
-  Widget _buildCesiumGlobe() {
-    return CesiumMapView(
-      latitude: _centerLat,
-      longitude: _centerLng,
-      title: 'GUILD CONSTELLATION CESIUM GLOBE',
+  Widget _buildFluonderGlobe(List<dynamic> teams) {
+    final cyanNodes = teams.asMap().entries.map((entry) {
+      final idx = entry.key;
+      final team = entry.value;
+      return CyanNode(
+        id: team.id,
+        name: team.name,
+        latitude: 30.2672 + (idx * 5.0),
+        longitude: -97.7431 + (idx * 8.0),
+        latencyMs: 12 + (idx * 3),
+        isHomebase: idx == 0,
+      );
+    }).toList();
+
+    return FluonderGlobe(
+      nodes: cyanNodes,
+      mainStreetName: 'Fluonder Guild Constellation',
+      crossStreetName: '${teams.length} Factions Active',
+      onNodeSelected: (node) {
+        if (node is CyanNode) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Guild Selected: ${node.name}')),
+          );
+        }
+      },
     );
   }
 
@@ -52,8 +69,8 @@ class _ConstellationMapPageState extends ConsumerState<ConstellationMapPage> {
     switch (_currentMode) {
       case ConstellationViewportMode.tactical3d:
         return _buildFluoderpod3D(teams);
-      case ConstellationViewportMode.macroCesium:
-        return _buildCesiumGlobe();
+      case ConstellationViewportMode.macroFluonder:
+        return _buildFluonderGlobe(teams);
       case ConstellationViewportMode.splitTactical:
         return Column(
           children: [
@@ -64,7 +81,7 @@ class _ConstellationMapPageState extends ConsumerState<ConstellationMapPage> {
             Container(height: 2, color: const Color(0xFF00E5FF)),
             Expanded(
               flex: 5,
-              child: _buildCesiumGlobe(),
+              child: _buildFluonderGlobe(teams),
             ),
           ],
         );
@@ -102,8 +119,8 @@ class _ConstellationMapPageState extends ConsumerState<ConstellationMapPage> {
                   icon: Icon(Icons.view_in_ar, size: 14),
                 ),
                 ButtonSegment(
-                  value: ConstellationViewportMode.macroCesium,
-                  label: Text('Cesium Globe'),
+                  value: ConstellationViewportMode.macroFluonder,
+                  label: Text('Fluonder Globe'),
                   icon: Icon(Icons.public, size: 14),
                 ),
                 ButtonSegment(
@@ -148,7 +165,7 @@ class _ConstellationMapPageState extends ConsumerState<ConstellationMapPage> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Fluoridian Mesh Active • Guilds: ${teams.length} • SPSC Ring Buffer Online',
+                            'Fluoridian Mesh Active • Guilds: ${teams.length} • Fluonder Vector Engine Online',
                             style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                           ),
                         ),
