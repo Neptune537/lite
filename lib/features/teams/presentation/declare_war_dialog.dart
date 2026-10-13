@@ -36,11 +36,11 @@ class _DeclareWarDialogState extends State<DeclareWarDialog> {
         borderRadius: BorderRadius.circular(HBRadius.lg),
         side: const BorderSide(color: HBColors.error, width: 2),
       ),
-      title: Row(
+      title: const Row(
         children: [
-          const Icon(Icons.military_tech, color: HBColors.error, size: 28),
-          const SizedBox(width: HBSpacing.sm),
-          const Expanded(
+          Icon(Icons.military_tech, color: HBColors.error, size: 28),
+          SizedBox(width: HBSpacing.sm),
+          Expanded(
             child: Text(
               'DECLARE WAR',
               style: TextStyle(

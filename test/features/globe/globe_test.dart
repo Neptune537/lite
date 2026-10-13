@@ -4,7 +4,7 @@ import 'package:fluoderpod/fluoderpod.dart';
 void main() {
   group('Fluonder Planetary Coordinates & Globe Tests', () {
     test('FluonderGeodetic to FluonderEcef converts equator point accurately', () {
-      const geo = FluonderGeodetic(latitude: 0.0, longitude: 0.0, altitudeMeters: 0.0);
+      const geo = FluonderGeodetic(latitude: 0.0, longitude: 0.0);
       final ecef = geo.toEcef();
 
       // At (0, 0), x should be approximately equatorial radius (6,378,137 m)
@@ -24,7 +24,7 @@ void main() {
     });
 
     test('FluonderAstronomy computes solar position', () {
-      final now = DateTime.utc(2026, 6, 21, 12, 0, 0); // Summer solstice noon UTC
+      final now = DateTime.utc(2026, 6, 21, 12); // Summer solstice noon UTC
       final subsolar = FluonderAstronomy.calculateSubsolarPoint(now);
 
       // In late June, subsolar latitude is near +23.4 degrees (Tropic of Cancer)

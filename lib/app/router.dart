@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../features/auth/presentation/auth_providers.dart';
 import '../features/auth/presentation/login_page.dart';
 import '../features/auth/presentation/signup_page.dart';
 import '../features/board/presentation/board_page.dart';
@@ -50,21 +49,21 @@ GoRouter appRouter(Ref ref) {
 
     routes: [
       // ── Auth & Auxiliary routes ─────────────────────────────────────────
-      GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
-      GoRoute(path: '/signup', builder: (_, __) => const SignupPage()),
-      GoRoute(path: '/create', builder: (_, __) => const CreateTaskPage()),
-      GoRoute(path: '/bids', builder: (_, __) => const BidsPage()),
+      GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
+      GoRoute(path: '/signup', builder: (_, _) => const SignupPage()),
+      GoRoute(path: '/create', builder: (_, _) => const CreateTaskPage()),
+      GoRoute(path: '/bids', builder: (_, _) => const BidsPage()),
       GoRoute(
         path: '/bids/:offerId',
         builder: (_, state) => OfferDetailPage(offerId: state.pathParameters['offerId']!),
       ),
       GoRoute(
         path: '/teams',
-        builder: (_, __) => const TeamsPage(),
+        builder: (_, _) => const TeamsPage(),
         routes: [
           GoRoute(
             path: 'constellation',
-            builder: (_, __) => const ConstellationMapPage(),
+            builder: (_, _) => const ConstellationMapPage(),
           ),
           GoRoute(
             path: ':teamId',
@@ -83,7 +82,7 @@ GoRouter appRouter(Ref ref) {
             routes: [
               GoRoute(
                 path: '/board',
-                builder: (_, __) => const BoardPage(),
+                builder: (_, _) => const BoardPage(),
                 routes: [
                   GoRoute(
                     path: 'task/:taskId',
@@ -119,7 +118,7 @@ GoRouter appRouter(Ref ref) {
           StatefulShellBranch(
             navigatorKey: _gameKey,
             routes: [
-              GoRoute(path: '/game', builder: (_, __) => const GamePage()),
+              GoRoute(path: '/game', builder: (_, _) => const GamePage()),
             ],
           ),
 
@@ -129,13 +128,13 @@ GoRouter appRouter(Ref ref) {
             routes: [
               GoRoute(
                 path: '/mission-control',
-                builder: (_, __) => const MissionControlPage(),
+                builder: (_, _) => const MissionControlPage(),
                 routes: [
                   GoRoute(
                     path: 'comms-config',
-                    builder: (_, __) => const CommsConfigPage(),
+                    builder: (_, _) => const CommsConfigPage(),
                   ),
-                  GoRoute(path: 'obd', builder: (_, __) => const ObdScreen()),
+                  GoRoute(path: 'obd', builder: (_, _) => const ObdScreen()),
                 ],
               ),
             ],
@@ -147,11 +146,11 @@ GoRouter appRouter(Ref ref) {
             routes: [
               GoRoute(
                 path: '/profile',
-                builder: (_, __) => const ProfilePage(),
+                builder: (_, _) => const ProfilePage(),
                 routes: [
                   GoRoute(
                     path: 'credentials',
-                    builder: (_, __) => const CredentialsPage(),
+                    builder: (_, _) => const CredentialsPage(),
                   ),
                 ],
               ),
@@ -164,7 +163,7 @@ GoRouter appRouter(Ref ref) {
             routes: [
               GoRoute(
                 path: '/nexus',
-                builder: (_, __) => const NexusComputePage(),
+                builder: (_, _) => const NexusComputePage(),
               ),
             ],
           ),

@@ -83,8 +83,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     prefixIcon: Icon(Icons.person_outline),
                   ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty)
+                    if (v == null || v.trim().isEmpty) {
                       return 'Name is required';
+                    }
                     if (v.trim().length < 2) return 'Name is too short';
                     return null;
                   },
@@ -128,8 +129,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                   ),
                   validator: (v) {
                     if (v == null || v.isEmpty) return 'Password is required';
-                    if (v.length < 8)
+                    if (v.length < 8) {
                       return 'Password must be at least 8 characters';
+                    }
                     return null;
                   },
                 ),
@@ -146,8 +148,9 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     prefixIcon: Icon(Icons.lock_outline),
                   ),
                   validator: (v) {
-                    if (v != _passwordCtrl.text)
+                    if (v != _passwordCtrl.text) {
                       return 'Passwords do not match';
+                    }
                     return null;
                   },
                 ),

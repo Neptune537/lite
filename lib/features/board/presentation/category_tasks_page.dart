@@ -108,7 +108,7 @@ class CategoryTasksPage extends ConsumerWidget {
                   child: ListView.separated(
                     padding: const EdgeInsets.all(HBSpacing.md),
                     itemCount: tasks.length,
-                    separatorBuilder: (_, __) =>
+                    separatorBuilder: (_, _) =>
                         const SizedBox(height: HBSpacing.md),
                     itemBuilder: (ctx, i) => TaskCard(
                       task: tasks[i],

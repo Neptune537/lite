@@ -2,10 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:fluoderpod/fluoderpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/theme.dart';
 import '../../../core/services/location_geocoding_service.dart';
+import '../../../core/mapping/cesium_map_view.dart';
 import '../../comms/presentation/comms_overlay.dart';
 import '../../teams/presentation/declare_war_dialog.dart';
 
@@ -18,7 +18,7 @@ class GameMapOverlay extends ConsumerStatefulWidget {
 
 class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
   String currentMode = 'CYBERPUNK RADAR';
-  final List<String> modes = ['CYBERPUNK RADAR', 'TACTICAL GRID', 'SATELLITE 3D', 'STREET VIEW'];
+  final List<String> modes = ['CYBERPUNK RADAR', 'TACTICAL GRID', 'SATELLITE 3D', 'CESIUM 3D NAV'];
   Position? _currentPosition;
   StreamSubscription<Position>? _positionStreamSub;
 
@@ -68,50 +68,60 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
   }
 
   void _switchMode(String mode) {
-    if (mode == 'STREET VIEW') {
-      final lat = _currentPosition?.latitude ?? 30.2672;
-      final lng = _currentPosition?.longitude ?? -97.7431;
-      _launchStreetView(lat, lng);
-    } else {
-      setState(() {
-        currentMode = mode;
-      });
-    }
+    setState(() {
+      currentMode = mode;
+    });
   }
 
-  Future<void> _launchStreetView(double lat, double lng) async {
-    final url = Uri.parse('https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=$lat,$lng');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Opening Street View at $lat, $lng...')),
+  void _openCesiumTacticalModal(double lat, double lng, String title) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF070C15),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(HBRadius.xl)),
+        side: BorderSide(color: Color(0xFF00E5FF), width: 1.5),
+      ),
+      builder: (context) {
+        return SizedBox(
+          height: MediaQuery.of(context).size.height * 0.75,
+          child: Column(
+            children: [
+              AppBar(
+                backgroundColor: const Color(0xFF0D1424),
+                title: Text(
+                  'CESIUM 3D NAV: $title',
+                  style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
+                ),
+                leading: IconButton(
+                  icon: const Icon(Icons.close, color: Color(0xFF00E5FF)),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                elevation: 0,
+              ),
+              Expanded(
+                child: CesiumMapView(
+                  latitude: lat,
+                  longitude: lng,
+                  title: title,
+                ),
+              ),
+            ],
+          ),
         );
-      }
-    }
+      },
+    );
   }
 
-  Future<void> _launchNavigation(double lat, double lng) async {
-    final url = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng');
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    } else {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Opening Google Maps route to $lat, $lng...')),
-        );
+  void _onNodeSelectedOnGlobe(dynamic node) {
+    if (node is CyanNode) {
+      if (node.id.startsWith('person-')) {
+        _showPersonCommsSheet(node.name, 'CALLSIGN-${node.id.toUpperCase().replaceAll('PERSON-', '')}', '462.5625 MHz', node.latitude, node.longitude);
+      } else if (node.id.startsWith('sat-')) {
+        _showSatelliteTelemetrySheet(node.name, node.latencyMs);
+      } else {
+        _showFactionWarSheet(node.name, node.id, node.latitude, node.longitude);
       }
-    }
-  }
-
-  void _onNodeSelectedOnGlobe(CyanNode node) {
-    if (node.id.startsWith('person-')) {
-      _showPersonCommsSheet(node.name, 'CALLSIGN-${node.id.toUpperCase().replaceAll('PERSON-', '')}', '462.5625 MHz', node.latitude, node.longitude);
-    } else if (node.id.startsWith('sat-')) {
-      _showSatelliteTelemetrySheet(node.name, node.latencyMs);
-    } else {
-      _showFactionWarSheet(node.name, node.id, node.latitude, node.longitude);
     }
   }
 
@@ -171,11 +181,11 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
                         foregroundColor: HBColors.primaryLight,
                         side: const BorderSide(color: HBColors.primaryLight),
                       ),
-                      icon: const Icon(Icons.streetview, size: 16),
-                      label: const Text('360° Ground View'),
+                      icon: const Icon(Icons.public, size: 16),
+                      label: const Text('Cesium 3D Orbit'),
                       onPressed: () {
                         Navigator.pop(context);
-                        _launchStreetView(flight.y, flight.x);
+                        _openCesiumTacticalModal(flight.y, flight.x, label);
                       },
                     ),
                   ),
@@ -253,11 +263,11 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
                         foregroundColor: HBColors.primaryLight,
                         side: const BorderSide(color: HBColors.primaryLight),
                       ),
-                      icon: const Icon(Icons.streetview, size: 16),
-                      label: const Text('360° Street View'),
+                      icon: const Icon(Icons.public, size: 16),
+                      label: const Text('Cesium 3D Recon'),
                       onPressed: () {
                         Navigator.pop(context);
-                        _launchStreetView(lat, lng);
+                        _openCesiumTacticalModal(lat, lng, name);
                       },
                     ),
                   ),
@@ -269,10 +279,10 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
                         side: const BorderSide(color: HBColors.secondary),
                       ),
                       icon: const Icon(Icons.navigation, size: 16),
-                      label: const Text('Navigate (Maps)'),
+                      label: const Text('FPS Drive Route'),
                       onPressed: () {
                         Navigator.pop(context);
-                        _launchNavigation(lat, lng);
+                        _openCesiumTacticalModal(lat, lng, 'Route to $name');
                       },
                     ),
                   ),
@@ -350,11 +360,11 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
                         foregroundColor: HBColors.primaryLight,
                         side: const BorderSide(color: HBColors.primaryLight),
                       ),
-                      icon: const Icon(Icons.streetview, size: 16),
-                      label: const Text('360° Street View'),
+                      icon: const Icon(Icons.public, size: 16),
+                      label: const Text('Cesium 3D Citadel'),
                       onPressed: () {
                         Navigator.pop(context);
-                        _launchStreetView(lat, lng);
+                        _openCesiumTacticalModal(lat, lng, factionName);
                       },
                     ),
                   ),
@@ -366,10 +376,10 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
                         side: const BorderSide(color: HBColors.secondary),
                       ),
                       icon: const Icon(Icons.navigation, size: 16),
-                      label: const Text('Route (Maps)'),
+                      label: const Text('FPS Attack Route'),
                       onPressed: () {
                         Navigator.pop(context);
-                        _launchNavigation(lat, lng);
+                        _openCesiumTacticalModal(lat, lng, 'Approach $factionName');
                       },
                     ),
                   ),
@@ -529,7 +539,12 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
     final userLat = _currentPosition?.latitude ?? 30.2672;
     final userLng = _currentPosition?.longitude ?? -97.7431;
 
-    // Rich Fluonder Globe Node Roster centered over live GPS camera view
+    final atakConfig = AtakMapConfig(
+      enable3dDemElevation: _enable3dDemTerrain,
+      enableRayleighMieScattering: _enableAtmosphericRayleighGlow,
+    );
+
+    // Rich Fluonder Globe Node Roster
     final cyanNodes = [
       // Player Base (Centered on User GPS)
       CyanNode(id: 'node-water-hq', name: 'Water Clan HQ (Command Post)', latitude: userLat, longitude: userLng, latencyMs: 12, isHomebase: true),
@@ -559,24 +574,52 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
 
     return Stack(
       children: [
-        // High-Performance Canonical Fluonder Globe via Fluoderpod
+        // High-Performance Canonical Fluonder Globe & Cesium 3D Viewport
         Positioned.fill(
-          child: CyanDashboard(
-            showControlBar: false,
-            globeWidget: FluonderGlobe(
-              nodes: cyanNodes,
-              entities: flightPackets,
-              mainStreetName: _realStreetName,
-              crossStreetName: _realNeighborhood,
-              onNodeSelected: (node) {
-                if (node is CyanNode) {
-                  _onNodeSelectedOnGlobe(node);
-                }
-              },
-              onFlightSelected: _showFlightSheet,
-            ),
-            immersiveAppWidget: const CyanImmersiveView(),
-          ),
+          child: currentMode == 'CESIUM 3D NAV'
+              ? CesiumMapView(
+                  latitude: userLat,
+                  longitude: userLng,
+                  title: 'TACTICAL RECON • $_realStreetName',
+                )
+              : (currentMode == 'CYBERPUNK RADAR'
+                  ? CrtPhosphorScanlines(
+                      scanlineOpacity: 0.10,
+                      child: CyanDashboard(
+                        showControlBar: false,
+                        globeWidget: FluonderGlobe(
+                          nodes: cyanNodes,
+                          entities: flightPackets,
+                          mainStreetName: _realStreetName,
+                          crossStreetName: _realNeighborhood,
+                          atakConfig: atakConfig,
+                          onNodeSelected: (node) {
+                            if (node is CyanNode) {
+                              _onNodeSelectedOnGlobe(node);
+                            }
+                          },
+                          onFlightSelected: _showFlightSheet,
+                        ),
+                        immersiveAppWidget: const CyanImmersiveView(),
+                      ),
+                    )
+                  : CyanDashboard(
+                      showControlBar: false,
+                      globeWidget: FluonderGlobe(
+                        nodes: cyanNodes,
+                        entities: flightPackets,
+                        mainStreetName: _realStreetName,
+                        crossStreetName: _realNeighborhood,
+                        atakConfig: atakConfig,
+                        onNodeSelected: (node) {
+                          if (node is CyanNode) {
+                            _onNodeSelectedOnGlobe(node);
+                          }
+                        },
+                        onFlightSelected: _showFlightSheet,
+                      ),
+                      immersiveAppWidget: const CyanImmersiveView(),
+                    )),
         ),
 
         // Live GPS & ATAK Config Header Overlay

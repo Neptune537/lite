@@ -67,7 +67,7 @@ class _BoardPageState extends ConsumerState<BoardPage>
             Tab(text: 'Main Feed'),
             Tab(text: 'My Guild'),
             Tab(text: 'Local Radar'),
-            Tab(text: 'My Interactions'),
+            Tab(text: 'My Offers'),
           ],
         ),
       ),
@@ -328,11 +328,11 @@ class _OfferingCardState extends ConsumerState<OfferingCard> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Explicit Interaction Buttons
+                  // Explicit Action Buttons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      if (isCreator) ...[
+                      if (isCreator)
                         OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
                             foregroundColor: HBColors.secondary,
@@ -341,19 +341,18 @@ class _OfferingCardState extends ConsumerState<OfferingCard> {
                           icon: const Icon(Icons.edit, size: 16),
                           label: const Text('Edit Listing'),
                           onPressed: _editOffering,
+                        )
+                      else
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: HBColors.primary,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          ),
+                          icon: const Icon(Icons.handshake, size: 18),
+                          label: const Text('Make Offer'),
+                          onPressed: _openMakeOfferModal,
                         ),
-                        const SizedBox(width: 8),
-                      ],
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: HBColors.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                        ),
-                        icon: const Icon(Icons.handshake, size: 18),
-                        label: const Text('Interact / Make Offer'),
-                        onPressed: _openMakeOfferModal,
-                      ),
                     ],
                   ),
                 ],
@@ -378,8 +377,8 @@ class _InteractingTab extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: const [
+          const Row(
+            children: [
               Icon(Icons.gavel, color: HBColors.primary, size: 28),
               SizedBox(width: 10),
               Text(
@@ -424,7 +423,7 @@ class _InteractingTab extends ConsumerWidget {
             style: TextStyle(color: Colors.white54, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2),
           ),
           const SizedBox(height: 10),
-          _ContractTile(
+          const _ContractTile(
             title: 'Cybernetic Armor Repair',
             status: 'OFFER PENDING',
             statusColor: HBColors.secondary,
@@ -432,7 +431,7 @@ class _InteractingTab extends ConsumerWidget {
             zipCode: '78701',
             note: 'Your bid of 140 ₣ is currently undergoing review by Team Alpha.',
           ),
-          _ContractTile(
+          const _ContractTile(
             title: 'Encrypted Data Relay',
             status: 'ACCEPTED / ESCROW LOCKED',
             statusColor: Colors.greenAccent,

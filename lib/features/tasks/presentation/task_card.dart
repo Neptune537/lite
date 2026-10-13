@@ -66,7 +66,7 @@ class TaskCard extends StatelessWidget {
                       vertical: HBSpacing.xs,
                     ),
                     decoration: BoxDecoration(
-                      color: HBColors.warning.withOpacity(0.12),
+                      color: HBColors.warning.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(HBRadius.sm),
                     ),
                     child: Text(
@@ -135,7 +135,7 @@ class _CategoryBadge extends StatelessWidget {
         vertical: HBSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: HBColors.primary.withOpacity(0.10),
+        color: HBColors.primary.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(HBRadius.full),
       ),
       child: Text(
@@ -180,7 +180,7 @@ class _StatusChip extends StatelessWidget {
         vertical: HBSpacing.xs,
       ),
       decoration: BoxDecoration(
-        color: c.withOpacity(0.12),
+        color: c.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(HBRadius.full),
       ),
       child: Text(

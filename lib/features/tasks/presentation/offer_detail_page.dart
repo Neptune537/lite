@@ -87,35 +87,35 @@ class _OfferDetailPageState extends ConsumerState<OfferDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Card(
+            const Card(
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('Bid Amount', style: TextStyle(color: HBColors.onSurfaceVariantDark)),
                         Text('\$140.00', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: HBColors.primary)),
                       ],
                     ),
-                    const Divider(height: 24),
-                    const ListTile(
+                    Divider(height: 24),
+                    ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: CircleAvatar(child: Icon(Icons.person)),
                       title: Text('Provider: did:nexus:worker_alpha'),
                       subtitle: Text('Rating: ★ 4.9 (24 jobs completed)'),
                     ),
-                    const SizedBox(height: 8),
-                    const Text('Proposed Completion:', style: TextStyle(fontWeight: FontWeight.w600)),
-                    const Text('Within 48 hours of acceptance'),
-                    const SizedBox(height: 12),
-                    const Text('Verified Credentials:', style: TextStyle(fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 6),
+                    SizedBox(height: 8),
+                    Text('Proposed Completion:', style: TextStyle(fontWeight: FontWeight.w600)),
+                    Text('Within 48 hours of acceptance'),
+                    SizedBox(height: 12),
+                    Text('Verified Credentials:', style: TextStyle(fontWeight: FontWeight.w600)),
+                    SizedBox(height: 6),
                     Wrap(
                       spacing: 8,
-                      children: const [
+                      children: [
                         Chip(avatar: Icon(Icons.verified, size: 16), label: Text('Driver License')),
                         Chip(avatar: Icon(Icons.security, size: 16), label: Text('Liability Verified')),
                       ],

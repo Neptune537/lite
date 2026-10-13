@@ -10,6 +10,7 @@ import '../data/weather_service.dart';
 import '../domain/weather_data.dart';
 import 'game_map_overlay.dart';
 import '../../comms/presentation/comms_overlay.dart';
+import '../../profile/presentation/profile_page.dart';
 
 class MissionControlPage extends ConsumerStatefulWidget {
   const MissionControlPage({super.key});
@@ -44,7 +45,7 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
 
   Future<void> _determinePositionAndWeather() async {
     try {
-      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      final bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (serviceEnabled) {
         LocationPermission permission = await Geolocator.checkPermission();
         if (permission == LocationPermission.denied) {
@@ -62,7 +63,7 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
           }
 
           // 2. High accuracy fresh GPS fix
-          final position = await Geolocator.getCurrentPosition(
+          final Position position = await Geolocator.getCurrentPosition(
             locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
           ).timeout(const Duration(seconds: 8));
           
@@ -107,22 +108,38 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
   }
 
   void _showFullscreenGlobeModal(BuildContext context) {
-    showDialog(
-      context: context,
-      useSafeArea: false,
-      builder: (context) {
-        return Scaffold(
-          backgroundColor: HBColors.neutral,
-          appBar: AppBar(
-            title: const Text('FLUONDER GLOBE FULLSCREEN'),
-            leading: IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () => Navigator.pop(context),
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return Scaffold(
+            backgroundColor: HBColors.neutral,
+            appBar: AppBar(
+              title: const Text(
+                '3D TACTICAL MATRIX FULLSCREEN',
+                style: TextStyle(
+                  fontFamily: 'Space Grotesk',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                  letterSpacing: 1.2,
+                  color: HBColors.primary,
+                ),
+              ),
+              backgroundColor: Colors.black,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.close, color: HBColors.primary),
+                onPressed: () => Navigator.pop(context),
+              ),
             ),
-          ),
-          body: const GameMapOverlay(),
-        );
-      },
+            body: const SafeArea(
+              child: GameMapOverlay(),
+            ),
+          );
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
     );
   }
 
@@ -292,6 +309,7 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
 
   @override
   Widget build(BuildContext context) {
+    final userProfile = ref.watch(userProfileProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text(_isLoadingNavigatorTitle()),
@@ -396,7 +414,7 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('MY GUILD: $_userGuild', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                              Text('MY GUILD: ${userProfile.guild}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
                               const Text('42 Members • 24,500 ₣ Staked', style: TextStyle(color: Colors.white54, fontSize: 11)),
                             ],
                           ),
@@ -419,13 +437,13 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
 
             const SizedBox(height: 12),
 
-            // Fluonder Globe Header with Fullscreen Expand Trigger
+            // 3D Tactical Matrix Header with Fullscreen Expand Trigger
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: HBSpacing.md),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('FLUONDER 3D GLOBE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1.1)),
+                  const Text('3D TACTICAL MATRIX', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1.1)),
                   TextButton.icon(
                     style: TextButton.styleFrom(foregroundColor: HBColors.primary),
                     icon: const Icon(Icons.fullscreen, size: 18),
@@ -436,16 +454,11 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
               ),
             ),
 
-            // Expanded Fluonder Globe Display (460px height)
-            SizedBox(
-              height: 460,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: HBSpacing.md),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(HBRadius.md),
-                  child: const GameMapOverlay(),
-                ),
-              ),
+            // Full Edge-to-Edge Unconstrained 3D Tactical Map Viewport
+            const SizedBox(
+              height: 520,
+              width: double.infinity,
+              child: GameMapOverlay(),
             ),
 
             const SizedBox(height: 12),

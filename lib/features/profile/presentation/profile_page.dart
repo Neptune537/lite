@@ -7,6 +7,83 @@ import '../../../app/theme.dart';
 import '../../../app/theme_provider.dart';
 import '../../auth/presentation/auth_providers.dart';
 
+// ── Reactive User Profile State & Provider ───────────────────────────────────
+class UserProfileData {
+  final String name;
+  final String bio;
+  final String zip;
+  final String phone;
+  final String guild;
+  final List<String> skills;
+
+  const UserProfileData({
+    required this.name,
+    required this.bio,
+    required this.zip,
+    required this.phone,
+    required this.guild,
+    required this.skills,
+  });
+}
+
+class UserProfileNotifier extends Notifier<UserProfileData> {
+  @override
+  UserProfileData build() {
+    _loadFromPrefs();
+    return const UserProfileData(
+      name: 'Operator One',
+      bio: 'Tactical community contractor in Sector 7.',
+      zip: '78701',
+      phone: '(512) 555-0199',
+      guild: 'Water Clan',
+      skills: ['General Labor', 'Logistics'],
+    );
+  }
+
+  Future<void> _loadFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = UserProfileData(
+      name: prefs.getString('user_profile_name') ?? 'Operator One',
+      bio: prefs.getString('user_profile_bio') ?? 'Tactical community contractor in Sector 7.',
+      zip: prefs.getString('user_profile_zip') ?? '78701',
+      phone: prefs.getString('user_profile_phone') ?? '(512) 555-0199',
+      guild: prefs.getString('user_profile_guild') ?? 'Water Clan',
+      skills: prefs.getStringList('user_profile_skills') ?? ['General Labor', 'Logistics'],
+    );
+  }
+
+  Future<void> updateProfile({
+    required String name,
+    required String bio,
+    required String zip,
+    required String phone,
+    required String guild,
+    required List<String> skills,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_profile_name', name);
+    await prefs.setString('user_profile_bio', bio);
+    await prefs.setString('user_profile_zip', zip);
+    await prefs.setString('user_profile_phone', phone);
+    await prefs.setString('user_profile_guild', guild);
+    await prefs.setStringList('user_profile_skills', skills);
+
+    state = UserProfileData(
+      name: name,
+      bio: bio,
+      zip: zip,
+      phone: phone,
+      guild: guild,
+      skills: List.from(skills),
+    );
+  }
+}
+
+final userProfileProvider =
+    NotifierProvider<UserProfileNotifier, UserProfileData>(
+        UserProfileNotifier.new);
+
+// ── Profile Page ─────────────────────────────────────────────────────────────
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
@@ -42,42 +119,38 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     _phoneCtrl = TextEditingController();
     _skillInputCtrl = TextEditingController();
 
-    _loadProfileFromPrefs();
-  }
-
-  Future<void> _loadProfileFromPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final user = ref.read(currentUserProvider);
-
-    setState(() {
-      _nameCtrl.text = prefs.getString('user_profile_name') ?? user?.displayName ?? 'Operator One';
-      _bioCtrl.text = prefs.getString('user_profile_bio') ?? 'Tactical community contractor in Sector 7.';
-      _zipCtrl.text = prefs.getString('user_profile_zip') ?? '78701';
-      _phoneCtrl.text = prefs.getString('user_profile_phone') ?? '(512) 555-0199';
-      _selectedGuild = prefs.getString('user_profile_guild') ?? 'Water Clan';
-      
-      final savedSkills = prefs.getStringList('user_profile_skills');
-      if (savedSkills != null && savedSkills.isNotEmpty) {
-        _userSkills = List.from(savedSkills);
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _populateControllers();
     });
   }
 
+  void _populateControllers() {
+    final profile = ref.read(userProfileProvider);
+    _nameCtrl.text = profile.name;
+    _bioCtrl.text = profile.bio;
+    _zipCtrl.text = profile.zip;
+    _phoneCtrl.text = profile.phone;
+    _selectedGuild = profile.guild;
+    _userSkills = List.from(profile.skills);
+    setState(() {});
+  }
+
   Future<void> _saveProfile() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_profile_name', _nameCtrl.text.trim());
-    await prefs.setString('user_profile_bio', _bioCtrl.text.trim());
-    await prefs.setString('user_profile_zip', _zipCtrl.text.trim());
-    await prefs.setString('user_profile_phone', _phoneCtrl.text.trim());
-    await prefs.setString('user_profile_guild', _selectedGuild);
-    await prefs.setStringList('user_profile_skills', _userSkills);
+    await ref.read(userProfileProvider.notifier).updateProfile(
+          name: _nameCtrl.text.trim(),
+          bio: _bioCtrl.text.trim(),
+          zip: _zipCtrl.text.trim(),
+          phone: _phoneCtrl.text.trim(),
+          guild: _selectedGuild,
+          skills: _userSkills,
+        );
 
     setState(() => _isEditing = false);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Profile updated successfully!'),
+          content: Text('Profile updated and saved successfully!'),
           backgroundColor: Colors.green,
         ),
       );
@@ -97,6 +170,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
+    final profile = ref.watch(userProfileProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -109,6 +183,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               if (_isEditing) {
                 _saveProfile();
               } else {
+                _populateControllers();
                 setState(() => _isEditing = true);
               }
             },
@@ -135,7 +210,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       : null,
                   child: user?.photoURL == null
                       ? Text(
-                          _nameCtrl.text.isNotEmpty ? _nameCtrl.text[0].toUpperCase() : 'O',
+                          profile.name.isNotEmpty ? profile.name[0].toUpperCase() : 'O',
                           style: const TextStyle(
                             fontSize: 36,
                             color: Colors.white,
@@ -145,13 +220,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       : null,
                 ),
                 if (_isEditing)
-                  Positioned(
+                  const Positioned(
                     bottom: 0,
                     right: 0,
                     child: CircleAvatar(
                       radius: 16,
                       backgroundColor: HBColors.secondary,
-                      child: const Icon(Icons.camera_alt, size: 16, color: Colors.black),
+                      child: Icon(Icons.camera_alt, size: 16, color: Colors.black),
                     ),
                   ),
               ],
@@ -161,7 +236,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             // Profile View Mode vs Edit Mode
             if (!_isEditing) ...[
               Text(
-                _nameCtrl.text,
+                profile.name,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -169,7 +244,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ),
               const SizedBox(height: 4),
               Text(
-                '${user?.email ?? "operator@heavenlybond.nexus"} • ZIP: ${_zipCtrl.text}',
+                '${user?.email ?? "operator@heavenlybond.nexus"} • ZIP: ${profile.zip}',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: HBColors.primary,
                       fontWeight: FontWeight.w600,
@@ -184,7 +259,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   border: Border.all(color: HBColors.secondary.withValues(alpha: 0.4)),
                 ),
                 child: Text(
-                  'Affiliation: $_selectedGuild',
+                  'Affiliation: ${profile.guild}',
                   style: const TextStyle(color: HBColors.secondary, fontWeight: FontWeight.bold, fontSize: 12),
                 ),
               ),
@@ -192,7 +267,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Text(
-                  _bioCtrl.text,
+                  profile.bio,
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
                 ),
@@ -204,7 +279,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 spacing: 8,
                 runSpacing: 6,
                 alignment: WrapAlignment.center,
-                children: _userSkills.map((s) => Chip(
+                children: profile.skills.map((s) => Chip(
                   backgroundColor: HBColors.neutralLight,
                   label: Text(s, style: const TextStyle(color: Colors.white, fontSize: 12)),
                   side: const BorderSide(color: HBColors.primary),
@@ -276,7 +351,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: _selectedGuild,
+                        initialValue: _selectedGuild,
                         dropdownColor: HBColors.neutral,
                         style: const TextStyle(color: Colors.white),
                         items: _guildOptions.map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),

@@ -3,7 +3,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'entity_packet_encoder.dart';
 import 'fluoderpod_bridge.dart';
-import 'fluoderpod_providers.dart'; // for taskToPacket if needed elsewhere
+// for taskToPacket if needed elsewhere
 
 /// Public API for ingesting entity data into the Fluoderpod GPU pipeline.
 ///

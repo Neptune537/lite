@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fluoderpod/fluoderpod.dart';
 
 import '../../features/board/presentation/board_providers.dart';
@@ -7,7 +6,6 @@ import '../../features/tasks/domain/task.dart';
 import '../../features/teams/domain/team.dart';
 import '../../features/teams/presentation/team_providers.dart';
 import '../../shared/models/user_profile.dart';
-import 'fluoderpod_bridge.dart';
 
 /// Maps a [Task] to a GPU entity packet.
 EntityPacket taskToPacket(Task t) {

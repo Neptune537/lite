@@ -6,6 +6,7 @@ import '../../../app/theme.dart';
 import '../../../core/blockchain/fluoridian_service.dart';
 import '../../../core/blockchain/models/network_event.dart';
 import '../../board/presentation/local_offerings_provider.dart';
+import '../../teams/presentation/team_providers.dart';
 
 /// Sprint 2: Multi-step Task Creation Wizard
 /// Target Platforms: Android and Web.
@@ -76,9 +77,11 @@ class _CreateTaskPageState extends ConsumerState<CreateTaskPage> {
   Future<void> _publishTask() async {
     final bounty = double.tryParse(_bountyCtrl.text.trim()) ?? 100.0;
     final taskId = const Uuid().v4();
+    final teamId = ref.read(selectedTeamProvider) ?? 'water';
 
     final taskPayload = {
       'id': taskId,
+      'creatorId': teamId,
       'title': _titleCtrl.text.trim().isEmpty ? 'Community Task' : _titleCtrl.text.trim(),
       'description': _descCtrl.text.trim(),
       'category': _selectedCategory,
@@ -169,7 +172,7 @@ class _CreateTaskPageState extends ConsumerState<CreateTaskPage> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<String>(
-                  value: _selectedCategory,
+                  initialValue: _selectedCategory,
                   items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
                   onChanged: (val) => setState(() => _selectedCategory = val!),
                   decoration: const InputDecoration(labelText: 'Category'),

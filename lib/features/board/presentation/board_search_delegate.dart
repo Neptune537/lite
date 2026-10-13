@@ -146,7 +146,7 @@ class _TaskSearchList extends StatelessWidget {
         return ListView.separated(
           padding: const EdgeInsets.all(HBSpacing.md),
           itemCount: docs.length,
-          separatorBuilder: (_, __) => const SizedBox(height: HBSpacing.md),
+          separatorBuilder: (_, _) => const SizedBox(height: HBSpacing.md),
           itemBuilder: (ctx, i) {
             final data = docs[i].data() as Map<String, dynamic>;
             data['id'] = docs[i].id; // Ensure ID is present if not in doc

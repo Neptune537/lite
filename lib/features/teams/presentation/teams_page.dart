@@ -438,7 +438,7 @@ class _TeamsPageState extends ConsumerState<TeamsPage>
               decoration: BoxDecoration(
                 color: badgeColor.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(HBRadius.sm),
-                border: Border.all(color: badgeColor, width: 1),
+                border: Border.all(color: badgeColor),
               ),
               child: Text(
                 badgeText,

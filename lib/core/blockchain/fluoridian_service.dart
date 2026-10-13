@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sqflite/sqflite.dart';
 import '../services/local_database_service.dart';
 import 'models/network_event.dart';
 
@@ -79,22 +80,30 @@ class FluoridianService {
     try {
       final db = await _dbService.database;
       if (event.eventType == NetworkEventType.marketplaceBid) {
-        await db.insert('bids', {
-          'id': event.id,
-          'taskId': event.payload['taskId'] ?? '',
-          'providerId': event.payload['providerId'] ?? event.did,
-          'data': jsonEncode(event.payload),
-          'createdAt': event.createdAt.millisecondsSinceEpoch,
-        });
+        await db.insert(
+          'bids',
+          {
+            'id': event.id,
+            'taskId': event.payload['taskId'] ?? '',
+            'providerId': event.payload['providerId'] ?? event.did,
+            'data': jsonEncode(event.payload),
+            'createdAt': event.createdAt.millisecondsSinceEpoch,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       } else if (event.eventType == NetworkEventType.taskCreated) {
-        await db.insert('tasks', {
-          'id': event.id,
-          'creatorId': event.payload['creatorId'] ?? event.did,
-          'data': jsonEncode(event.payload),
-          'listingType': event.payload['listingType'] ?? 'forSale',
-          'rentalDuration': event.payload['rentalDuration'],
-          'createdAt': event.createdAt.millisecondsSinceEpoch,
-        });
+        await db.insert(
+          'tasks',
+          {
+            'id': event.payload['id'] ?? event.id,
+            'creatorId': event.payload['creatorId'] ?? event.did,
+            'data': jsonEncode(event.payload),
+            'listingType': event.payload['listingType'] ?? 'forSale',
+            'rentalDuration': event.payload['rentalDuration'],
+            'createdAt': event.createdAt.millisecondsSinceEpoch,
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       } else if (event.eventType == NetworkEventType.warDeclared) {
         await db.insert('wars', {
           'id': event.id,

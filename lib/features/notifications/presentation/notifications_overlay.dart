@@ -115,7 +115,7 @@ class NotificationsOverlay extends ConsumerWidget {
                           shrinkWrap: true,
                           padding: EdgeInsets.zero,
                           itemCount: notifications.length,
-                          separatorBuilder: (_, __) => const Divider(height: 1),
+                          separatorBuilder: (_, _) => const Divider(height: 1),
                           itemBuilder: (ctx, index) {
                             final notif = notifications[index];
                             return ListTile(

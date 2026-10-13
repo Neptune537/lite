@@ -3,11 +3,9 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:fluorescent_core/fluorescent_core.dart';
-import 'dart:math';
 
 import 'package:fluorescent_flame/fluorescent_flame.dart';
 import 'dart:math' as math;
-import 'package:vector_math/vector_math_64.dart' as vmath;
 
 import '../../domain/team.dart';
 
@@ -84,6 +82,7 @@ class TreatyLink extends Component {
 }
 
 class BranchLink extends Component {
+  @override
   final ConstellationNode parent;
   final ConstellationNode child;
 
@@ -113,7 +112,7 @@ class ConstellationGame extends FlameGame with PanDetector {
   final Map<String, ConstellationNode> _nodes = {};
 
   // Camera dragging
-  Vector2 _dragVelocity = Vector2.zero();
+  final Vector2 _dragVelocity = Vector2.zero();
 
   ConstellationGame({required this.teams, required this.onTeamTapped});
 
@@ -147,8 +146,8 @@ class ConstellationGame extends FlameGame with PanDetector {
   void _buildNodes() {
     // Simple circular layout for now
     final center = size / 2;
-    double radius = 150;
-    double angleStep = (2 * 3.14159) / (teams.isEmpty ? 1 : teams.length);
+    const double radius = 150;
+    final double angleStep = (2 * 3.14159) / (teams.isEmpty ? 1 : teams.length);
 
     for (int i = 0; i < teams.length; i++) {
       final team = teams[i];

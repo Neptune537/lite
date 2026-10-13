@@ -655,7 +655,7 @@ class _GamePageState extends ConsumerState<GamePage> {
       padding: const EdgeInsets.all(20),
       child: Column(
         children: [
-          Text(
+          const Text(
             'VICTORY DECLARED!',
             style: TextStyle(
               color: HBColors.primary,

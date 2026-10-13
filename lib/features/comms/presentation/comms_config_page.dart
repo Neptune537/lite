@@ -132,7 +132,7 @@ class _CommsConfigPageState extends State<CommsConfigPage> {
       subtitle: Text(subtitle, style: const TextStyle(color: Colors.white70)),
       value: value,
       onChanged: onChanged,
-      activeColor: HBColors.secondary,
+      activeThumbColor: HBColors.secondary,
       activeTrackColor: HBColors.secondary.withValues(alpha: 0.3),
       inactiveThumbColor: HBColors.primary,
       inactiveTrackColor: HBColors.neutral,

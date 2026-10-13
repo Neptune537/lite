@@ -5,7 +5,7 @@ import 'game_state.dart';
 class GameNotifier extends Notifier<GameState> {
   @override
   GameState build() {
-    List<Card> deck = [];
+    final List<Card> deck = [];
     for (int i = 1; i <= 12; i++) {
       for (int j = 0; j < 4; j++) {
         deck.add(Card(i));
@@ -38,9 +38,9 @@ class GameNotifier extends Notifier<GameState> {
       return;
     }
 
-    Map<Point, PlayerId> newPieces = Map.from(state.pieces);
-    Map<Point, MapEntry<PlayerId, Card>> newTraps = Map.from(state.traps);
-    Map<Point, PlayerId> newFlags = Map.from(state.flags);
+    final Map<Point, PlayerId> newPieces = Map.from(state.pieces);
+    final Map<Point, MapEntry<PlayerId, Card>> newTraps = Map.from(state.traps);
+    final Map<Point, PlayerId> newFlags = Map.from(state.flags);
 
     PlayerState newPState = pState;
 
@@ -121,7 +121,7 @@ class GameNotifier extends Notifier<GameState> {
     // Check bounds
     if (target.x < 0 || target.x >= 9 || target.y < 0 || target.y >= 9) return;
 
-    Map<Point, PlayerId> newPieces = Map.from(state.pieces);
+    final Map<Point, PlayerId> newPieces = Map.from(state.pieces);
     newPieces.remove(selected);
 
     // Check combat
@@ -200,7 +200,7 @@ class GameNotifier extends Notifier<GameState> {
       damage = trap.value.value - rollValue;
     }
 
-    Map<Point, MapEntry<PlayerId, Card>> newTraps = Map.from(state.traps);
+    final Map<Point, MapEntry<PlayerId, Card>> newTraps = Map.from(state.traps);
     newTraps.remove(loc);
 
     _applyDamageAndContinue(damage, newTraps: newTraps);
@@ -222,10 +222,10 @@ class GameNotifier extends Notifier<GameState> {
       return;
     }
 
-    Map<Point, PlayerId> newPieces = Map.from(state.pieces);
-    int damage = (attackerRoll - defenderRoll).abs();
+    final Map<Point, PlayerId> newPieces = Map.from(state.pieces);
+    final int damage = (attackerRoll - defenderRoll).abs();
 
-    PlayerId loser = attackerRoll > defenderRoll ? defender : state.currentPlayer;
+    final PlayerId loser = attackerRoll > defenderRoll ? defender : state.currentPlayer;
 
     if (loser == defender) {
       // Attacker won, defender piece dies, attacker takes the tile
@@ -238,11 +238,11 @@ class GameNotifier extends Notifier<GameState> {
   }
 
   void _applyDamageAndContinue(int damage, {Map<Point, MapEntry<PlayerId, Card>>? newTraps, Map<Point, PlayerId>? newPieces, PlayerId? loser}) {
-    PlayerId targetPlayer = loser ?? state.currentPlayer;
+    final PlayerId targetPlayer = loser ?? state.currentPlayer;
     final pState = state.players[targetPlayer]!;
     final newHp = pState.hp - damage;
 
-    PlayerState newPState = pState.copyWith(hp: newHp);
+    final PlayerState newPState = pState.copyWith(hp: newHp);
 
     if (newHp <= 0) {
       state = state.copyWith(
