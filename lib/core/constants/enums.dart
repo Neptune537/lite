@@ -183,17 +183,17 @@ enum WarStatus {
 enum ListingType {
   forSale,
   wantedToBuy,
-  forRent;
+  bookService;
 
   String get label => switch (this) {
     forSale => 'For Sale',
     wantedToBuy => 'Wanted',
-    forRent => 'For Rent',
+    bookService => 'Book Service',
   };
 
   String get emoji => switch (this) {
     forSale => '💰',
     wantedToBuy => '🛒',
-    forRent => '🔑',
+    bookService => '📅',
   };
 }

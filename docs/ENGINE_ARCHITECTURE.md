@@ -43,8 +43,21 @@ The `mobile-vault-sdk` will eventually be bridged to Dart (via `flutter_rust_bri
 *   It will manage the Secure Enclave key generation.
 *   It will act as the signing authority for every Event Envelope pushed to the SQLite database and TithX WebSocket.
 
-## Summary for TithX Core Team
-To support this mobile application, the TithX engine should prioritize:
-1.  **Ed25519 Signature Verification API:** For validating payloads.
-2.  **WebSocket Pub/Sub Relay:** For gossiping unstructured JSON state events between mobile clients.
-3.  **DID Resolution:** A ledger mapping `did:nexus:...` to public keys.
+## 5. Graphics & Planetary Engine Integration: Fluorescent & Fluonder
+All 3D visualization, constellation graphs, and geospatial map navigation in this project are strictly integrated across two high-performance graphics technologies:
+
+### 5.1 Fluorescent & Fluoderpod Native Engine (Android & Web Only)
+*   **Android (Vulkan NDK):** Uses `fluoderpod_render` (`android_vulkan.rs`) with NDK `ANativeWindow` handles bound to Flutter's `SurfaceProducer` texture registry via zero-copy GPU swapchain buffers.
+*   **Web (WebGPU / Wasm):** Compiles through the Wasm pipeline to target the WebGPU canvas context.
+*   **Compute Culling:** Hardware-accelerated frustum and occlusion culling with Nanite-style cluster LOD evaluation and unified indirect draw calls.
+
+### 5.2 Fluonder Geospatial & Planetary Engine (Strict Mapping Exclusive)
+*   All mapping, planetary tactical globes, radar surfaces, and location views strictly and exclusively use **Fluonder** (`FluonderGlobe`, `FluonderVectorMap`, `FluonderCoordinates`).
+*   **Spherical Unit Vector Splines:** Precomputes cubic Catmull-Rom splines directly on 3D unit vectors normalized to the unit sphere $S^2$, eliminating dateline seam artifacts and low-poly jaggedness.
+*   **Exact Limb Horizon Clipping:** Calculates precise edge intersections with the horizon plane ($z = 0$) at $t = \frac{z_1}{z_1 - z_2}$, terminating visible coastline strokes and tracing landmass fills along the spherical limb arc without ocean-crossing chords.
+*   **Astronomical Solar Shading:** Real-time subsolar day/night terminator with dusk scattering aura ($3.0^\circ$ civil twilight band), specular ocean glint, and night-side metropolitan lights with golden phosphor bloom.
+
+## Summary for Engineering Teams
+1.  **TithX / Consensus:** Ed25519 signature verification, WebSocket gossip relay, DID resolution, and escrow settlement.
+2.  **Fluorescent / Graphics:** Vulkan NDK zero-copy bridge (Android) and WebGPU Wasm pipeline (Web).
+3.  **Fluonder / Mapping:** Exclusive mathematical spherical vector rendering across all planetary views.

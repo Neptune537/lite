@@ -77,18 +77,55 @@ Security is enforced via robust Firestore rules (`firestore.rules`):
 
 The application features 5 major sections, managed by persistent bottom navigation:
 1.  **Board (`/board`):** Feed of open tasks, nearby tasks, categories, and projects.
-2.  **Create (`/create`):** Wizard to create tasks/service requests.
+2.  **Create (`/create`):** Wizard to create tasks, gig bookings, and service requests.
 3.  **Bids (`/bids`):** Manage offers received, own offers made, and active contracts.
-4.  **Teams/Guilds (`/teams`):** Create/join guilds, manage credentials and jobs. Features the **Constellation Map** (`/teams/constellation`), an interactive 3D solar system view rendered using the Fluorescent 3D Engine to visualize parent/child structures, sibling links, and treaty partnerships as glowing nodes and tethers.
+4.  **Teams/Guilds (`/teams`):** Create/join guilds, manage credentials, offerings, and jobs. Features:
+    *   **Offerings & Gig Booking:** Specialized listing system supporting direct **Booking / Gig Services** (e.g., DJs, audio engineers, event entertainers, technicians) with flexible billing periods (hourly, daily, weekly, monthly) and in-app communication channels (Direct Booking, Public Chat, or Team-only Chat).
+    *   **Constellation Map (`/teams/constellation`):** An interactive 3D tactical planetary view rendered exclusively using **Fluonder** to visualize parent/child structures, sibling links, and treaty partnerships as glowing orbital nodes and great-circle data corridors.
 5.  **Profile (`/profile`):** User skills, ratings, credentials, history, and earnings.
+
+## Mapping & Planetary Visualization: Strictly Fluonder
+
+> [!IMPORTANT]
+> **TARGET PLATFORMS: ANDROID AND WEB ONLY**
+> **MAPPING ENGINE: EXCLUSIVELY FLUONDER**
+> All geospatial navigation, tactical radar surfaces, and 3D planetary views strictly use **Fluonder** (`FluonderGlobe`, `FluonderVectorMap`, `FluonderCoordinates`, and `package:fluoderpod`).
+> External map engines (Google Maps, MapLibre, Cesium, or iframes) are strictly barred.
+
+### Fluonder High-Fidelity Tactical Vector Globe Architecture
+Fluonder delivers high-performance 60+ FPS tactical planetary rendering driven entirely by mathematical spherical geometry:
+1.  **Spherical Catmull-Rom Splines:**
+    *   Precomputes uniform cubic Catmull-Rom spline curves directly between 3D unit vectors in $\mathbb{R}^3$.
+    *   Normalizes each interpolated point $\hat{V}(t) = \frac{V(t)}{\|V(t)\|}$ back onto the unit sphere $S^2$, producing organic $C^1$-smooth coastlines without dateline seams.
+2.  **Limb Horizon Edge Clipping Math:**
+    *   Calculates exact edge intersections with the horizon plane ($z = 0$ in camera space) at $t = \frac{z_1}{z_1 - z_2}$.
+    *   Clips visible strokes cleanly at the planetary limb circle.
+    *   Traces partially visible landmass fills along the circular limb arc between exit and entry intersections, completely eliminating ocean-crossing chords and front-face artifacts.
+3.  **3D Planetary Shading & Lighting:**
+    *   **Dual-Layer Atmosphere:** Rayleigh scattering halo ($1.0R$ to $1.32R$) and inner Mie forward-scattering neon-cyan limb ring.
+    *   **Bathymetric Depth Gradient:** Multi-stop radial shader rendering deep ocean abyss, mid-ocean ridges, and continental shelves.
+    *   **Real-Time Solar Terminator:** True astronomical subsolar positioning with specular solar glint and a warm copper/amber dusk aura ($3.0^\circ$ civil twilight band).
+    *   **Night-Side Urban Lights:** Golden phosphor bloom clusters across 20 global metropolitan centers that automatically illuminate on the dark hemisphere.
+    *   **Geodesic Grid Rings:** Parallels (Equator, Tropics, Arctic/Antarctic circles) and Meridians with Prime Meridian and foreshortened perspective curvature.
+4.  **Orbital Drift & Multi-Level Zoom:**
+    *   Continuous polar-axis orbital drift ($0.0012\text{ rad/tick}$) when idle.
+    *   Smooth gesture zoom scaling from $0.6\times$ (orbital satellite view) up to $6.0\times$ (tactical street/sector recon) with live HUD telemetry.
+
+## The Three Architecture Pillars
+
+HeavenlyBond Lite / Game Maps IRL operates as part of a synchronized 3-pillar ecosystem:
+1.  **Pillar 1: Client Application (This Repository)**
+    *   Mobile (Android) and Web client, Riverpod state management, local SQLite parallel caching, task/gig marketplace, and team workflows.
+2.  **Pillar 2: Fluorescent & Fluoderpod 3D Graphics Engine (`third_party/fluorescent`)**
+    *   GPU-driven compute frustum/occlusion culling, Nanite-style virtual geometry, unified indirect draw pipeline, Android NDK Vulkan zero-copy bridge (`android_vulkan.rs`), and Web Wasm/WebGPU pipeline.
+3.  **Pillar 3: TitheX / Fluoridian Blockchain & Nexus Protocol (`third_party/tithX`)**
+    *   Parallel storage sync, decentralized event envelopes (`NetworkEvent`), `mobile-vault-sdk` Ed25519 signing, WebSocket gossip relay, double-entry internal ledger, and on-chain escrow settlement.
 
 ## Future: Nexus Protocol Ecosystem
 
-HeavenlyBond Lite will eventually integrate with the **Nexus Protocol** and the **Nexus Coin**. The Nexus Protocol is an edge-native compute substrate and decentralized marketplace for idle hardware, powered by a Proof of Health (PoH) consensus engine.
+HeavenlyBond Lite will integrate with the **Nexus Protocol** and the **Nexus Coin**. The Nexus Protocol is an edge-native compute substrate and decentralized marketplace for idle hardware, powered by a Proof of Health (PoH) consensus engine.
 
 As the app ecosystem evolves into "Game Maps IRL", the native application will leverage the Nexus Protocol for:
 *   **Mobile Sovereign Vaults & Identity Rails:** Utilizing hardware Secure Enclaves for managing local user context, credentials, and Decentralized Identifiers (DIDs).
 *   **Distributed AI Compute:** Providing telemetry and participating in the decentralized marketplace for AI workload execution.
 *   **Proof of Health Telemetry:** A future telemetry daemon will coordinate with the cluster to validate hardware state for consensus.
-
-*Note: Initial foundation code includes waitlist capabilities and placeholder state for compute node telemetry, preparing the architecture for Phase 1 of the Nexus Protocol implementation.*

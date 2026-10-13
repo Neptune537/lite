@@ -640,7 +640,7 @@ class _TeamsPageState extends ConsumerState<TeamsPage>
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CREATE OFFERING FORM — with Buy/Sell/Rent listing type
+// CREATE OFFERING FORM — with Buy/Sell/Book (Gig Booking) listing type
 // ═══════════════════════════════════════════════════════════════════════════════
 class CreateOfferingForm extends StatefulWidget {
   final Function(
@@ -705,7 +705,7 @@ class _CreateOfferingFormState extends State<CreateOfferingForm> {
                   ),
                   DropdownMenuItem(
                     value: 'forBook',
-                    child: Text('🔑 Book Service'),
+                    child: Text('📅 Book Service / Gig'),
                   ),
                 ],
                 onChanged: (v) => setState(() {
