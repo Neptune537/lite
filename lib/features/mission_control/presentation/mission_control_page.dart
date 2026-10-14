@@ -32,6 +32,7 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
   @override
   void initState() {
     super.initState();
+    _weatherFuture = _weatherService.fetchWeather(lat, lng);
     _loadUserGuild();
     _determinePositionAndWeather();
   }
@@ -414,7 +415,7 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('MY GUILD: ${userProfile.guild}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                              Text('MY GUILD: ${userProfile.guild.isNotEmpty ? userProfile.guild : _userGuild}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
                               const Text('42 Members • 24,500 ₣ Staked', style: TextStyle(color: Colors.white54, fontSize: 11)),
                             ],
                           ),

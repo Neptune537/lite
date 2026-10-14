@@ -93,10 +93,11 @@ class GameNotifier extends Notifier<GameState> {
     }
   }
 
-  void rollForMovement(int value) {
+  void rollForMovement([int? value]) {
     if (state.phase != GamePhase.playing || state.turnPhase != TurnPhase.rollForMovement) return;
+    final roll = value ?? (Random().nextInt(6) + 1);
     state = state.copyWith(
-      movementPointsLeft: value,
+      movementPointsLeft: roll,
       turnPhase: TurnPhase.move,
     );
   }
@@ -107,6 +108,8 @@ class GameNotifier extends Notifier<GameState> {
       state = state.copyWith(selectedPiece: point);
     }
   }
+
+  void movePiece(Point target) => moveSelectedPiece(target);
 
   void moveSelectedPiece(Point target) {
     if (state.phase != GamePhase.playing || state.turnPhase != TurnPhase.move) return;
@@ -187,7 +190,7 @@ class GameNotifier extends Notifier<GameState> {
     );
   }
 
-  void resolveTrap(int rollValue) {
+  void resolveTrap([int? rollValue]) {
     if (state.phase != GamePhase.playing || state.turnPhase != TurnPhase.resolveTrap) return;
     final loc = state.pendingTrapLocation;
     if (loc == null) return;
@@ -195,9 +198,10 @@ class GameNotifier extends Notifier<GameState> {
     final trap = state.traps[loc];
     if (trap == null) return;
 
+    final roll = rollValue ?? (Random().nextInt(6) + 1);
     int damage = 0;
-    if (rollValue <= trap.value.value) {
-      damage = trap.value.value - rollValue;
+    if (roll <= trap.value.value) {
+      damage = trap.value.value - roll;
     }
 
     final Map<Point, MapEntry<PlayerId, Card>> newTraps = Map.from(state.traps);
@@ -206,7 +210,7 @@ class GameNotifier extends Notifier<GameState> {
     _applyDamageAndContinue(damage, newTraps: newTraps);
   }
 
-  void resolveCombat(int attackerRoll, int defenderRoll) {
+  void resolveCombat([int? attackerRoll, int? defenderRoll]) {
     if (state.phase != GamePhase.playing || state.turnPhase != TurnPhase.resolveCombat) return;
     final loc = state.pendingCombatLocation;
     if (loc == null) return;
@@ -214,18 +218,21 @@ class GameNotifier extends Notifier<GameState> {
     final defender = state.pieces[loc];
     if (defender == null) return;
 
-    if (attackerRoll == defenderRoll) {
+    final aRoll = attackerRoll ?? (Random().nextInt(6) + 1);
+    final dRoll = defenderRoll ?? (Random().nextInt(6) + 1);
+
+    if (aRoll == dRoll) {
       // Tie, reroll (no state change except log maybe, for simplicity just wait for next roll call)
       state = state.copyWith(
-        combatLogs: [...state.combatLogs, 'Tie! Attacker: $attackerRoll, Defender: $defenderRoll. Reroll!'],
+        combatLogs: [...state.combatLogs, 'Tie! Attacker: $aRoll, Defender: $dRoll. Reroll!'],
       );
       return;
     }
 
     final Map<Point, PlayerId> newPieces = Map.from(state.pieces);
-    final int damage = (attackerRoll - defenderRoll).abs();
+    final int damage = (aRoll - dRoll).abs();
 
-    final PlayerId loser = attackerRoll > defenderRoll ? defender : state.currentPlayer;
+    final PlayerId loser = aRoll > dRoll ? defender : state.currentPlayer;
 
     if (loser == defender) {
       // Attacker won, defender piece dies, attacker takes the tile

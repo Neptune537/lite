@@ -215,7 +215,7 @@ class _TeamTacticalGamePageState extends ConsumerState<TeamTacticalGamePage> {
           notifier.movePiece(point);
         }
       } else if (state.turnPhase == TurnPhase.resolveTrap) {
-        notifier.resolveTrap(point == state.pendingTrapLocation);
+        notifier.resolveTrap();
       } else if (state.turnPhase == TurnPhase.resolveCombat) {
         notifier.resolveCombat();
       }
@@ -298,7 +298,7 @@ class _TeamTacticalGamePageState extends ConsumerState<TeamTacticalGamePage> {
           if (state.turnPhase == TurnPhase.resolveTrap)
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: HBColors.error),
-              onPressed: () => notifier.resolveTrap(true),
+              onPressed: () => notifier.resolveTrap(),
               child: const Text('RESOLVE TRAP TRIGGER'),
             ),
           if (state.turnPhase == TurnPhase.resolveCombat)

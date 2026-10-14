@@ -70,6 +70,22 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
     setState(() {
       currentMode = mode;
     });
+    final desc = switch (mode) {
+      'TACTICAL GRID' => 'TACTICAL GRID: 3D Topographic DEM Isobars & Geodesic Contour Grid',
+      'SATELLITE 3D' => 'SATELLITE 3D: Dynamic Lambertian Hillshading & High-Altitude Relief',
+      'TACTICAL RECON' => 'TACTICAL RECON: 4x Optical Zoom, FLIR Thermal Heat & Target Lock',
+      _ => 'CYBERPUNK RADAR: 360° Microwave Radar Sweep & CRT Phosphor Active',
+    };
+    if (mounted) {
+      ScaffoldMessenger.of(context).removeCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(desc, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+          backgroundColor: const Color(0xFF001F3F),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   void _focusOnCoordinate(double lat, double lng, String label) {
@@ -513,6 +529,8 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
     final atakConfig = AtakMapConfig(
       enable3dDemElevation: _enable3dDemTerrain,
       enableRayleighMieScattering: _enableAtmosphericRayleighGlow,
+      enableSonarGossipRelay: _enableSonarGossipRelay,
+      enableBioluminescencePoh: _enableBioluminescencePoh,
     );
 
     // Rich Fluonder Globe Node Roster
@@ -558,6 +576,7 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
                       mainStreetName: _realStreetName,
                       crossStreetName: _realNeighborhood,
                       atakConfig: atakConfig,
+                      mode: currentMode,
                       onNodeSelected: (node) {
                         if (node is CyanNode) {
                           _onNodeSelectedOnGlobe(node);
@@ -576,6 +595,7 @@ class _GameMapOverlayState extends ConsumerState<GameMapOverlay> {
                     mainStreetName: _realStreetName,
                     crossStreetName: _realNeighborhood,
                     atakConfig: atakConfig,
+                    mode: currentMode,
                     onNodeSelected: (node) {
                       if (node is CyanNode) {
                         _onNodeSelectedOnGlobe(node);

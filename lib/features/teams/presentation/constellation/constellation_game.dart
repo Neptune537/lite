@@ -111,9 +111,6 @@ class ConstellationGame extends FlameGame with PanDetector {
   late final FluorescentViewport _viewport;
   final Map<String, ConstellationNode> _nodes = {};
 
-  // Camera dragging
-  final Vector2 _dragVelocity = Vector2.zero();
-
   ConstellationGame({required this.teams, required this.onTeamTapped});
 
   @override
