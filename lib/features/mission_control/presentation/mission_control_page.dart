@@ -515,6 +515,20 @@ class _MissionControlPageState extends ConsumerState<MissionControlPage> {
                       context.push('/mission-control/obd');
                     },
                   ),
+                  _QuickActionTile(
+                    icon: Icons.radio,
+                    label: 'Cyan Mesh Radio',
+                    onTap: () {
+                      context.push('/tools');
+                    },
+                  ),
+                  _QuickActionTile(
+                    icon: Icons.settings_input_antenna,
+                    label: 'ATAK Comms Hub',
+                    onTap: () {
+                      context.push('/mission-control/comms-config');
+                    },
+                  ),
                 ],
               ),
             ),

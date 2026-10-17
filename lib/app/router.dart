@@ -22,6 +22,7 @@ import '../features/comms/presentation/comms_config_page.dart';
 import '../features/tasks/presentation/bids_page.dart';
 import '../features/tasks/presentation/offer_detail_page.dart';
 import '../features/tasks/presentation/task_verification_page.dart';
+import '../features/tools/presentation/tools_page.dart';
 
 part 'router.g.dart';
 
@@ -71,6 +72,8 @@ GoRouter appRouter(Ref ref) {
           ),
         ],
       ),
+      GoRoute(path: '/tools', builder: (_, _) => const ToolsPage()),
+      GoRoute(path: '/radio', builder: (_, _) => const ToolsPage()),
 
       // ── Main shell with persistent bottom navigation bar ────────────────
       StatefulShellRoute.indexedStack(
