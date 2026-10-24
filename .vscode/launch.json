@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "cargo",
+      "request": "launch",
+      "name": "Run HeavenlyBound Lite (Pure Rust Desktop)",
+      "cargo": {
+        "args": ["run", "--package", "hblite_desktop"]
+      },
+      "env": {
+        "WGPU_BACKEND": "dx12"
+      }
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+[package]
+name = "hblite_desktop"
+version = "0.2.0"
+edition = "2021"
+description = "HeavenlyBound Lite Desktop & Web Runner - Pure Rust Pause Menu & Companion HUD"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "src/lib.rs"
+
+[[bin]]
+name = "hblite"
+path = "src/main.rs"
+
+[dependencies]
+lemuria_engine = { path = "../../../heavenlyBound/crates/lemuria_engine" }
+nautilus_world = { path = "../../../heavenlyBound/crates/nautilus_world" }
+lemuria_leptos_client = { path = "../../../heavenlyBound/crates/lemuria_leptos_client" }
+atlantis_protocol = { path = "../../../heavenlyBound/third_party/atlantis_protocol" }
+glam = "0.29"
+uuid = "1.28"
+egui = "0.37.0"
+eframe = { version = "0.37.0", default-features = false, features = ["wgpu", "default_fonts"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = ["HtmlCanvasElement"] }
+log = "0.4"

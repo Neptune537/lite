@@ -1,0 +1,8 @@
+[build]
+target = "index.html"
+
+[clean]
+dist = "dist"
+
+[watch]
+watch = ["crates/hblite_desktop/src"]
