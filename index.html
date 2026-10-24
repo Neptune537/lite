@@ -67,5 +67,36 @@
     <div id="canvas-container">
         <canvas id="the_canvas_id"></canvas>
     </div>
+
+    <script type="module">
+        window.addEventListener("TrunkApplicationStarted", async (event) => {
+            console.log("TrunkApplicationStarted event received. Initializing WebHandle...");
+            try {
+                const loadingScreen = document.getElementById("loading-screen");
+                const canvas = document.getElementById("the_canvas_id");
+                
+                if (window.wasmBindings && window.wasmBindings.WebHandle) {
+                    const handle = new window.wasmBindings.WebHandle();
+                    console.log("Starting eframe WebRunner on canvas #the_canvas_id...");
+                    await handle.start(canvas);
+                    console.log("HeavenlyBound Lite UI successfully mounted.");
+                    
+                    if (loadingScreen) {
+                        loadingScreen.style.opacity = "0";
+                        setTimeout(() => loadingScreen.remove(), 400);
+                    }
+                } else {
+                    console.error("WebHandle was not found in wasmBindings:", window.wasmBindings);
+                }
+            } catch (err) {
+                console.error("Failed to start HeavenlyBound Lite WebRunner:", err);
+                const loadingText = document.querySelector("#loading-screen div:last-child");
+                if (loadingText) {
+                    loadingText.innerText = "Error initializing WebGPU/WebGL: " + err;
+                    loadingText.style.color = "#ff4d4f";
+                }
+            }
+        });
+    </script>
 </body>
 </html>
