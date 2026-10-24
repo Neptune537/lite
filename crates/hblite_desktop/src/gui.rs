@@ -99,12 +99,16 @@ impl Default for LemuriaNativeApp {
             tier,
         };
 
+        let mut radio_state = TheaterRadioState::default();
+        radio_state.stream_url = "https://stream.nightride.fm/nightride.mp3".into();
+        radio_state.is_playing = false;
+
         Self {
             selected_tab: MarketplaceTab::TacticalMap,
             club_open: false,
             club: ClubState::default(),
             catalog: MarketplaceItem::default_catalog(),
-            radio_state: TheaterRadioState::default(),
+            radio_state,
             storefront,
             last_status_message: "LEMURIA V2 INITIALIZED • ALL ARCHITECTURE PILLARS MOUNTED".into(),
             tip_counter: 0,
@@ -433,16 +437,34 @@ impl LemuriaNativeApp {
                 ui.label(egui::RichText::new("Switch Host:").strong());
                 for i in 1..=7 {
                     let names = ["Maia", "Alcyone", "Asterope", "Celaeno", "Electra", "Taygete", "Merope"];
+                    let urls = [
+                        "https://stream.nightride.fm/chillsynth.mp3", // Maia: 432 Hz Dawn Oceanic Ambient
+                        "https://stream.nightride.fm/nightride.mp3",  // Alcyone: 528 Hz Cyberpunk D&B / Synthwave
+                        "https://ice2.somafm.com/secretagent-128-mp3", // Asterope: 639 Hz Tactical Deep House
+                        "https://stream.nightride.fm/darksynth.mp3",   // Celaeno: 741 Hz Glitch / Industrial Bass
+                        "https://stream.nightride.fm/datawave.mp3",    // Electra: 852 Hz Vocal Trance / Eurobeat
+                        "https://ice2.somafm.com/groovesalad-128-mp3", // Taygete: 963 Hz Darkwave / Abyssal Drone
+                        "https://radio.plaza.one/mp3",                 // Merope: 396 Hz Lo-Fi Starlight Harbor
+                    ];
                     let is_active = self.radio_state.active_daughter.daughter_index == i;
                     let btn_text = format!("{}: {}", i, names[(i - 1) as usize]);
                     if ui.selectable_label(is_active, btn_text).clicked() {
                         self.radio_state.set_daughter_by_index(i);
-                        self.last_status_message = format!("Radio switched to Daughter #{}: {}", i, names[(i - 1) as usize]);
+                        self.radio_state.stream_url = urls[(i - 1) as usize].to_string();
+                        self.last_status_message = format!("Radio switched to Daughter #{}: {} ({})", i, names[(i - 1) as usize], self.radio_state.stream_url);
+                        #[cfg(target_arch = "wasm32")]
+                        if self.radio_state.is_playing {
+                            crate::play_radio_stream(&self.radio_state.stream_url, self.radio_state.volume);
+                        }
                     }
                 }
                 if ui.button("🔄 Cycle Next Shift").clicked() {
                     let d = self.radio_state.cycle_next_daughter();
                     self.last_status_message = format!("Shift rotated to Daughter #{}: {}", d.daughter_index, d.name);
+                    #[cfg(target_arch = "wasm32")]
+                    if self.radio_state.is_playing {
+                        crate::play_radio_stream(&self.radio_state.stream_url, self.radio_state.volume);
+                    }
                 }
             });
 
@@ -452,9 +474,13 @@ impl LemuriaNativeApp {
                 if ui.button(egui::RichText::new(play_btn_text).strong().size(15.0)).clicked() {
                     let playing = self.radio_state.toggle_playback();
                     if playing {
-                        self.last_status_message = "Tuned into live stream (http://10.0.0.237:8080/live.mp3)...".into();
+                        self.last_status_message = format!("Tuned into {} ({})", self.radio_state.dj_name, self.radio_state.stream_url);
+                        #[cfg(target_arch = "wasm32")]
+                        crate::play_radio_stream(&self.radio_state.stream_url, self.radio_state.volume);
                     } else {
                         self.last_status_message = "Radio paused.".into();
+                        #[cfg(target_arch = "wasm32")]
+                        crate::pause_radio_stream();
                     }
                 }
 
@@ -462,6 +488,8 @@ impl LemuriaNativeApp {
                 let mut vol = self.radio_state.volume;
                 if ui.add(egui::Slider::new(&mut vol, 0.0..=1.0)).changed() {
                     self.radio_state.set_volume(vol);
+                    #[cfg(target_arch = "wasm32")]
+                    crate::set_radio_volume(vol);
                 }
             });
 

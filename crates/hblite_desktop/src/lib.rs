@@ -48,3 +48,72 @@ impl WebHandle {
         self.runner.has_panicked()
     }
 }
+
+
+#[cfg(target_arch = "wasm32")]
+pub fn play_radio_stream(url: &str, volume: f32) {
+    if let Some(win) = web_sys::window() {
+        let doc = match win.document() {
+            Some(d) => d,
+            None => return,
+        };
+
+        // Reuse or create #siren_radio_audio element
+        let audio: web_sys::HtmlAudioElement = match doc.get_element_by_id("siren_radio_audio") {
+            Some(elem) => match elem.dyn_into::<web_sys::HtmlAudioElement>() {
+                Ok(a) => a,
+                Err(_) => return,
+            },
+            None => {
+                let elem = match doc.create_element("audio") {
+                    Ok(e) => e,
+                    Err(_) => return,
+                };
+                elem.set_id("siren_radio_audio");
+                if let Some(body) = doc.body() {
+                    let _ = body.append_child(&elem);
+                }
+                match elem.dyn_into::<web_sys::HtmlAudioElement>() {
+                    Ok(a) => a,
+                    Err(_) => return,
+                }
+            }
+        };
+
+        audio.set_cross_origin(Some("anonymous"));
+        audio.set_volume(volume as f64);
+        
+        let current_src = audio.src();
+        if !current_src.contains(url) {
+            audio.set_src(url);
+        }
+
+        let _ = audio.play();
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn pause_radio_stream() {
+    if let Some(win) = web_sys::window() {
+        if let Some(doc) = win.document() {
+            if let Some(elem) = doc.get_element_by_id("siren_radio_audio") {
+                if let Ok(audio) = elem.dyn_into::<web_sys::HtmlAudioElement>() {
+                    let _ = audio.pause();
+                }
+            }
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn set_radio_volume(volume: f32) {
+    if let Some(win) = web_sys::window() {
+        if let Some(doc) = win.document() {
+            if let Some(elem) = doc.get_element_by_id("siren_radio_audio") {
+                if let Ok(audio) = elem.dyn_into::<web_sys::HtmlAudioElement>() {
+                    audio.set_volume(volume.clamp(0.0, 1.0) as f64);
+                }
+            }
+        }
+    }
+}
