@@ -15,7 +15,6 @@ use lemuria_engine::{
 use lemuria_leptos_client::VirtualStorefrontState;
 use nautilus_world::Wgs84GeoCoord;
 
-mod club;
 use hblite_desktop::gui::LemuriaNativeApp;
 
 #[cfg(not(target_arch = "wasm32"))]

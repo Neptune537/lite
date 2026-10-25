@@ -31,6 +31,29 @@ pub enum ScreenFormFactor {
     WidescreenHud,    // Desktop / Large Tablet Landscape (>= 1100px wide)
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct LiveVenueBroadcast {
+    pub venue_id: String,
+    pub title: String,
+    pub venue_type_label: String,
+    pub coord: Wgs84GeoCoord,
+    pub broadcaster_callsign: String,
+    pub stream_uri: String,
+    pub rt60_seconds: f32,
+    pub active_viewers: u32,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct SpectatorSessionState {
+    pub venue_id: String,
+    pub title: String,
+    pub broadcaster_callsign: String,
+    pub stream_uri: String,
+    pub elapsed_seconds: f32,
+    pub total_tips_cyan: f32,
+    pub camera_mode: String,
+}
+
 pub struct LemuriaNativeApp {
     pub selected_tab: MarketplaceTab,
     pub club_open: bool,
@@ -40,6 +63,10 @@ pub struct LemuriaNativeApp {
     pub storefront: VirtualStorefrontState,
     pub last_status_message: String,
     pub tip_counter: u32,
+
+    // Real-to-Virtual 1:1 Grounded Venues & Live VR Spectator Beacons
+    pub venue_broadcasts: Vec<LiveVenueBroadcast>,
+    pub active_spectator_session: Option<SpectatorSessionState>,
 
     // Real Lemuria Engine Core Subsystems
     pub frame_allocator: DoubleBufferedFrameAllocator,
@@ -112,6 +139,29 @@ impl Default for LemuriaNativeApp {
             storefront,
             last_status_message: "LEMURIA V2 INITIALIZED • ALL ARCHITECTURE PILLARS MOUNTED".into(),
             tip_counter: 0,
+            venue_broadcasts: vec![
+                LiveVenueBroadcast {
+                    venue_id: "venue_wh_01".into(),
+                    title: "Sector-7 Old Iron Warehouse Arcade".into(),
+                    venue_type_label: "🏭 1:1 Warehouse Virtual Arcade".into(),
+                    coord: Wgs84GeoCoord::new(35.6528, 139.7532, 12.0),
+                    broadcaster_callsign: "Jules Vance (VR)".into(),
+                    stream_uri: "webtransport://relay.kuroshio.mesh:4433/broadcast/wh_01".into(),
+                    rt60_seconds: 1.45,
+                    active_viewers: 42,
+                },
+                LiveVenueBroadcast {
+                    venue_id: "venue_park_02".into(),
+                    title: "Yoyogi Tactical Field & Holo-Park".into(),
+                    venue_type_label: "🌳 1:1 Public Municipal Park Arena".into(),
+                    coord: Wgs84GeoCoord::new(35.6717, 139.6949, 38.0),
+                    broadcaster_callsign: "Seraph-9 [Mech Pilot]".into(),
+                    stream_uri: "webtransport://relay.kuroshio.mesh:4433/broadcast/park_02".into(),
+                    rt60_seconds: 0.25,
+                    active_viewers: 118,
+                },
+            ],
+            active_spectator_session: None,
             frame_allocator,
             physics_stepper,
             siren_engine,
@@ -372,6 +422,115 @@ impl LemuriaNativeApp {
                     }
                 }
             });
+        });
+
+        ui.add_space(10.0);
+
+        // 1-to-1 Real Site Grounded Venues & Live VR Spectator Beacons
+        ui.group(|ui| {
+            ui.horizontal(|ui| {
+                ui.heading("🌐 1:1 Grounded Venues & VR Spectator Feeds");
+                ui.separator();
+                ui.label(
+                    egui::RichText::new("● LIVE FROM HEAVENLYBOUND VR")
+                        .color(egui::Color32::from_rgb(255, 82, 82))
+                        .strong(),
+                );
+            });
+            ui.label("Touch any real-world site beacon to descend from orbit into 500m Karman SectorSlice LOD & watch in-situ VR gameplay.");
+            ui.add_space(6.0);
+
+            let venues = self.venue_broadcasts.clone();
+            for venue in venues {
+                let dist_km = self.current_coord.haversine_distance_meters(&venue.coord) / 1000.0;
+                egui::Frame::new()
+                    .fill(egui::Color32::from_rgb(18, 24, 36))
+                    .stroke(egui::Stroke::new(1.0, egui::Color32::from_rgb(0, 229, 255)))
+                    .corner_radius(6.0)
+                    .inner_margin(8.0)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label(egui::RichText::new(&venue.title).strong().size(15.0));
+                            ui.separator();
+                            ui.label(egui::RichText::new(&venue.venue_type_label).color(egui::Color32::from_rgb(255, 215, 0)));
+                            ui.separator();
+                            ui.label(egui::RichText::new(format!("{:.2} km away", dist_km)).color(egui::Color32::LIGHT_GRAY));
+                            ui.separator();
+                            ui.label(egui::RichText::new(format!("👀 {} viewers", venue.active_viewers)).color(egui::Color32::from_rgb(0, 229, 255)));
+                        });
+
+                        ui.horizontal(|ui| {
+                            ui.label(format!("Broadcaster: {}", venue.broadcaster_callsign));
+                            ui.separator();
+                            ui.label(format!("Sabine RT60: {:.2}s", venue.rt60_seconds));
+                            ui.separator();
+                            ui.label(format!("Anchor: {:.4}°, {:.4}°", venue.coord.lat_deg, venue.coord.lon_deg));
+                        });
+
+                        ui.add_space(4.0);
+                        ui.horizontal(|ui| {
+                            if ui.button(egui::RichText::new("🥽 Touch to Watch (Descend to Venue)").strong().color(egui::Color32::BLACK))
+                                .clicked()
+                            {
+                                self.current_coord = venue.coord;
+                                self.active_route = TacticalRouteSpline::new(vec![self.current_coord, venue.coord]);
+                                self.active_spectator_session = Some(SpectatorSessionState {
+                                    venue_id: venue.venue_id.clone(),
+                                    title: venue.title.clone(),
+                                    broadcaster_callsign: venue.broadcaster_callsign.clone(),
+                                    stream_uri: venue.stream_uri.clone(),
+                                    elapsed_seconds: 12.4,
+                                    total_tips_cyan: 0.0,
+                                    camera_mode: "Third-Person Orbit (Dual-Quat Kimodo)".into(),
+                                });
+                                self.last_status_message = format!("Touched venue beacon! Joined spectator stream: {}", venue.title);
+                            }
+
+                            if ui.button("📍 Lock Waypoint").clicked() {
+                                self.active_route = TacticalRouteSpline::new(vec![self.current_coord, venue.coord]);
+                                self.last_status_message = format!("Locked Waypoint: {} ({:.2} km)", venue.title, dist_km);
+                            }
+                        });
+                    });
+                ui.add_space(4.0);
+            }
+
+            // Spectator Stream Overlay / HUD
+            if let Some(mut session) = self.active_spectator_session.clone() {
+                ui.add_space(8.0);
+                egui::Frame::new()
+                    .fill(egui::Color32::from_rgb(10, 16, 26))
+                    .stroke(egui::Stroke::new(2.0, egui::Color32::from_rgb(255, 82, 82)))
+                    .corner_radius(8.0)
+                    .inner_margin(10.0)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.heading(format!("📺 SPECTATING: {}", session.title));
+                            ui.separator();
+                            ui.label(egui::RichText::new("● 60Hz PURE-RUST DUAL-QUAT STREAM").color(egui::Color32::from_rgb(0, 229, 255)));
+                        });
+
+                        ui.label(format!("Broadcaster: {} | Stream URI: {}", session.broadcaster_callsign, session.stream_uri));
+                        ui.label(format!("Camera Angle: {} | Active RT60 Ingest: 48kHz Stereo", session.camera_mode));
+
+                        ui.add_space(6.0);
+                        ui.horizontal(|ui| {
+                            if ui.button("🪙 Tip Broadcaster 0.1 CYAN").clicked() {
+                                session.total_tips_cyan += 0.1;
+                                self.tip_counter += 1;
+                                self.active_spectator_session = Some(session.clone());
+                                self.last_status_message = format!("Tipped 0.1 CYAN to {} via Tide Ledger State Channel!", session.broadcaster_callsign);
+                            }
+                            ui.label(egui::RichText::new(format!("Tipped This Session: {:.1} CYAN", session.total_tips_cyan)).color(egui::Color32::from_rgb(255, 215, 0)));
+
+                            ui.separator();
+                            if ui.button("❌ Close Stream").clicked() {
+                                self.active_spectator_session = None;
+                                self.last_status_message = "Spectator stream closed.".into();
+                            }
+                        });
+                    });
+            }
         });
 
         ui.add_space(10.0);

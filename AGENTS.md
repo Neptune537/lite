@@ -63,6 +63,13 @@ All agents contributing to **HeavenlyBound Lite** MUST understand and uphold the
   6. 🗺️ **Nautilus Tactical Map:** 64-bit ECEF terrain with Turn-by-Turn GPS guidance.
 * **Universal Mandate for All Platform Apps:** Every application built on the Lemuria platform inherits this dual foundation: **HeavenlyBound** sets the flagship 3D simulation/rendering standard, and **Lite** sets the responsive pause menu, HUD, and edge marketplace standard across `CompactPortrait`, `StandardTablet`, and `WidescreenHud`.
 
+### 10. 1-to-1 Real Site Grounding & VR Globe Spectator Standard
+* **Warehouse / Park to Virtual Arcade:** Local physical spaces are anchored to the Nautilus globe via `LocalTangentFrame` at authoritative 64-bit WGS84 geodesy (`Wgs84GeoCoord`). Local metric tracking (VR SLAM, SteamVR Lighthouse, RTK-GPS) translates seamlessly into planetary `f64` ECEF space without vertex or spatial drift.
+* **Touch-to-Watch on the Nautilus Tactical Globe:**
+  - Active VR broadcasts originating from HeavenlyBound appear as holographic beacons on the **🗺️ Nautilus Tactical Map / Globe Tab**.
+  - Touching or clicking a broadcast pin switches the client view from orbital perspective to `SectorSlice` dynamic LOD (~500m Karman threshold) centered at the physical site.
+  - Spectators receive synchronized 3D avatar pose streams (Kimodo dual-quaternion rigs) and room-tagged Siren spatial audio, with live Coral micro-tipping (0.1 CYAN) over Tide Ledger state channels.
+
 ---
 
 ## 🏛️ The Three Architecture Pillars & Cross-Pillar Coordination
