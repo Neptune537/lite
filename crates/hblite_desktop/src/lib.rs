@@ -18,9 +18,6 @@ pub struct WebHandle {
 impl WebHandle {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        #[cfg(feature = "web_logger")]
-        eframe::WebLogger::init(log::LevelFilter::Debug).ok();
-
         Self {
             runner: eframe::WebRunner::new(),
         }

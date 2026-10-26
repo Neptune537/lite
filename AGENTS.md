@@ -50,6 +50,9 @@ All agents contributing to **HeavenlyBound Lite** MUST understand and uphold the
   5. `Electra` (852 Hz • Vocal Trance / Eurobeat / Club Atlantis • 20:00-00:00)
   6. `Taygete` (963 Hz • Darkwave / Minimal Techno / Abyssal Drone • 00:00-02:00)
   7. `Merope` (396 Hz • Lo-Fi / Starlight Harbor Acoustic • 02:00-04:00)
+* **Auto-Bound to Club Atlantis Raspberry Pi Node (`atlantis-pi-home-1`):**
+  - The 7 Daughters 24/7 Radio daemon (`SevenDaughtersRadio`) is tied directly to the Club's Atlantis Raspberry Pi node on the local network (`10.0.0.237:8080`) via `ClubState::sync_pi_radio_daemon()` and `TheaterRadioState::sync_with_club_pi_node()`.
+  - Whenever the Atlantis daemon is running on the Pi, the 7 Daughters Radio is automatically active and streaming from `http://10.0.0.237:8080/live.mp3?daughter=<idx>&callsign=<name>`, with automatic fallback to direct HTTPS streams if the Pi node goes offline.
 * **Live Commentary & Tipping:** Live on-air chatter, sector alerts, and track IDs are generated autonomously by the active daughter via the Revolver Engine, supported by instant 0.1 CYAN tips via Coral State Channels.
 
 ### 9. The HeavenlyBound & Lite Dual Platform Standard

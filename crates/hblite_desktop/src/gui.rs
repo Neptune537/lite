@@ -20,7 +20,11 @@ use lemuria_engine::{
 use lemuria_leptos_client::{
     MarketplaceItem, MarketplaceTab, TheaterRadioState, VirtualStorefrontState,
 };
-use nautilus_world::{TacticalRouteSpline, Wgs84GeoCoord};
+use nautilus_world::{
+    AnchoredSpatialOverlay, DemTerrainTileStreamer, NautilusGlobeViewMode, RealSiteVenueOverlay,
+    RealSiteVenueType, SpatialOverlayKind, StadiumArenaOverlay, StadiumBattleMode,
+    StadiumNetworkAsset, TacticalRouteSpline, Wgs84GeoCoord,
+};
 
 use crate::club::ClubState;
 
@@ -41,6 +45,7 @@ pub struct LiveVenueBroadcast {
     pub stream_uri: String,
     pub rt60_seconds: f32,
     pub active_viewers: u32,
+    pub spatial_overlay: AnchoredSpatialOverlay,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -52,11 +57,14 @@ pub struct SpectatorSessionState {
     pub elapsed_seconds: f32,
     pub total_tips_cyan: f32,
     pub camera_mode: String,
+    pub playspace_bounds_m: Vec3,
+    pub local_gravity_dir: Vec3,
 }
 
 pub struct LemuriaNativeApp {
     pub selected_tab: MarketplaceTab,
     pub club_open: bool,
+    pub daemons_tab_open: bool,
     pub club: ClubState,
     pub catalog: Vec<MarketplaceItem>,
     pub radio_state: TheaterRadioState,
@@ -74,9 +82,13 @@ pub struct LemuriaNativeApp {
     pub siren_engine: SirenAcousticEngine,
     pub vehicle_dynamics: PacejkaVehicleDynamics,
 
-    // Real Nautilus World Geodesic Navigation
+    // Real Nautilus World Geodesic Navigation & Dynamic Globe Streamer
     pub current_coord: Wgs84GeoCoord,
     pub active_route: TacticalRouteSpline,
+    pub dem_streamer: DemTerrainTileStreamer,
+    pub globe_rotation_rad: f32,
+    pub globe_tilt_rad: f32,
+    pub is_dragging_globe: bool,
 
     // Live Atlantis Protocol Telemetry
     pub poh_telemetry: BioluminescenceTelemetry,
@@ -126,14 +138,24 @@ impl Default for LemuriaNativeApp {
             tier,
         };
 
+        let club = ClubState::default();
         let mut radio_state = TheaterRadioState::default();
-        radio_state.stream_url = "https://stream.nightride.fm/nightride.mp3".into();
-        radio_state.is_playing = false;
+        radio_state.sync_with_club_pi_node(club.is_siren_radio_running(), &club.pi_node_lan_host);
+
+        let mut dem_streamer = DemTerrainTileStreamer::new(15);
+        dem_streamer.set_view_mode(NautilusGlobeViewMode::CompleteGlobe);
+        dem_streamer.update_for_camera(current_coord);
+
+        let wh_coord = Wgs84GeoCoord::new(35.6528, 139.7532, 12.0);
+        let park_coord = Wgs84GeoCoord::new(35.6717, 139.6949, 38.0);
+        let office_overlay = AnchoredSpatialOverlay::team7_headquarters_office();
+        let office_coord = office_overlay.anchor_geo;
 
         Self {
             selected_tab: MarketplaceTab::TacticalMap,
             club_open: false,
-            club: ClubState::default(),
+            daemons_tab_open: false,
+            club,
             catalog: MarketplaceItem::default_catalog(),
             radio_state,
             storefront,
@@ -141,24 +163,107 @@ impl Default for LemuriaNativeApp {
             tip_counter: 0,
             venue_broadcasts: vec![
                 LiveVenueBroadcast {
+                    venue_id: "office_team7_01".into(),
+                    title: "Headquarters Building: Suite 700 (Team 7 Office)".into(),
+                    venue_type_label: "🏢 1:1 Enclave Office & Cornerstone Triad".into(),
+                    coord: office_coord,
+                    broadcaster_callsign: "Team 7 Triad [Triton • Ursula • Sebastian]".into(),
+                    stream_uri: "webtransport://relay.kuroshio.mesh:4433/broadcast/team7_office".into(),
+                    rt60_seconds: 0.45,
+                    active_viewers: 77,
+                    spatial_overlay: office_overlay,
+                },
+                LiveVenueBroadcast {
                     venue_id: "venue_wh_01".into(),
                     title: "Sector-7 Old Iron Warehouse Arcade".into(),
                     venue_type_label: "🏭 1:1 Warehouse Virtual Arcade".into(),
-                    coord: Wgs84GeoCoord::new(35.6528, 139.7532, 12.0),
+                    coord: wh_coord,
                     broadcaster_callsign: "Jules Vance (VR)".into(),
                     stream_uri: "webtransport://relay.kuroshio.mesh:4433/broadcast/wh_01".into(),
                     rt60_seconds: 1.45,
                     active_viewers: 42,
+                    spatial_overlay: AnchoredSpatialOverlay::new(
+                        "overlay_wh_01",
+                        wh_coord,
+                        SpatialOverlayKind::RealSiteGroundedVenue(RealSiteVenueOverlay {
+                            venue_id: "venue_wh_01".into(),
+                            name: "Sector-7 Old Iron Warehouse Arcade".into(),
+                            venue_type: RealSiteVenueType::WarehouseArcade,
+                            playspace_bounds_m: Vec3::new(40.0, 60.0, 12.0),
+                            is_broadcasting: true,
+                            broadcaster_callsign: Some("Jules Vance (VR)".into()),
+                            spectator_stream_uri: Some(
+                                "webtransport://relay.kuroshio.mesh:4433/broadcast/wh_01".into(),
+                            ),
+                            acoustic_profile_name: "Industrial Warehouse (Sabine RT60 1.45s)".into(),
+                        }),
+                        120.0,
+                    ),
                 },
                 LiveVenueBroadcast {
                     venue_id: "venue_park_02".into(),
                     title: "Yoyogi Tactical Field & Holo-Park".into(),
                     venue_type_label: "🌳 1:1 Public Municipal Park Arena".into(),
-                    coord: Wgs84GeoCoord::new(35.6717, 139.6949, 38.0),
+                    coord: park_coord,
                     broadcaster_callsign: "Seraph-9 [Mech Pilot]".into(),
                     stream_uri: "webtransport://relay.kuroshio.mesh:4433/broadcast/park_02".into(),
                     rt60_seconds: 0.25,
                     active_viewers: 118,
+                    spatial_overlay: AnchoredSpatialOverlay::new(
+                        "overlay_park_02",
+                        park_coord,
+                        SpatialOverlayKind::RealSiteGroundedVenue(RealSiteVenueOverlay {
+                            venue_id: "venue_park_02".into(),
+                            name: "Yoyogi Tactical Field & Holo-Park".into(),
+                            venue_type: RealSiteVenueType::MunicipalParkArena,
+                            playspace_bounds_m: Vec3::new(150.0, 200.0, 35.0),
+                            is_broadcasting: true,
+                            broadcaster_callsign: Some("Seraph-9 [Mech Pilot]".into()),
+                            spectator_stream_uri: Some(
+                                "webtransport://relay.kuroshio.mesh:4433/broadcast/park_02".into(),
+                            ),
+                            acoustic_profile_name: "Open Municipal Park (Sabine RT60 0.25s)".into(),
+                        }),
+                        250.0,
+                    ),
+                },
+                LiveVenueBroadcast {
+                    venue_id: "stadium_oracle_01".into(),
+                    title: "Oracle Park Seraphim Battle Colosseum".into(),
+                    venue_type_label: "🏟️ In-World Stadium Battle Arena".into(),
+                    coord: Wgs84GeoCoord::new(37.7749, -122.4194, 15.0),
+                    broadcaster_callsign: "House Storm Vanguard".into(),
+                    stream_uri: "webtransport://relay.kuroshio.mesh:4433/stadium/01".into(),
+                    rt60_seconds: 2.10,
+                    active_viewers: 420,
+                    spatial_overlay: AnchoredSpatialOverlay::new(
+                        "overlay_stadium_sf_01",
+                        Wgs84GeoCoord::new(37.7749, -122.4194, 15.0),
+                        SpatialOverlayKind::StadiumBattleArena(StadiumArenaOverlay {
+                            stadium_id: "stadium_oracle_01".into(),
+                            name: "Oracle Park Seraphim Battle Colosseum".into(),
+                            creator_club_did: "did:atlantis:club-ignis-prime".into(),
+                            battle_mode: StadiumBattleMode::TacticalFrontlinePush,
+                            inner_pitch_radius_m: 180.0,
+                            outer_colosseum_radius_m: 350.0,
+                            stadium_mesh_uri: "nautpak://assets.kuroshio.network/stadiums/oracle_colosseum.meshlet".into(),
+                            jumbotrons: vec![],
+                            allowed_network_assets: vec![
+                                StadiumNetworkAsset {
+                                    asset_id: "mech_julian_v2".into(),
+                                    name: "Julian Assault Mech".into(),
+                                    nautpak_uri: "nautpak://assets.kuroshio.network/units/julian.nautpak".into(),
+                                    unit_class: "AssaultMech".into(),
+                                    creator_did: "did:atlantis:vance-industries".into(),
+                                    min_poh_score: 0.65,
+                                },
+                            ],
+                            spectator_stream_uri: Some("webtransport://relay.kuroshio.mesh:4433/stadium/01".into()),
+                            active_combatant_count: 24,
+                            max_capacity: 64,
+                        }),
+                        500.0,
+                    ),
                 },
             ],
             active_spectator_session: None,
@@ -168,6 +273,10 @@ impl Default for LemuriaNativeApp {
             vehicle_dynamics,
             current_coord,
             active_route,
+            dem_streamer,
+            globe_rotation_rad: 0.0,
+            globe_tilt_rad: 0.25,
+            is_dragging_globe: false,
             poh_telemetry,
             vehicle_speed_kmh: 84.5,
             vehicle_rpm: 4200.0,
@@ -194,6 +303,11 @@ impl eframe::App for LemuriaNativeApp {
         self.vehicle_speed_kmh = (self.vehicle_dynamics.linear_velocity.length() * 3.6).max(self.vehicle_speed_kmh * 0.99);
         self.frame_allocator.flip_frame();
 
+        // Keep 7 Daughters Radio automatically synchronized with the Club's Atlantis Raspberry Pi node on LAN
+        self.club.sync_pi_radio_daemon();
+        self.radio_state
+            .sync_with_club_pi_node(self.club.is_siren_radio_running(), &self.club.pi_node_lan_host);
+
         let screen_rect = ui.input(|i| i.viewport_rect());
         let screen_width = screen_rect.width();
         let screen_height = screen_rect.height();
@@ -215,7 +329,7 @@ impl eframe::App for LemuriaNativeApp {
                     ui.vertical(|ui| {
                         ui.horizontal(|ui| {
                             ui.heading(
-                                egui::RichText::new("⏸ HEAVENLYBOND")
+                                egui::RichText::new("⏸ HEAVENLYBOUND")
                                     .color(egui::Color32::from_rgb(0, 229, 255))
                                     .strong(),
                             );
@@ -239,7 +353,7 @@ impl eframe::App for LemuriaNativeApp {
                 _ => {
                     ui.horizontal(|ui| {
                         ui.heading(
-                            egui::RichText::new("⏸ HEAVENLYBOND // PAUSE MENU")
+                            egui::RichText::new("⏸ HEAVENLYBOUND // PAUSE MENU")
                                 .color(egui::Color32::from_rgb(0, 229, 255))
                                 .strong(),
                         );
@@ -318,6 +432,10 @@ impl eframe::App for LemuriaNativeApp {
         // 4. Central Panel with Responsive Flex Scroll
         egui::CentralPanel::default().show(ui, |ui| {
             egui::ScrollArea::vertical().show(ui, |ui| {
+                if self.daemons_tab_open {
+                    self.club.render_registered_daemons_tab(ui);
+                    return;
+                }
                 if self.club_open {
                     self.club.ui(ui);
                     return;
@@ -360,18 +478,29 @@ impl LemuriaNativeApp {
 
         for (tab, short_label, full_label) in tabs {
             let label = if horizontal { short_label } else { full_label };
-            let is_selected = !self.club_open && self.selected_tab == tab;
+            let is_selected = !self.club_open && !self.daemons_tab_open && self.selected_tab == tab;
             if ui.selectable_label(is_selected, label).clicked() {
                 self.selected_tab = tab;
                 self.club_open = false;
+                self.daemons_tab_open = false;
                 self.last_status_message = format!("Tab switched: {}", full_label);
             }
         }
 
-        let club_label = if horizontal { "👥 Club" } else { "👥 My Club" };
+        let daemons_label = if horizontal { "🏢 Team 7" } else { "🏢 Team 7 Office" };
+        if ui.selectable_label(self.daemons_tab_open, daemons_label).clicked() {
+            self.daemons_tab_open = true;
+            self.club_open = false;
+            self.club.active_subtab = crate::club::ClubViewSubTab::RegisteredDaemons;
+            self.last_status_message = "Tab switched: 🏢 Team 7 Office & Daemons".into();
+        }
+
+        let club_label = if horizontal { "👥 Clubs" } else { "👥 Registered Clubs" };
         if ui.selectable_label(self.club_open, club_label).clicked() {
             self.club_open = true;
-            self.last_status_message = "Tab switched: 👥 My Club".into();
+            self.daemons_tab_open = false;
+            self.club.active_subtab = crate::club::ClubViewSubTab::RegisteredClubs;
+            self.last_status_message = "Tab switched: 👥 Registered Clubs & By-Laws".into();
         }
     }
 
@@ -398,12 +527,26 @@ impl LemuriaNativeApp {
                 ui.end_row();
 
                 ui.label("Terrain Engine:");
-                ui.label(egui::RichText::new("Nautilus DemTerrainTileStreamer (LOD 15)").color(egui::Color32::GREEN));
+                ui.label(
+                    egui::RichText::new(format!(
+                        "Nautilus DemTerrainTileStreamer (Mode: {:?} • Regime: {:?} • {} Active Tiles)",
+                        self.dem_streamer.view_mode,
+                        self.dem_streamer.active_regime,
+                        self.dem_streamer.active_leaf_tiles.len()
+                    ))
+                    .color(egui::Color32::GREEN),
+                );
                 ui.end_row();
             });
 
             ui.add_space(8.0);
             ui.horizontal_wrapped(|ui| {
+                if ui.button("🏢 Lock Waypoint: Team 7 Headquarters Office").clicked() {
+                    let dest = Wgs84GeoCoord::new(35.6586, 139.7454, 42.0);
+                    let dist_km = self.current_coord.haversine_distance_meters(&dest) / 1000.0;
+                    self.active_route = TacticalRouteSpline::new(vec![self.current_coord, dest]);
+                    self.last_status_message = format!("Locked Waypoint: Team 7 Office ({:.2} km away)", dist_km);
+                }
                 if ui.button("📍 Lock Waypoint: Club Nautilus").clicked() {
                     let dest = Wgs84GeoCoord::new(35.6601, 139.7290, 35.0);
                     let dist_km = self.current_coord.haversine_distance_meters(&dest) / 1000.0;
@@ -415,6 +558,15 @@ impl LemuriaNativeApp {
                     let dist_km = self.current_coord.haversine_distance_meters(&dest) / 1000.0;
                     self.active_route = TacticalRouteSpline::new(vec![self.current_coord, dest]);
                     self.last_status_message = format!("Locked Waypoint: Neo-Tokyo Garage ({:.2} km away)", dist_km);
+                }
+                if ui.button("🛰️ Orbital CompleteGlobe Overview").clicked() {
+                    self.dem_streamer.set_view_mode(NautilusGlobeViewMode::CompleteGlobe);
+                    self.dem_streamer.update_for_camera(Wgs84GeoCoord::new(
+                        self.current_coord.lat_deg,
+                        self.current_coord.lon_deg,
+                        85_000.0,
+                    ));
+                    self.last_status_message = "Camera ascended to 85km Karman Orbit (CompleteGlobe Mode)".into();
                 }
                 if ui.button("🌐 Open External Turn-by-Turn GPS").clicked() {
                     if let Some(url) = self.active_route.destination_google_maps_url() {
@@ -437,12 +589,21 @@ impl LemuriaNativeApp {
                         .strong(),
                 );
             });
-            ui.label("Touch any real-world site beacon to descend from orbit into 500m Karman SectorSlice LOD & watch in-situ VR gameplay.");
+            ui.label("Touch any real-world site beacon on the holographic globe or list below to descend from orbit into 500m Karman SectorSlice LOD & watch in-situ VR gameplay.");
             ui.add_space(6.0);
+
+            // --- Interactive Holographic Nautilus 3D Globe Visualizer ---
+            self.render_nautilus_holographic_globe(ui);
+
+            ui.add_space(8.0);
 
             let venues = self.venue_broadcasts.clone();
             for venue in venues {
                 let dist_km = self.current_coord.haversine_distance_meters(&venue.coord) / 1000.0;
+                let playspace_bounds = match &venue.spatial_overlay.overlay_kind {
+                    SpatialOverlayKind::RealSiteGroundedVenue(v) => v.playspace_bounds_m,
+                    _ => Vec3::new(50.0, 50.0, 10.0),
+                };
                 egui::Frame::new()
                     .fill(egui::Color32::from_rgb(18, 24, 36))
                     .stroke(egui::Stroke::new(1.0, egui::Color32::from_rgb(0, 229, 255)))
@@ -464,6 +625,11 @@ impl LemuriaNativeApp {
                             ui.separator();
                             ui.label(format!("Sabine RT60: {:.2}s", venue.rt60_seconds));
                             ui.separator();
+                            ui.label(format!(
+                                "1:1 ENU Bounds: {:.0}m × {:.0}m × {:.0}m",
+                                playspace_bounds.x, playspace_bounds.y, playspace_bounds.z
+                            ));
+                            ui.separator();
                             ui.label(format!("Anchor: {:.4}°, {:.4}°", venue.coord.lat_deg, venue.coord.lon_deg));
                         });
 
@@ -473,6 +639,10 @@ impl LemuriaNativeApp {
                                 .clicked()
                             {
                                 self.current_coord = venue.coord;
+                                self.dem_streamer.set_view_mode(NautilusGlobeViewMode::SectorSlice);
+                                self.dem_streamer.update_for_camera(venue.coord);
+                                let tangent = venue.spatial_overlay.tangent_frame();
+                                let gravity_dir = tangent.local_gravity_dir(Vec3::new(0.0, 1.7, 0.0));
                                 self.active_route = TacticalRouteSpline::new(vec![self.current_coord, venue.coord]);
                                 self.active_spectator_session = Some(SpectatorSessionState {
                                     venue_id: venue.venue_id.clone(),
@@ -482,8 +652,13 @@ impl LemuriaNativeApp {
                                     elapsed_seconds: 12.4,
                                     total_tips_cyan: 0.0,
                                     camera_mode: "Third-Person Orbit (Dual-Quat Kimodo)".into(),
+                                    playspace_bounds_m: playspace_bounds,
+                                    local_gravity_dir: gravity_dir,
                                 });
-                                self.last_status_message = format!("Touched venue beacon! Joined spectator stream: {}", venue.title);
+                                self.last_status_message = format!(
+                                    "Descended to <500m SectorSlice LOD ({:?}) • Spectating {}",
+                                    self.dem_streamer.active_regime, venue.title
+                                );
                             }
 
                             if ui.button("📍 Lock Waypoint").clicked() {
@@ -511,7 +686,16 @@ impl LemuriaNativeApp {
                         });
 
                         ui.label(format!("Broadcaster: {} | Stream URI: {}", session.broadcaster_callsign, session.stream_uri));
-                        ui.label(format!("Camera Angle: {} | Active RT60 Ingest: 48kHz Stereo", session.camera_mode));
+                        ui.label(format!(
+                            "Camera Angle: {} | 1:1 ENU Playspace: {:.0}m × {:.0}m × {:.0}m | Down-Normal Gravity: ({:.2}, {:.2}, {:.2})",
+                            session.camera_mode,
+                            session.playspace_bounds_m.x,
+                            session.playspace_bounds_m.y,
+                            session.playspace_bounds_m.z,
+                            session.local_gravity_dir.x,
+                            session.local_gravity_dir.y,
+                            session.local_gravity_dir.z
+                        ));
 
                         ui.add_space(6.0);
                         ui.horizontal(|ui| {
@@ -541,9 +725,320 @@ impl LemuriaNativeApp {
         });
     }
 
+    fn render_nautilus_holographic_globe(&mut self, ui: &mut egui::Ui) {
+        ui.vertical_centered(|ui| {
+            let desired_size = egui::Vec2::new(ui.available_width().min(600.0), 320.0);
+            let (rect, response) = ui.allocate_exact_size(desired_size, egui::Sense::click_and_drag());
+
+            // Drag to rotate globe
+            if response.dragged() {
+                let delta = response.drag_delta();
+                self.globe_rotation_rad += delta.x * 0.01;
+                self.globe_tilt_rad = (self.globe_tilt_rad - delta.y * 0.01).clamp(-1.2, 1.2);
+            } else {
+                // Gentle continuous idle rotation
+                self.globe_rotation_rad += 0.003;
+                if self.globe_rotation_rad > std::f32::consts::TAU {
+                    self.globe_rotation_rad -= std::f32::consts::TAU;
+                }
+            }
+
+            let painter = ui.painter_at(rect);
+            let center = rect.center();
+            let radius = (rect.height() * 0.42).min(rect.width() * 0.42);
+
+            // 1. Atmosphere / Outer Glow
+            painter.circle_filled(
+                center,
+                radius + 12.0,
+                egui::Color32::from_rgba_unmultiplied(0, 229, 255, 18),
+            );
+            painter.circle_filled(
+                center,
+                radius + 4.0,
+                egui::Color32::from_rgba_unmultiplied(0, 160, 255, 30),
+            );
+
+            // 2. Abyssal Ocean Sphere Base
+            painter.circle_filled(
+                center,
+                radius,
+                egui::Color32::from_rgb(10, 15, 28),
+            );
+            painter.circle_stroke(
+                center,
+                radius,
+                egui::Stroke::new(1.5, egui::Color32::from_rgb(0, 229, 255)),
+            );
+
+            // 3. Holographic Geodesic Latitude & Longitude Graticules
+            let rot = self.globe_rotation_rad;
+            let tilt = self.globe_tilt_rad;
+
+            // Parallels (Latitude lines)
+            for lat_deg in [-60.0, -30.0, 0.0, 30.0, 60.0] {
+                let lat_rad: f32 = (lat_deg as f32).to_radians();
+                let y_offset = radius * lat_rad.sin() * tilt.cos();
+                let x_radius = radius * lat_rad.cos();
+                let y_radius = (radius * lat_rad.cos() * tilt.sin()).abs().max(2.0);
+
+                let is_equator = lat_deg == 0.0;
+                let stroke = if is_equator {
+                    egui::Stroke::new(1.2, egui::Color32::from_rgba_unmultiplied(0, 255, 200, 140))
+                } else {
+                    egui::Stroke::new(0.8, egui::Color32::from_rgba_unmultiplied(0, 180, 240, 70))
+                };
+
+                painter.rect_stroke(
+                    egui::Rect::from_center_size(
+                        egui::Pos2::new(center.x, center.y - y_offset),
+                        egui::Vec2::new(x_radius * 2.0, y_radius * 2.0),
+                    ),
+                    y_radius,
+                    stroke,
+                    egui::StrokeKind::Middle,
+                );
+            }
+
+            // Meridians (Longitude arcs)
+            for i in 0..12 {
+                let lng_offset = (i as f32 / 12.0) * std::f32::consts::TAU + rot;
+                let x_offset = lng_offset.cos() * radius;
+                let is_front = lng_offset.sin() > 0.0;
+
+                if is_front {
+                    let stroke = egui::Stroke::new(
+                        0.8,
+                        egui::Color32::from_rgba_unmultiplied(0, 229, 255, 80),
+                    );
+                    painter.rect_stroke(
+                        egui::Rect::from_center_size(
+                            center,
+                            egui::Vec2::new(x_offset.abs() * 2.0, radius * 2.0),
+                        ),
+                        radius,
+                        stroke,
+                        egui::StrokeKind::Middle,
+                    );
+                }
+            }
+
+            // 4. Draw Authoritative Geodesic Loci & VR Broadcast Pins
+            let mouse_pos = response.hover_pos();
+
+            let venues = self.venue_broadcasts.clone();
+            for venue in &venues {
+                let lat_rad = (venue.coord.lat_deg as f32).to_radians();
+                let lon_rad = (venue.coord.lon_deg as f32).to_radians();
+                let effective_lon = lon_rad + rot;
+
+                // Spherical projection to 2D screen
+                let cos_lon = effective_lon.cos();
+                let sin_lon = effective_lon.sin();
+                let cos_lat = lat_rad.cos();
+                let sin_lat = lat_rad.sin();
+
+                // Visibility check (front hemisphere facing camera)
+                if cos_lon > -0.15 {
+                    let px = center.x + radius * cos_lat * sin_lon;
+                    let py = center.y - radius * (sin_lat * tilt.cos() - cos_lat * cos_lon * tilt.sin());
+
+                    let pin_pos = egui::Pos2::new(px, py);
+
+                    // Check hover or click
+                    let is_hovered = if let Some(m) = mouse_pos {
+                        (m - pin_pos).length() < 14.0
+                    } else {
+                        false
+                    };
+
+                    // Pulsing beacon ring
+                    let pulse_radius = 5.0 + ((rot * 4.0).sin().abs() * 3.0);
+                    painter.circle_filled(
+                        pin_pos,
+                        pulse_radius + 4.0,
+                        egui::Color32::from_rgba_unmultiplied(255, 82, 82, 70),
+                    );
+                    painter.circle_filled(
+                        pin_pos,
+                        5.0,
+                        egui::Color32::from_rgb(255, 82, 82),
+                    );
+                    painter.circle_stroke(
+                        pin_pos,
+                        6.5,
+                        egui::Stroke::new(1.0, egui::Color32::WHITE),
+                    );
+
+                    // Pin Label
+                    painter.text(
+                        pin_pos + egui::Vec2::new(8.0, -8.0),
+                        egui::Align2::LEFT_BOTTOM,
+                        &venue.title,
+                        egui::FontId::proportional(11.0),
+                        if is_hovered { egui::Color32::YELLOW } else { egui::Color32::from_rgb(0, 229, 255) },
+                    );
+
+                    // Click to touch-to-watch directly from globe
+                    if is_hovered && response.clicked() {
+                        self.current_coord = venue.coord;
+                        self.dem_streamer.set_view_mode(NautilusGlobeViewMode::SectorSlice);
+                        self.dem_streamer.update_for_camera(venue.coord);
+                        let tangent = venue.spatial_overlay.tangent_frame();
+                        let gravity_dir = tangent.local_gravity_dir(Vec3::new(0.0, 1.7, 0.0));
+                        self.active_route = TacticalRouteSpline::new(vec![self.current_coord, venue.coord]);
+                        let playspace_bounds = match &venue.spatial_overlay.overlay_kind {
+                            SpatialOverlayKind::RealSiteGroundedVenue(v) => v.playspace_bounds_m,
+                            _ => Vec3::new(50.0, 50.0, 10.0),
+                        };
+                        self.active_spectator_session = Some(SpectatorSessionState {
+                            venue_id: venue.venue_id.clone(),
+                            title: venue.title.clone(),
+                            broadcaster_callsign: venue.broadcaster_callsign.clone(),
+                            stream_uri: venue.stream_uri.clone(),
+                            elapsed_seconds: 0.0,
+                            total_tips_cyan: 0.0,
+                            camera_mode: "Third-Person Orbit (Globe Touch-to-Watch)".into(),
+                            playspace_bounds_m: playspace_bounds,
+                            local_gravity_dir: gravity_dir,
+                        });
+                        self.last_status_message = format!("Holographic Globe: Descended to SectorSlice for {}", venue.title);
+                    }
+                }
+            }
+
+            // Current player location marker
+            let my_lat_rad = (self.current_coord.lat_deg as f32).to_radians();
+            let my_lon_rad = (self.current_coord.lon_deg as f32).to_radians();
+            let my_effective_lon = my_lon_rad + rot;
+            if my_effective_lon.cos() > -0.15 {
+                let mx = center.x + radius * my_lat_rad.cos() * my_effective_lon.sin();
+                let my = center.y - radius * (my_lat_rad.sin() * tilt.cos() - my_lat_rad.cos() * my_effective_lon.cos() * tilt.sin());
+                let my_pos = egui::Pos2::new(mx, my);
+                painter.circle_filled(my_pos, 4.0, egui::Color32::GREEN);
+                painter.circle_stroke(my_pos, 7.0, egui::Stroke::new(1.0, egui::Color32::GREEN));
+                painter.text(
+                    my_pos + egui::Vec2::new(8.0, 6.0),
+                    egui::Align2::LEFT_TOP,
+                    "📍 YOU",
+                    egui::FontId::proportional(11.0),
+                    egui::Color32::GREEN,
+                );
+            }
+
+            ui.add_space(4.0);
+            ui.label(
+                egui::RichText::new("👆 Drag to rotate globe • Click any red beacon pin to descend and spectate live VR stream")
+                    .small()
+                    .color(egui::Color32::GRAY),
+            );
+        });
+    }
+
     fn render_theater_radio_tab(&mut self, ui: &mut egui::Ui, _form_factor: ScreenFormFactor) {
         ui.heading("📻 Theater 24/7 Live Broadcast & Siren Radio");
         ui.label("Direct low-latency HTTP live stream connected to Sabine RT60 acoustic decoder.");
+        ui.add_space(8.0);
+
+        // Club Atlantis Raspberry Pi Node Binding Card
+        let pi_online = self.club.is_siren_radio_running();
+        egui::Frame::new()
+            .fill(egui::Color32::from_rgb(16, 28, 36))
+            .stroke(egui::Stroke::new(
+                1.5,
+                if pi_online && self.radio_state.auto_bound_to_club_pi {
+                    egui::Color32::GREEN
+                } else {
+                    egui::Color32::YELLOW
+                },
+            ))
+            .corner_radius(6.0)
+            .inner_margin(8.0)
+            .show(ui, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    ui.label(
+                        egui::RichText::new("🍓 CLUB ATLANTIS RASPBERRY PI NODE (atlantis-pi-home-1)")
+                            .strong()
+                            .color(egui::Color32::from_rgb(0, 229, 255)),
+                    );
+                    ui.separator();
+                    if pi_online && self.radio_state.auto_bound_to_club_pi {
+                        ui.label(
+                            egui::RichText::new(format!(
+                                "🟢 TIED TO LAN PI ({}) • AUTO-RUNNING 24/7",
+                                self.club.pi_node_lan_host
+                            ))
+                            .color(egui::Color32::GREEN)
+                            .strong(),
+                        );
+                    } else if !pi_online {
+                        ui.label(
+                            egui::RichText::new("🟡 PI NODE STOPPED • USING DIRECT HTTPS STREAM FALLBACK")
+                                .color(egui::Color32::YELLOW)
+                                .strong(),
+                        );
+                    } else {
+                        ui.label(
+                            egui::RichText::new("🟡 MANUAL OVERRIDE (UNBOUND FROM PI NODE)")
+                                .color(egui::Color32::YELLOW),
+                        );
+                    }
+                });
+
+                ui.add_space(4.0);
+                ui.horizontal_wrapped(|ui| {
+                    if ui
+                        .checkbox(
+                            &mut self.radio_state.auto_bound_to_club_pi,
+                            "Auto-Tie 7 Daughters Radio to Club Atlantis Pi Node",
+                        )
+                        .changed()
+                    {
+                        self.radio_state.sync_with_club_pi_node(
+                            self.club.is_siren_radio_running(),
+                            &self.club.pi_node_lan_host,
+                        );
+                        self.last_status_message = if self.radio_state.auto_bound_to_club_pi {
+                            format!(
+                                "7 Daughters Radio auto-bound to Club Atlantis Pi Node ({})",
+                                self.club.pi_node_lan_host
+                            )
+                        } else {
+                            "7 Daughters Radio switched to standalone HTTPS stream mode".into()
+                        };
+                    }
+
+                    ui.separator();
+                    if ui
+                        .checkbox(&mut self.club.pi_atlantis_running, "Atlantis Running on Pi")
+                        .changed()
+                    {
+                        self.club.sync_pi_radio_daemon();
+                        self.radio_state.sync_with_club_pi_node(
+                            self.club.is_siren_radio_running(),
+                            &self.club.pi_node_lan_host,
+                        );
+                        self.last_status_message = if self.club.pi_atlantis_running {
+                            format!(
+                                "Atlantis Pi Node online ({}) — 7 Daughters Radio auto-started!",
+                                self.club.pi_node_lan_host
+                            )
+                        } else {
+                            "Atlantis Pi Node stopped — fell back to external HTTPS stream.".into()
+                        };
+                    }
+
+                    ui.separator();
+                    ui.label("Pi LAN Host:");
+                    if ui.text_edit_singleline(&mut self.club.pi_node_lan_host).changed() {
+                        self.radio_state.sync_with_club_pi_node(
+                            self.club.is_siren_radio_running(),
+                            &self.club.pi_node_lan_host,
+                        );
+                    }
+                });
+            });
+
         ui.add_space(8.0);
 
         ui.group(|ui| {
@@ -594,23 +1089,18 @@ impl LemuriaNativeApp {
             // Daughter Shift Switcher
             ui.horizontal_wrapped(|ui| {
                 ui.label(egui::RichText::new("Switch Host:").strong());
+                let names = ["Maia", "Alcyone", "Asterope", "Celaeno", "Electra", "Taygete", "Merope"];
                 for i in 1..=7 {
-                    let names = ["Maia", "Alcyone", "Asterope", "Celaeno", "Electra", "Taygete", "Merope"];
-                    let urls = [
-                        "https://stream.nightride.fm/chillsynth.mp3", // Maia: 432 Hz Dawn Oceanic Ambient
-                        "https://stream.nightride.fm/nightride.mp3",  // Alcyone: 528 Hz Cyberpunk D&B / Synthwave
-                        "https://ice2.somafm.com/secretagent-128-mp3", // Asterope: 639 Hz Tactical Deep House
-                        "https://stream.nightride.fm/darksynth.mp3",   // Celaeno: 741 Hz Glitch / Industrial Bass
-                        "https://stream.nightride.fm/datawave.mp3",    // Electra: 852 Hz Vocal Trance / Eurobeat
-                        "https://ice2.somafm.com/groovesalad-128-mp3", // Taygete: 963 Hz Darkwave / Abyssal Drone
-                        "https://radio.plaza.one/mp3",                 // Merope: 396 Hz Lo-Fi Starlight Harbor
-                    ];
                     let is_active = self.radio_state.active_daughter.daughter_index == i;
                     let btn_text = format!("{}: {}", i, names[(i - 1) as usize]);
                     if ui.selectable_label(is_active, btn_text).clicked() {
                         self.radio_state.set_daughter_by_index(i);
-                        self.radio_state.stream_url = urls[(i - 1) as usize].to_string();
-                        self.last_status_message = format!("Radio switched to Daughter #{}: {} ({})", i, names[(i - 1) as usize], self.radio_state.stream_url);
+                        self.last_status_message = format!(
+                            "Radio switched to Daughter #{}: {} ({})",
+                            i,
+                            names[(i - 1) as usize],
+                            self.radio_state.stream_url
+                        );
                         #[cfg(target_arch = "wasm32")]
                         if self.radio_state.is_playing {
                             crate::play_radio_stream(&self.radio_state.stream_url, self.radio_state.volume);
@@ -618,8 +1108,14 @@ impl LemuriaNativeApp {
                     }
                 }
                 if ui.button("🔄 Cycle Next Shift").clicked() {
-                    let d = self.radio_state.cycle_next_daughter();
-                    self.last_status_message = format!("Shift rotated to Daughter #{}: {}", d.daughter_index, d.name);
+                    let (d_idx, d_name) = {
+                        let d = self.radio_state.cycle_next_daughter();
+                        (d.daughter_index, d.name.clone())
+                    };
+                    self.last_status_message = format!(
+                        "Shift rotated to Daughter #{}: {} ({})",
+                        d_idx, d_name, self.radio_state.stream_url
+                    );
                     #[cfg(target_arch = "wasm32")]
                     if self.radio_state.is_playing {
                         crate::play_radio_stream(&self.radio_state.stream_url, self.radio_state.volume);
@@ -940,5 +1436,107 @@ impl LemuriaNativeApp {
                 }
             });
         });
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use nautilus_world::NautilusAltitudeRegime;
+
+    #[test]
+    fn test_lite_app_default_and_touch_to_watch_sector_slice_descent() {
+        let mut app = LemuriaNativeApp::default();
+        assert_eq!(app.dem_streamer.view_mode, NautilusGlobeViewMode::CompleteGlobe);
+        assert_eq!(app.venue_broadcasts.len(), 4);
+
+        // Verify Team 7 Headquarters Office overlay entry
+        let office = app.venue_broadcasts.iter().find(|v| v.venue_id == "office_team7_01").unwrap();
+        assert_eq!(office.title, "Headquarters Building: Suite 700 (Team 7 Office)");
+        assert!(matches!(office.spatial_overlay.overlay_kind, SpatialOverlayKind::RealSiteGroundedVenue(_)));
+
+        // Verify the Stadium Battle Arena broadcast entry
+        let stadium = app.venue_broadcasts.iter().find(|v| v.venue_id == "stadium_oracle_01").unwrap();
+        assert_eq!(stadium.title, "Oracle Park Seraphim Battle Colosseum");
+        assert!(matches!(stadium.spatial_overlay.overlay_kind, SpatialOverlayKind::StadiumBattleArena(_)));
+
+        // Simulate Touch-to-Watch on the first 1:1 Warehouse Arcade beacon
+        let wh = app.venue_broadcasts[1].clone();
+        app.current_coord = wh.coord;
+        app.dem_streamer.set_view_mode(NautilusGlobeViewMode::SectorSlice);
+        app.dem_streamer.update_for_camera(wh.coord);
+
+        assert_eq!(app.dem_streamer.view_mode, NautilusGlobeViewMode::SectorSlice);
+        assert_eq!(app.dem_streamer.active_regime, NautilusAltitudeRegime::LocalGameField);
+        assert!(app.dem_streamer.locked_game_field_origin_ecef.is_some());
+
+        let gravity = wh.spatial_overlay.tangent_frame().local_gravity_dir(Vec3::new(0.0, 1.7, 0.0));
+        assert!(gravity.y < -0.99);
+    }
+
+    #[test]
+    fn test_seven_daughters_auto_tied_to_club_atlantis_pi_node() {
+        let mut app = LemuriaNativeApp::default();
+        // By default, Atlantis is running on the Pi and 7 Daughters Radio is auto-bound and playing
+        assert!(app.club.pi_atlantis_running);
+        assert!(app.club.is_siren_radio_running());
+        assert!(app.radio_state.auto_bound_to_club_pi);
+        assert!(app.radio_state.is_playing);
+        assert!(app.radio_state.stream_url.starts_with("http://10.0.0.237:8080/live.mp3"));
+
+        // Cycling to next daughter updates stream URL on the Pi node
+        let next_idx = app.radio_state.cycle_next_daughter().daughter_index;
+        assert!(app
+            .radio_state
+            .stream_url
+            .contains(&format!("daughter={}", next_idx)));
+
+        // If Pi Atlantis node stops, radio falls back to direct HTTPS stream
+        app.club.pi_atlantis_running = false;
+        app.club.sync_pi_radio_daemon();
+        app.radio_state
+            .sync_with_club_pi_node(app.club.is_siren_radio_running(), &app.club.pi_node_lan_host);
+        assert!(app.radio_state.stream_url.starts_with("https://"));
+
+        // When Pi Atlantis node resumes, radio automatically re-binds to the Pi LAN node and plays
+        app.club.pi_atlantis_running = true;
+        app.club.sync_pi_radio_daemon();
+        app.radio_state
+            .sync_with_club_pi_node(app.club.is_siren_radio_running(), &app.club.pi_node_lan_host);
+        assert!(app.radio_state.is_playing);
+        assert!(app.radio_state.stream_url.starts_with("http://10.0.0.237:8080/live.mp3"));
+    }
+
+    #[test]
+    fn test_registered_daemons_tab_team7_and_google_auth() {
+        let mut app = LemuriaNativeApp::default();
+        assert_eq!(app.club.current_user.team_id, "team-7");
+        assert!(app.club.current_user.is_authenticated);
+        assert_eq!(app.club.current_user.email, "team7.operator@gmail.com");
+
+        // Verify Team 7 daemons are registered
+        let team7_daemons: Vec<_> = app.club.daemons.iter().filter(|d| d.team_id.as_deref() == Some("team-7")).collect();
+        assert!(team7_daemons.len() >= 3);
+
+        // Verify Registered Clubs and 7 Officer Structure
+        assert_eq!(app.club.registered_clubs.len(), 2);
+        let hq_club = &app.club.registered_clubs[0];
+        assert_eq!(hq_club.club_id, "club_team7_hq");
+        assert_eq!(hq_club.user_role, crate::club::OfficerRole::TeamDirector);
+        assert!(hq_club.user_role.is_officer());
+
+        // Verify 7 Primary Secular Officers translation
+        let officers: Vec<_> = app.club.members.iter().filter(|m| m.officer_role.is_officer()).collect();
+        assert_eq!(officers.len(), 7);
+
+        // Verify authoritative office overlay comes from Nautilus
+        let office = AnchoredSpatialOverlay::team7_headquarters_office();
+        assert_eq!(app.club.building_office.overlay_id, office.overlay_id);
+        assert_eq!(app.club.building_office.anchor_geo.lat_deg, office.anchor_geo.lat_deg);
+
+        // Switch to daemons tab
+        app.daemons_tab_open = true;
+        assert!(app.daemons_tab_open);
+        assert!(!app.club_open);
     }
 }

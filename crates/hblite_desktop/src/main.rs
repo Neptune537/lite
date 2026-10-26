@@ -6,15 +6,21 @@
 //! - Sabine RT60 spatial acoustic decoding (Siren Frequency)
 //! - Kuroshio Virtual Storefront proximity triggers & totem interaction
 
+#[cfg(not(target_arch = "wasm32"))]
 use std::time::Instant;
+#[cfg(not(target_arch = "wasm32"))]
 use glam::{Quat, Vec3};
+#[cfg(not(target_arch = "wasm32"))]
 use lemuria_engine::{
     AcousticRoomProfile, ClusteredForwardPlusGrid, DeterministicPhysicsStepper,
     DoubleBufferedFrameAllocator, GaussianSplat3D, GaussianSplattingPass, SirenAcousticEngine,
 };
+#[cfg(not(target_arch = "wasm32"))]
 use lemuria_leptos_client::VirtualStorefrontState;
+#[cfg(not(target_arch = "wasm32"))]
 use nautilus_world::Wgs84GeoCoord;
 
+#[cfg(not(target_arch = "wasm32"))]
 use hblite_desktop::gui::LemuriaNativeApp;
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -33,12 +39,12 @@ fn main() {
             viewport: egui::ViewportBuilder::default()
                 .with_inner_size([1200.0, 800.0])
                 .with_min_inner_size([400.0, 500.0])
-                .with_title("HeavenlyBond // Lemuria Pause Menu (Pure Rust - Zero Flutter)"),
+                .with_title("HeavenlyBound // Lemuria Pause Menu (Pure Rust - Zero Flutter)"),
             ..Default::default()
         };
 
         if let Err(e) = eframe::run_native(
-            "HeavenlyBond // Pause Menu",
+            "HeavenlyBound // Pause Menu",
             native_options,
             Box::new(|_cc| Ok(Box::new(LemuriaNativeApp::default()))),
         ) {

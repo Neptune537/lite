@@ -1,6 +1,3 @@
-[submodule "third_party/fluorescent"]
-	path = third_party/fluorescent
-	url = https://github.com/tritonSama/Fluorescent.git
 [submodule "third_party/baton"]
 	path = third_party/baton
 	url = https://github.com/tritonSama/Baton.git
