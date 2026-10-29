@@ -2,14 +2,14 @@
 name = "hblite_desktop"
 version = "0.2.0"
 edition = "2021"
-description = "HeavenlyBound Lite Desktop & Web Runner - Pure Rust Pause Menu & Companion HUD"
+description = "Dashboard - Reincarnated in a Different World (Forgotten Angels Guild HUD & Companion)"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "src/lib.rs"
 
 [[bin]]
-name = "hblite"
+name = "dashboard"
 path = "src/main.rs"
 
 [dependencies]

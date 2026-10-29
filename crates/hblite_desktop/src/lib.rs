@@ -5,7 +5,7 @@ pub use gui::LemuriaNativeApp;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-/// Web runner handle for embedding HeavenlyBound Lite into any web page or Cloudflare Pages canvas.
+/// Web runner handle for embedding the Dashboard into any web page or Cloudflare Pages canvas.
 #[cfg(target_arch = "wasm32")]
 #[derive(Clone)]
 #[wasm_bindgen]
@@ -23,7 +23,7 @@ impl WebHandle {
         }
     }
 
-    /// Mounts and starts the HeavenlyBound Lite Pause Menu & Companion HUD on the provided canvas.
+    /// Mounts and starts the Dashboard (Reincarnated in a Different World) on the provided canvas.
     #[wasm_bindgen]
     pub async fn start(&self, canvas: web_sys::HtmlCanvasElement) -> Result<(), wasm_bindgen::JsValue> {
         self.runner

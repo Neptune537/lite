@@ -39,12 +39,12 @@ fn main() {
             viewport: egui::ViewportBuilder::default()
                 .with_inner_size([1200.0, 800.0])
                 .with_min_inner_size([400.0, 500.0])
-                .with_title("HeavenlyBound // Lemuria Pause Menu (Pure Rust - Zero Flutter)"),
+                .with_title("Dashboard // Reincarnated in a Different World (Forgotten Angels Guild HUD)"),
             ..Default::default()
         };
 
         if let Err(e) = eframe::run_native(
-            "HeavenlyBound // Pause Menu",
+            "Dashboard // Reincarnated in a Different World",
             native_options,
             Box::new(|_cc| Ok(Box::new(LemuriaNativeApp::default()))),
         ) {

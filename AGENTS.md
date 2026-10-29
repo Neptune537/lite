@@ -1,4 +1,4 @@
-# AGENTS.md — HeavenlyBound Lite / Edge Client (Lemuria V2 Architecture Guide)
+# AGENTS.md — Dashboard / Edge Client (Reincarnated in a Different World Companion HUD)
 
 This document tracks AI agents working on this repository, their roles, and the strict operational invariants required under the **Lemuria V2 Architecture**.
 
@@ -6,7 +6,7 @@ This document tracks AI agents working on this repository, their roles, and the 
 
 ## ⚠️ CRITICAL ARCHITECTURAL DIRECTIVE: LEMURIA V2 STANDARDS
 
-All agents contributing to **HeavenlyBound Lite** MUST understand and uphold the unified **Lemuria V2 Architecture**:
+All agents contributing to **Dashboard** (formerly HeavenlyBound Lite) MUST understand and uphold the unified **Lemuria V2 Architecture**:
 
 ### 1. Pure Rust & Zero-GC Memory Standard
 * **Zero OS Heap Allocations in Tick Loops:** All 3D rendering, physics simulation, and spatial queries run using Lemuria's **16MB Double-Buffered Frame Allocator** (`DoubleBufferedFrameAllocator`).
@@ -41,7 +41,7 @@ All agents contributing to **HeavenlyBound Lite** MUST understand and uphold the
 * **Rate-Limit Tracking & Spinning:** The cylinder spins on each request turn, tracking RPM/RPD limits and taking tripped chambers offline upon HTTP 429.
 * **Defaulting to Gemini Free Tier:** When all free revolver chambers meet their active limits, the harness seamlessly defaults to the **Google Gemini Free Tier** (`gemini-2.5-flash` / `gemini-1.5-flash`) as the persistent anchor.
 
-### 8. Media Standard: The Seven Daughters 24/7 Radio Station
+### 8. Media Standard: The Seven Daughters 24/7 Radio Station & ATAK Hardened Mesh
 * **Canonical Broadcasters:** The 24/7 Siren Frequency Theater Radio (`siren:frequency:global_stage`, $432\text{ Hz}$ base) is canonically operated by **The Seven Daughters**:
   1. `Maia` (432 Hz • Dawn Oceanic Ambient / Horizon Chill • 04:00-08:00)
   2. `Alcyone` (528 Hz • High-Speed Cyberpunk D&B / Breakbeats • 08:00-12:00)
@@ -50,9 +50,10 @@ All agents contributing to **HeavenlyBound Lite** MUST understand and uphold the
   5. `Electra` (852 Hz • Vocal Trance / Eurobeat / Club Atlantis • 20:00-00:00)
   6. `Taygete` (963 Hz • Darkwave / Minimal Techno / Abyssal Drone • 00:00-02:00)
   7. `Merope` (396 Hz • Lo-Fi / Starlight Harbor Acoustic • 02:00-04:00)
-* **Auto-Bound to Club Atlantis Raspberry Pi Node (`atlantis-pi-home-1`):**
-  - The 7 Daughters 24/7 Radio daemon (`SevenDaughtersRadio`) is tied directly to the Club's Atlantis Raspberry Pi node on the local network (`10.0.0.237:8080`) via `ClubState::sync_pi_radio_daemon()` and `TheaterRadioState::sync_with_club_pi_node()`.
-  - Whenever the Atlantis daemon is running on the Pi, the 7 Daughters Radio is automatically active and streaming from `http://10.0.0.237:8080/live.mp3?daughter=<idx>&callsign=<name>`, with automatic fallback to direct HTTPS streams if the Pi node goes offline.
+* **Global Event Resilience & "Game ATAK" Architecture:**
+  - The entire ecosystem functions as a gamified **ATAK (Android Tactical Assault Kit)** infrastructure designed to sustain a hardened, resilient VR operational picture through severe network disruptions or global events.
+  - **Primary Default (Cloud & Distributed Ingress):** Clients and edge daemons connect by default to the persistent **Cloud Atlantis Hub** and public HTTPS stream relays (Hugging Face Space `josh375/triton-tier1-hub`, Cloudflare Zero-Cost Tunnels, free-tier cloud containers). The station stream, trading engine, and consensus daemons remain continuously accessible to all users worldwide on any network.
+  - **Failover / Offline Tier (Local Atlantis Node as Backup):** Local hardware—such as the Club's Atlantis Raspberry Pi node on the home subnet (`10.0.0.237:8080`) or local desktop instance—operates strictly as a **hardened survivability fallback**, **NOT the primary default**. If cloud connectivity, WAN access, or external power fails during a regional or global incident, edge clients automatically downshift to local mesh discovery (mDNS `_atlantis-ai._tcp.local`, Reticulum mesh, and LAN Pi `http://10.0.0.237:8080/live.mp3`).
 * **Live Commentary & Tipping:** Live on-air chatter, sector alerts, and track IDs are generated autonomously by the active daughter via the Revolver Engine, supported by instant 0.1 CYAN tips via Coral State Channels.
 
 ### 9. The HeavenlyBound & Lite Dual Platform Standard
@@ -72,6 +73,11 @@ All agents contributing to **HeavenlyBound Lite** MUST understand and uphold the
   - Active VR broadcasts originating from HeavenlyBound appear as holographic beacons on the **🗺️ Nautilus Tactical Map / Globe Tab**.
   - Touching or clicking a broadcast pin switches the client view from orbital perspective to `SectorSlice` dynamic LOD (~500m Karman threshold) centered at the physical site.
   - Spectators receive synchronized 3D avatar pose streams (Kimodo dual-quaternion rigs) and room-tagged Siren spatial audio, with live Coral micro-tipping (0.1 CYAN) over Tide Ledger state channels.
+
+### 11. Gamified God's-Eye-View Telemetry & VR-First Web3D Guild Marketplace Standard
+* **Single Mandatory OSINT + Game Globe (`GodsEyeGlobalState`):**
+  - Inspired by `bilawalsidhu/gods-eye-view`, the Nautilus Tactical Map / Globe integrates all 6 real-time telemetry and guild layers (`AviationAdsB`, `MaritimeAis`, `OrbitalSatellites`, `SeismicWildfireWeather`, `SdrSirenRadio`, and `VrGuildMarketplace`) onto a single mandatory globe.
+  - Users can toggle layers, execute Voice/AI Command Center queries (`execute_gods_eye_query`), lock into first-person **Cockpit / Bridge / Satellite Ride-Along** views (`compute_cockpit_ride_along_pose`), enter VR WebXR Guild Bazaars, and claim live Coral Escrow guild bounties (`claim_entity_guild_bounty`).
 
 ---
 

@@ -21,7 +21,8 @@ use lemuria_leptos_client::{
     MarketplaceItem, MarketplaceTab, TheaterRadioState, VirtualStorefrontState,
 };
 use nautilus_world::{
-    AnchoredSpatialOverlay, DemTerrainTileStreamer, NautilusGlobeViewMode, RealSiteVenueOverlay,
+    AnchoredSpatialOverlay, DemTerrainTileStreamer, GodsEyeGlobalState,
+    GodsEyeLayerKind, GodsEyeTelemetryKind, NautilusGlobeViewMode, RealSiteVenueOverlay,
     RealSiteVenueType, SpatialOverlayKind, StadiumArenaOverlay, StadiumBattleMode,
     StadiumNetworkAsset, TacticalRouteSpline, Wgs84GeoCoord,
 };
@@ -89,6 +90,11 @@ pub struct LemuriaNativeApp {
     pub globe_rotation_rad: f32,
     pub globe_tilt_rad: f32,
     pub is_dragging_globe: bool,
+
+    // Mandatory God's-Eye-View Multi-Layer OSINT Telemetry & VR Guild Marketplace
+    pub gods_eye: GodsEyeGlobalState,
+    pub gods_eye_query_input: String,
+    pub guild_bounties_claimed_cyan: f64,
 
     // Live Atlantis Protocol Telemetry
     pub poh_telemetry: BioluminescenceTelemetry,
@@ -277,6 +283,9 @@ impl Default for LemuriaNativeApp {
             globe_rotation_rad: 0.0,
             globe_tilt_rad: 0.25,
             is_dragging_globe: false,
+            gods_eye: GodsEyeGlobalState::default(),
+            gods_eye_query_input: String::new(),
+            guild_bounties_claimed_cyan: 0.0,
             poh_telemetry,
             vehicle_speed_kmh: 84.5,
             vehicle_rpm: 4200.0,
@@ -301,6 +310,7 @@ impl eframe::App for LemuriaNativeApp {
             dynamics.step_vehicle(steer_rad / 0.55, throttle, brake, 0.0, dt);
         });
         self.vehicle_speed_kmh = (self.vehicle_dynamics.linear_velocity.length() * 3.6).max(self.vehicle_speed_kmh * 0.99);
+        self.gods_eye.step_telemetry_kinematics(0.016);
         self.frame_allocator.flip_frame();
 
         // Keep 7 Daughters Radio automatically synchronized with the Club's Atlantis Raspberry Pi node on LAN
@@ -329,7 +339,7 @@ impl eframe::App for LemuriaNativeApp {
                     ui.vertical(|ui| {
                         ui.horizontal(|ui| {
                             ui.heading(
-                                egui::RichText::new("⏸ HEAVENLYBOUND")
+                                egui::RichText::new("⏸ DASHBOARD")
                                     .color(egui::Color32::from_rgb(0, 229, 255))
                                     .strong(),
                             );
@@ -346,19 +356,19 @@ impl eframe::App for LemuriaNativeApp {
                             ui.separator();
                             ui.label(egui::RichText::new(format!("Stamina: {:.0}%", self.player_stamina)).color(egui::Color32::GREEN).small());
                             ui.separator();
-                            ui.label(egui::RichText::new("[LEMURIA ENGINE]").color(egui::Color32::LIGHT_GRAY).small());
+                            ui.label(egui::RichText::new("[REINCARNATED • GUILD HUD]").color(egui::Color32::LIGHT_GRAY).small());
                         });
                     });
                 }
                 _ => {
                     ui.horizontal(|ui| {
                         ui.heading(
-                            egui::RichText::new("⏸ HEAVENLYBOUND // PAUSE MENU")
+                            egui::RichText::new("⏸ DASHBOARD // REINCARNATED IN A DIFFERENT WORLD")
                                 .color(egui::Color32::from_rgb(0, 229, 255))
                                 .strong(),
                         );
                         ui.label(
-                            egui::RichText::new("[LEMURIA V2 ARCHITECTURE • ZERO FLUTTER]")
+                            egui::RichText::new("[LEMURIA V2 ARCHITECTURE • ANIME GUILD & FORGOTTEN ANGELS]")
                                 .color(egui::Color32::LIGHT_GRAY)
                                 .small(),
                         );
@@ -487,20 +497,41 @@ impl LemuriaNativeApp {
             }
         }
 
-        let daemons_label = if horizontal { "🏢 Team 7" } else { "🏢 Team 7 Office" };
+        let is_officer = self.club.viewer_is_officer();
+
+        let daemons_label = if is_officer {
+            if horizontal { "🛡️ Node Dash" } else { "🛡️ Node Officer Dash" }
+        } else {
+            if horizontal { "🏢 Team 7" } else { "🏢 Team 7 Office" }
+        };
+
         if ui.selectable_label(self.daemons_tab_open, daemons_label).clicked() {
             self.daemons_tab_open = true;
             self.club_open = false;
-            self.club.active_subtab = crate::club::ClubViewSubTab::RegisteredDaemons;
-            self.last_status_message = "Tab switched: 🏢 Team 7 Office & Daemons".into();
+            if is_officer {
+                self.club.active_subtab = crate::club::ClubViewSubTab::OfficerNodeDashboard;
+                self.last_status_message = "Tab switched: 🛡️ Home Node Officer Dashboard".into();
+            } else {
+                self.club.active_subtab = crate::club::ClubViewSubTab::RegisteredDaemons;
+                self.last_status_message = "Tab switched: 🏢 Team 7 Office & Daemons".into();
+            }
         }
 
         let club_label = if horizontal { "👥 Clubs" } else { "👥 Registered Clubs" };
-        if ui.selectable_label(self.club_open, club_label).clicked() {
+        if ui.selectable_label(self.club_open && self.club.active_subtab != crate::club::ClubViewSubTab::SlipstreamNode, club_label).clicked() {
             self.club_open = true;
             self.daemons_tab_open = false;
             self.club.active_subtab = crate::club::ClubViewSubTab::RegisteredClubs;
             self.last_status_message = "Tab switched: 👥 Registered Clubs & By-Laws".into();
+        }
+
+        let is_slipstream_open = self.club_open && self.club.active_subtab == crate::club::ClubViewSubTab::SlipstreamNode;
+        let slipstream_label = if horizontal { "🛸 Slipstream" } else { "🛸 Slipstream Node" };
+        if ui.selectable_label(is_slipstream_open, egui::RichText::new(slipstream_label).color(if is_slipstream_open { egui::Color32::from_rgb(0, 242, 254) } else { egui::Color32::from_rgb(120, 220, 255) })).clicked() {
+            self.club_open = true;
+            self.daemons_tab_open = false;
+            self.club.active_subtab = crate::club::ClubViewSubTab::SlipstreamNode;
+            self.last_status_message = "Tab switched: 🛸 Slipstream Node & C&C War Room Rebuild".into();
         }
     }
 
@@ -718,10 +749,176 @@ impl LemuriaNativeApp {
         });
 
         ui.add_space(10.0);
+
+        // Mandatory God's-Eye-View Telemetry & VR-First Web3D Guild Marketplace Command Center
         ui.group(|ui| {
-            ui.heading("Active Nautilus Quests in Sector");
-            ui.label("• [Bounty] Escort Pelagic Transport to Kuroshio Gate (Reward: 450 CYAN)");
-            ui.label("• [Contract] Perform Sabine RT60 acoustic survey at Totem #04 (Reward: 120 USDC)");
+            ui.horizontal_wrapped(|ui| {
+                ui.heading("👁️ GOD'S-EYE-VIEW // OSINT TELEMETRY & VR GUILD MARKETPLACE");
+                ui.separator();
+                ui.label(
+                    egui::RichText::new(format!(
+                        "● {} ACTIVE TARGETS • {:.0} CYAN BOUNTY POOL",
+                        self.gods_eye.visible_entities().len(),
+                        self.gods_eye.total_guild_bounty_pool_cyan
+                    ))
+                    .color(egui::Color32::from_rgb(0, 255, 157))
+                    .strong(),
+                );
+            });
+            ui.label("Gamified bilawalsidhu/gods-eye-view Command Center: Live ADS-B Aviation, Maritime AIS, Orbital TLE Satellites, Seismic/Wildfire Radar, SDR 7-Daughters Radio, and VR Guild Bounties on a single mandatory globe.");
+
+            ui.add_space(6.0);
+            // Layer Toggles
+            ui.horizontal_wrapped(|ui| {
+                ui.label(egui::RichText::new("Telemetry Layers:").strong());
+                for layer in GodsEyeLayerKind::ALL {
+                    let mut is_on = self.gods_eye.active_layers.contains(&layer);
+                    if ui.checkbox(&mut is_on, layer.display_name()).changed() {
+                        let vis = self.gods_eye.toggle_layer(layer, is_on);
+                        self.last_status_message = format!(
+                            "God's-Eye Layer {} -> {} ({} visible entities)",
+                            layer.display_name(),
+                            if is_on { "ENABLED" } else { "HIDDEN" },
+                            vis
+                        );
+                    }
+                }
+            });
+
+            ui.add_space(4.0);
+            // Voice / AI Command Center Query Bar
+            ui.horizontal_wrapped(|ui| {
+                ui.label(egui::RichText::new("🎙️ God's-Eye Voice/AI Query:").strong().color(egui::Color32::from_rgb(0, 229, 255)));
+                let resp = ui.add(
+                    egui::TextEdit::singleline(&mut self.gods_eye_query_input)
+                        .hint_text("e.g., 'ANA-106', 'starlink', 'kuroshio vanguard', 'vortex', 'guild', or 'reset'")
+                        .desired_width(320.0),
+                );
+                if ui.button("🔍 Execute Query").clicked() || (resp.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter))) {
+                    let q = self.gods_eye_query_input.clone();
+                    if let Some(matched_id) = self.gods_eye.execute_gods_eye_query(&q) {
+                        if let Some(ent) = self.gods_eye.entities.iter().find(|e| e.entity_id == matched_id) {
+                            self.current_coord = ent.geo;
+                            self.dem_streamer.update_for_camera(ent.geo);
+                            self.last_status_message = format!("God's-Eye locked onto {} ({:.3}°, {:.3}°)", ent.callsign, ent.geo.lat_deg, ent.geo.lon_deg);
+                        }
+                    } else {
+                        self.last_status_message = format!("God's-Eye Query executed: {}", self.gods_eye.last_voice_or_ai_query);
+                    }
+                }
+                if ui.button("🛰️ Release to Orbital God's-Eye").clicked() {
+                    self.gods_eye.release_to_orbital_gods_eye();
+                    self.dem_streamer.set_view_mode(NautilusGlobeViewMode::CompleteGlobe);
+                    self.last_status_message = "Returned to Orbital God's-Eye-View Globe.".into();
+                }
+                ui.label(egui::RichText::new(format!("Mode: {:?}", self.gods_eye.camera_mode)).color(egui::Color32::from_rgb(255, 215, 0)).small());
+            });
+
+            ui.add_space(6.0);
+            // Live Tracked Entities & Gamified Guild Bounties Table
+            let active_layers = self.gods_eye.active_layers.clone();
+            let entities_snapshot: Vec<_> = self
+                .gods_eye
+                .entities
+                .iter()
+                .filter(|e| active_layers.contains(&e.layer))
+                .cloned()
+                .collect();
+
+            for ent in entities_snapshot {
+                egui::Frame::new()
+                    .fill(egui::Color32::from_rgb(14, 22, 34))
+                    .stroke(egui::Stroke::new(
+                        1.0,
+                        if self.gods_eye.selected_entity_id.as_deref() == Some(&ent.entity_id) {
+                            egui::Color32::from_rgb(0, 255, 157)
+                        } else {
+                            egui::Color32::from_rgb(0, 180, 220)
+                        },
+                    ))
+                    .corner_radius(5.0)
+                    .inner_margin(6.0)
+                    .show(ui, |ui| {
+                        ui.horizontal_wrapped(|ui| {
+                            ui.label(egui::RichText::new(ent.layer.display_name()).color(egui::Color32::from_rgb(0, 229, 255)).strong());
+                            ui.separator();
+                            ui.label(egui::RichText::new(&ent.callsign).strong().size(14.0));
+                            ui.separator();
+                            ui.label(format!(
+                                "({:.3}°, {:.3}°, Alt {:.0}m | Spd {:.0} m/s | Hdg {:.0}°)",
+                                ent.geo.lat_deg, ent.geo.lon_deg, ent.geo.alt_meters, ent.speed_mps, ent.heading_deg
+                            ));
+                        });
+
+                        let detail_text = match &ent.telemetry {
+                            GodsEyeTelemetryKind::AircraftFlight { icao24_hex, origin_airport, dest_airport, mach_or_knots, squawk, .. } => {
+                                format!("ICAO24: {} • Route: {} → {} • Speed: {:.0} kts • Squawk: {}", icao24_hex, origin_airport, dest_airport, mach_or_knots, squawk)
+                            }
+                            GodsEyeTelemetryKind::MaritimeVessel { mmsi, vessel_class, speed_knots, destination_port, .. } => {
+                                format!("MMSI: {} • Class: {} • {:.1} kts • Dest: {}", mmsi, vessel_class, speed_knots, destination_port)
+                            }
+                            GodsEyeTelemetryKind::OrbitalSatellite { norad_id, inclination_deg, orbital_period_min, apogee_km, perigee_km } => {
+                                format!("NORAD #{} • Inc {:.1}° • Period {:.1}m • Orbit {:.0}×{:.0} km", norad_id, inclination_deg, orbital_period_min, apogee_km, perigee_km)
+                            }
+                            GodsEyeTelemetryKind::GeophysicalAnomaly { event_category, magnitude_or_frp_mw, severity_tag, radius_km } => {
+                                format!("[{}] {} • Mag/FRP: {:.1} • Radius: {:.0} km", severity_tag, event_category, magnitude_or_frp_mw, radius_km)
+                            }
+                            GodsEyeTelemetryKind::SdrRadioStation { frequency_mhz, modulation, active_daughter_or_op, sabine_rt60_sec } => {
+                                format!("{:.1} MHz ({}) • On-Air: {} • Sabine RT60: {:.2}s", frequency_mhz, modulation, active_daughter_or_op, sabine_rt60_sec)
+                            }
+                            GodsEyeTelemetryKind::VrGuildContract { guild_house, contract_type, min_poh_score, webxr_store_url, .. } => {
+                                format!("Guild: {} • {} • Min PoH: {:.2} • WebXR: {}", guild_house, contract_type, min_poh_score, webxr_store_url)
+                            }
+                        };
+                        ui.label(egui::RichText::new(detail_text).small().color(egui::Color32::LIGHT_GRAY));
+
+                        ui.horizontal_wrapped(|ui| {
+                            let ride_btn_label = match ent.layer {
+                                GodsEyeLayerKind::AviationAdsB => "✈️ Cockpit Ride-Along",
+                                GodsEyeLayerKind::MaritimeAis => "🚢 Bridge Cam Lock",
+                                GodsEyeLayerKind::OrbitalSatellites => "🛰️ Orbital Downlink Cam",
+                                GodsEyeLayerKind::VrGuildMarketplace => "🥽 Enter VR Guild Storefront",
+                                _ => "🎯 Lock Target Cam",
+                            };
+                            if ui.button(egui::RichText::new(ride_btn_label).strong()).clicked() {
+                                let _ = self.gods_eye.lock_cockpit_or_guild_target(&ent.entity_id);
+                                self.current_coord = ent.geo;
+                                self.dem_streamer.update_for_camera(ent.geo);
+                                self.last_status_message = format!(
+                                    "Locked {} onto {} at ({:.3}°, {:.3}°, {:.0}m)",
+                                    ride_btn_label, ent.callsign, ent.geo.lat_deg, ent.geo.lon_deg, ent.geo.alt_meters
+                                );
+                            }
+
+                            if let Some(ref claimer) = ent.claimed_by_guild_did {
+                                ui.label(
+                                    egui::RichText::new(format!("✅ Claimed by {} ({:.0} CYAN)", claimer, ent.attached_bounty_cyan))
+                                        .color(egui::Color32::GREEN)
+                                        .strong(),
+                                );
+                            } else if ent.attached_bounty_cyan > 0.0 {
+                                if ui
+                                    .button(
+                                        egui::RichText::new(format!("⚡ Claim Guild Bounty ({:.0} CYAN Coral Escrow)", ent.attached_bounty_cyan))
+                                            .color(egui::Color32::from_rgb(255, 215, 0))
+                                            .strong(),
+                                    )
+                                    .clicked()
+                                {
+                                    let viewer_did = self.club.viewer_did.clone();
+                                    if let Some(reward) = self.gods_eye.claim_entity_guild_bounty(&ent.entity_id, &viewer_did) {
+                                        self.guild_bounties_claimed_cyan += reward;
+                                        self.last_status_message = format!(
+                                            "Guild Bounty Claimed! {:.0} CYAN locked in Coral Escrow for {} (Total Claimed: {:.0} CYAN)",
+                                            reward, ent.callsign, self.guild_bounties_claimed_cyan
+                                        );
+                                    }
+                                }
+                            }
+                        });
+                    });
+                ui.add_space(4.0);
+            }
         });
     }
 
@@ -903,6 +1100,69 @@ impl LemuriaNativeApp {
                             local_gravity_dir: gravity_dir,
                         });
                         self.last_status_message = format!("Holographic Globe: Descended to SectorSlice for {}", venue.title);
+                    }
+                }
+            }
+
+            // 5. Draw Mandatory God's-Eye-View Live Multi-Layer Telemetry Entities on Globe
+            let active_layers = self.gods_eye.active_layers.clone();
+            let gods_eye_entities: Vec<_> = self
+                .gods_eye
+                .entities
+                .iter()
+                .filter(|e| active_layers.contains(&e.layer))
+                .cloned()
+                .collect();
+
+            for ent in &gods_eye_entities {
+                let lat_rad = (ent.geo.lat_deg as f32).to_radians();
+                let lon_rad = (ent.geo.lon_deg as f32).to_radians();
+                let effective_lon = lon_rad + rot;
+                let cos_lon = effective_lon.cos();
+                let sin_lon = effective_lon.sin();
+                let cos_lat = lat_rad.cos();
+                let sin_lat = lat_rad.sin();
+
+                if cos_lon > -0.15 {
+                    let alt_boost = if ent.layer == GodsEyeLayerKind::OrbitalSatellites {
+                        1.08
+                    } else if ent.layer == GodsEyeLayerKind::AviationAdsB {
+                        1.03
+                    } else {
+                        1.0
+                    };
+                    let r = radius * alt_boost;
+                    let px = center.x + r * cos_lat * sin_lon;
+                    let py = center.y - r * (sin_lat * tilt.cos() - cos_lat * cos_lon * tilt.sin());
+                    let pt = egui::Pos2::new(px, py);
+
+                    let color = match ent.layer {
+                        GodsEyeLayerKind::AviationAdsB => egui::Color32::from_rgb(0, 242, 254),
+                        GodsEyeLayerKind::MaritimeAis => egui::Color32::from_rgb(0, 255, 157),
+                        GodsEyeLayerKind::OrbitalSatellites => egui::Color32::from_rgb(255, 226, 89),
+                        GodsEyeLayerKind::SeismicWildfireWeather => egui::Color32::from_rgb(255, 110, 30),
+                        GodsEyeLayerKind::SdrSirenRadio => egui::Color32::from_rgb(180, 60, 255),
+                        GodsEyeLayerKind::VrGuildMarketplace => egui::Color32::from_rgb(255, 215, 0),
+                    };
+
+                    let is_hovered = mouse_pos.map(|m| (m - pt).length() < 12.0).unwrap_or(false);
+                    painter.circle_filled(pt, if is_hovered { 5.5 } else { 4.0 }, color);
+                    painter.circle_stroke(pt, 6.5, egui::Stroke::new(1.0, color));
+
+                    if is_hovered {
+                        painter.text(
+                            pt + egui::Vec2::new(8.0, -6.0),
+                            egui::Align2::LEFT_BOTTOM,
+                            format!("{} [{:.0} CYAN]", ent.callsign, ent.attached_bounty_cyan),
+                            egui::FontId::proportional(11.0),
+                            egui::Color32::YELLOW,
+                        );
+                        if response.clicked() {
+                            let _ = self.gods_eye.lock_cockpit_or_guild_target(&ent.entity_id);
+                            self.current_coord = ent.geo;
+                            self.dem_streamer.update_for_camera(ent.geo);
+                            self.last_status_message = format!("Globe Lock: {} ({:?})", ent.callsign, self.gods_eye.camera_mode);
+                        }
                     }
                 }
             }
@@ -1442,7 +1702,7 @@ impl LemuriaNativeApp {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use nautilus_world::NautilusAltitudeRegime;
+    use nautilus_world::{GodsEyeCameraMode, NautilusAltitudeRegime};
 
     #[test]
     fn test_lite_app_default_and_touch_to_watch_sector_slice_descent() {
@@ -1519,7 +1779,7 @@ mod tests {
         assert!(team7_daemons.len() >= 3);
 
         // Verify Registered Clubs and 7 Officer Structure
-        assert_eq!(app.club.registered_clubs.len(), 2);
+        assert!(app.club.registered_clubs.len() >= 2);
         let hq_club = &app.club.registered_clubs[0];
         assert_eq!(hq_club.club_id, "club_team7_hq");
         assert_eq!(hq_club.user_role, crate::club::OfficerRole::TeamDirector);
@@ -1538,5 +1798,123 @@ mod tests {
         app.daemons_tab_open = true;
         assert!(app.daemons_tab_open);
         assert!(!app.club_open);
+    }
+
+    #[test]
+    fn test_officer_dashboard_accessible_when_officer() {
+        let mut app = LemuriaNativeApp::default();
+        // Default viewer is did:atlantis:team7_operator, who is TeamDirector (Officer)
+        assert!(app.club.viewer_is_officer());
+        assert_eq!(
+            app.club.viewer_officer_role(),
+            Some(crate::club::OfficerRole::TeamDirector)
+        );
+
+        // When officer, switching to daemons/team tab targets OfficerNodeDashboard
+        let is_officer = app.club.viewer_is_officer();
+        assert!(is_officer);
+
+        app.daemons_tab_open = true;
+        app.club.active_subtab = crate::club::ClubViewSubTab::OfficerNodeDashboard;
+        assert_eq!(
+            app.club.active_subtab,
+            crate::club::ClubViewSubTab::OfficerNodeDashboard
+        );
+
+        // Verify demoting to a non-officer candidate role revokes officer status
+        app.club.viewer_did = "did:atlantis:guest_unverified".into();
+        assert!(!app.club.viewer_is_officer());
+        assert_eq!(app.club.viewer_officer_role(), None);
+    }
+
+    #[test]
+    fn test_lite_app_gods_eye_telemetry_and_vr_guild_bounties() {
+        let mut app = LemuriaNativeApp::default();
+        assert_eq!(app.gods_eye.active_layers.len(), 6);
+        assert!(app.gods_eye.visible_entities().len() >= 10);
+
+        // Execute voice/AI query to lock onto Kuroshio Vanguard maritime vessel
+        let matched = app.gods_eye.execute_gods_eye_query("kuroshio vanguard");
+        assert_eq!(matched.as_deref(), Some("ais_kuroshio_vanguard"));
+        assert!(matches!(
+            app.gods_eye.camera_mode,
+            GodsEyeCameraMode::CockpitRideAlong { .. }
+        ));
+
+        // Claim the guild bounty on the vessel
+        let viewer_did = app.club.viewer_did.clone();
+        let reward = app
+            .gods_eye
+            .claim_entity_guild_bounty("ais_kuroshio_vanguard", &viewer_did)
+            .expect("Bounty claim should succeed");
+        app.guild_bounties_claimed_cyan += reward;
+        assert_eq!(app.guild_bounties_claimed_cyan, 1_250.0);
+    }
+
+    #[test]
+    fn test_slipstream_node_chambers_and_cnc_rebuild_room() {
+        let mut app = LemuriaNativeApp::default();
+
+        // Verify Slipstream Sovereign Seed Club is present
+        let slipstream = app
+            .club
+            .registered_clubs
+            .iter()
+            .find(|c| c.club_id == "club_slipstream_seed")
+            .expect("Slipstream club must be registered");
+        assert_eq!(slipstream.home_node_id, "slipstream-node-master");
+        assert_eq!(slipstream.callsign, "SLIPSTREAM-01");
+
+        // Verify subtab navigation to Slipstream Node
+        app.club.active_subtab = crate::club::ClubViewSubTab::SlipstreamNode;
+        assert_eq!(
+            app.club.active_subtab,
+            crate::club::ClubViewSubTab::SlipstreamNode
+        );
+
+        // Verify all 5 dedicated tool rooms are registered
+        assert_eq!(crate::club::SlipstreamRoomId::ALL.len(), 5);
+        assert_eq!(
+            app.club.selected_slipstream_room,
+            crate::club::SlipstreamRoomId::CncTacticalArena
+        );
+
+        // Verify playable C&C Rebuild war room simulation
+        assert_eq!(app.club.cnc_sim.sectors.len(), 12);
+        assert!(!app.club.cnc_sim.factions.is_empty());
+
+        let initial_fuel = app
+            .club
+            .cnc_sim
+            .factions
+            .iter()
+            .find(|f| f.faction == app.club.cnc_sim.player_faction)
+            .map(|f| f.fuel_stockpile)
+            .unwrap_or(0.0);
+        assert!(initial_fuel > 0.0);
+
+        // Test building construction in the C&C war room
+        let build_res = app.club.cnc_sim.construct_building(
+            lemuria_engine::TacticalBuildingType::PowerPlant,
+            10.0,
+            -20.0,
+        );
+        assert!(build_res.is_ok());
+
+        // Test unit production in the C&C war room
+        let unit_res = app.club.cnc_sim.produce_unit(
+            lemuria_engine::TacticalUnitType::FrontlineCombatDroneUAV,
+        );
+        assert!(unit_res.is_ok());
+
+        // Test issuing tactical orders
+        let units_ordered = app.club.cnc_sim.issue_tactical_order(25.0, 50.0);
+        assert!(units_ordered > 0);
+
+        // Step simulation tick (dt clamped to 0.1s max per tick)
+        for _ in 0..10 {
+            app.club.cnc_sim.tick(0.1);
+        }
+        assert!(app.club.cnc_sim.match_elapsed_seconds >= 0.99);
     }
 }
