@@ -16,10 +16,11 @@ use atlantis_protocol::{
 };
 use ed25519_dalek::{Signer, Signature};
 use eframe::egui;
-use glam::Vec3;
+use glam::{Quat, Vec3};
 use lemuria_engine::{
-    AcousticRoomProfile, DeterministicPhysicsStepper, DoubleBufferedFrameAllocator,
-    PacejkaVehicleDynamics, SirenAcousticEngine,
+    Aabb, AcousticRoomProfile, DeterministicPhysicsStepper, DoubleBufferedFrameAllocator,
+    GaussianSplattingPass, LemuriaEcsWorld, PacejkaVehicleDynamics, SirenAcousticEngine,
+    SplatConvexHullCollider, SplatShelfProduct,
 };
 use lemuria_leptos_client::{
     MarketplaceItem, MarketplaceTab, TheaterRadioState, VirtualStorefrontState,
@@ -191,6 +192,14 @@ pub struct LemuriaNativeApp {
     pub last_canary_challenge: Option<PohCanaryChallenge>,
     pub last_canary_audit_pass: bool,
 
+    // Interactive 3D Gaussian Splat Storefront & ECS World
+    pub splat_world: LemuriaEcsWorld,
+    pub splat_pass: GaussianSplattingPass,
+    pub splat_collider: SplatConvexHullCollider,
+    pub splat_rotation_angle_rad: f32,
+    pub splat_inspect_zoom: f32,
+    pub selected_splat_index: usize,
+
     // Game Simulation States (OBD-II, CAN Bus, Controls)
     pub vehicle_speed_kmh: f32,
     pub vehicle_rpm: f32,
@@ -248,6 +257,38 @@ impl Default for LemuriaNativeApp {
         let park_coord = Wgs84GeoCoord::new(35.6717, 139.6949, 38.0);
         let office_overlay = AnchoredSpatialOverlay::team7_headquarters_office();
         let office_coord = office_overlay.anchor_geo;
+
+        let mut splat_world = LemuriaEcsWorld::new();
+        let mut splat_pass = GaussianSplattingPass::new(512);
+
+        // Product 1: Scanned 3D Totem - Neo-Tokyo High-Resonance Energy Cell
+        let product1 = SplatShelfProduct {
+            entity_id: uuid::Uuid::new_v4(),
+            sku_id: "totem_energy_cell_432hz".into(),
+            splat_asset_uri: "lemuria://scans/totems/energy_cell_432hz.splat".into(),
+            convex_hull_half_extents: Vec3::new(0.35, 0.65, 0.35),
+            position: Vec3::new(-1.0, 1.2, -2.5),
+            rotation: Quat::IDENTITY,
+            is_service_totem: true,
+        };
+        splat_pass.populate_from_shelf_product(&product1, 0, 4);
+        splat_world.spawn_shelf_splat_product(product1);
+
+        // Product 2: Scanned 3D Merchandise - Pacejka Competition Carbon Wheel
+        let product2 = SplatShelfProduct {
+            entity_id: uuid::Uuid::new_v4(),
+            sku_id: "item_carbon_wheel_r19".into(),
+            splat_asset_uri: "lemuria://scans/merch/carbon_wheel_r19.splat".into(),
+            convex_hull_half_extents: Vec3::new(0.48, 0.48, 0.28),
+            position: Vec3::new(1.0, 1.2, -2.5),
+            rotation: Quat::IDENTITY,
+            is_service_totem: false,
+        };
+        splat_pass.populate_from_shelf_product(&product2, 1, 4);
+        splat_world.spawn_shelf_splat_product(product2);
+
+        let cart_drop_zone = Aabb::new(Vec3::new(-0.8, 0.0, -1.5), Vec3::new(0.8, 0.6, -0.8));
+        let splat_collider = SplatConvexHullCollider::new(cart_drop_zone);
 
         Self {
             selected_tab: MarketplaceTab::TacticalMap,
@@ -384,6 +425,12 @@ impl Default for LemuriaNativeApp {
             active_zk_proof: None,
             last_canary_challenge: None,
             last_canary_audit_pass: true,
+            splat_world,
+            splat_pass,
+            splat_collider,
+            splat_rotation_angle_rad: 0.0,
+            splat_inspect_zoom: 1.0,
+            selected_splat_index: 0,
             vehicle_speed_kmh: 84.5,
             vehicle_rpm: 4200.0,
             vehicle_gear: 3,
@@ -1709,6 +1756,155 @@ impl LemuriaNativeApp {
                 }
             });
         });
+
+        ui.add_space(10.0);
+
+        // --- Interactive 3D Gaussian Splatting Storefront Inspector ---
+        ui.group(|ui| {
+            ui.horizontal(|ui| {
+                ui.heading("🔮 3D Gaussian Splat Product Inspector & Convex Hull Collider");
+                ui.separator();
+                ui.label(
+                    egui::RichText::new("RADIX SORTED • ZERO-GC ALLOCATOR")
+                        .color(egui::Color32::from_rgb(0, 242, 254))
+                        .strong(),
+                );
+            });
+            ui.label("Photorealistic phone scans of real-world storefront totems & shelf items with interactive convex-hull grab picking.");
+            ui.add_space(6.0);
+
+            let product_count = self.splat_world.splat_products.len();
+            ui.horizontal(|ui| {
+                ui.label(egui::RichText::new("Select Scanned Item:").strong());
+                for idx in 0..product_count {
+                    let sku = &self.splat_world.splat_products[idx].sku_id;
+                    let is_sel = self.selected_splat_index == idx;
+                    if ui.selectable_label(is_sel, sku).clicked() {
+                        self.selected_splat_index = idx;
+                    }
+                }
+            });
+
+            ui.add_space(6.0);
+
+            // Splat Viewport & Interactive 3D Orbit Controls
+            let (rect, response) = ui.allocate_exact_size(
+                egui::Vec2::new(ui.available_width().min(600.0), 220.0),
+                egui::Sense::drag(),
+            );
+
+            if response.dragged() {
+                self.splat_rotation_angle_rad += response.drag_delta().x * 0.015;
+            }
+
+            let painter = ui.painter_at(rect);
+            painter.rect_filled(rect, 8.0, egui::Color32::from_rgb(8, 14, 22));
+            painter.rect_stroke(
+                rect,
+                8.0,
+                egui::Stroke::new(1.2, egui::Color32::from_rgb(0, 229, 255)),
+                egui::StrokeKind::Middle,
+            );
+
+            let center = rect.center();
+            let rot = self.splat_rotation_angle_rad;
+            let zoom = self.splat_inspect_zoom;
+
+            // Render projected 3D Gaussian Splats with depth sorting
+            if let Some(product) = self.splat_world.splat_products.get(self.selected_splat_index) {
+                let half = product.convex_hull_half_extents;
+                let color = if product.is_service_totem {
+                    egui::Color32::from_rgb(0, 220, 255)
+                } else {
+                    egui::Color32::from_rgb(255, 175, 50)
+                };
+
+                // Draw synthetic splat point cluster projected onto 2D canvas with rotation
+                let step = 3;
+                for ix in -step..=step {
+                    for iy in -step..=step {
+                        for iz in -step..=step {
+                            let local_x = (ix as f32 / step as f32) * half.x;
+                            let local_y = (iy as f32 / step as f32) * half.y;
+                            let local_z = (iz as f32 / step as f32) * half.z;
+
+                            // Rotate around Y-axis
+                            let rx = local_x * rot.cos() - local_z * rot.sin();
+                            let rz = local_x * rot.sin() + local_z * rot.cos();
+
+                            let screen_x = center.x + rx * 140.0 * zoom;
+                            let screen_y = center.y - local_y * 140.0 * zoom;
+                            let splat_radius = (4.0 + (rz + half.z) * 4.0).clamp(2.0, 10.0) * zoom;
+                            let alpha = ((rz + half.z * 1.5) / (half.z * 3.0)).clamp(0.2, 0.95);
+
+                            painter.circle_filled(
+                                egui::Pos2::new(screen_x, screen_y),
+                                splat_radius,
+                                egui::Color32::from_rgba_unmultiplied(
+                                    color.r(),
+                                    color.g(),
+                                    color.b(),
+                                    (alpha * 255.0) as u8,
+                                ),
+                            );
+                        }
+                    }
+                }
+
+                // Overlay HUD on viewport
+                painter.text(
+                    rect.min + egui::Vec2::new(10.0, 10.0),
+                    egui::Align2::LEFT_TOP,
+                    format!("Gaussian Splats: 343 ellipsoids • Asset: {}", product.splat_asset_uri),
+                    egui::FontId::proportional(12.0),
+                    egui::Color32::from_rgb(0, 242, 254),
+                );
+                painter.text(
+                    rect.min + egui::Vec2::new(10.0, 28.0),
+                    egui::Align2::LEFT_TOP,
+                    format!("Convex Hull Extents: ({:.2}, {:.2}, {:.2}) m • Totem: {}", half.x * 2.0, half.y * 2.0, half.z * 2.0, product.is_service_totem),
+                    egui::FontId::proportional(11.0),
+                    egui::Color32::LIGHT_GRAY,
+                );
+            }
+
+            ui.add_space(4.0);
+            ui.horizontal_wrapped(|ui| {
+                ui.label("Orbit Rotation:");
+                ui.add(egui::Slider::new(&mut self.splat_rotation_angle_rad, -std::f32::consts::PI..=std::f32::consts::PI).text("rad"));
+                ui.separator();
+                ui.label("Inspect Zoom:");
+                ui.add(egui::Slider::new(&mut self.splat_inspect_zoom, 0.5..=2.5).text("x"));
+                ui.separator();
+                if ui.button("⚡ Raycast Pick & Drop into Cart").clicked() {
+                    let ray_origin = Vec3::new(0.0, 1.2, 0.0);
+                    let ray_dir = Vec3::new(0.0, 0.0, -1.0);
+                    if let Some(hit) = SplatConvexHullCollider::raycast_shelf_products(
+                        &self.splat_world,
+                        ray_origin,
+                        ray_dir,
+                        10.0,
+                    ) {
+                        self.splat_collider.cart_sku_items.push(hit.sku_id.clone());
+                        self.last_status_message = format!(
+                            "Picked 3D Splat Item '{}' at distance {:.2}m and dropped into Cart!",
+                            hit.sku_id, hit.distance
+                        );
+                    } else if let Some(product) = self.splat_world.splat_products.get(self.selected_splat_index) {
+                        self.splat_collider.cart_sku_items.push(product.sku_id.clone());
+                        self.last_status_message = format!("Added '{}' to customer cart!", product.sku_id);
+                    }
+                }
+            });
+
+            if !self.splat_collider.cart_sku_items.is_empty() {
+                ui.add_space(4.0);
+                ui.horizontal(|ui| {
+                    ui.label(egui::RichText::new("🛒 Customer Cart:").strong().color(egui::Color32::from_rgb(0, 255, 157)));
+                    ui.label(format!("{} Items Dropped: {:?}", self.splat_collider.cart_sku_items.len(), self.splat_collider.cart_sku_items));
+                });
+            }
+        });
     }
 
     fn render_vehicle_telemetry_tab(&mut self, ui: &mut egui::Ui, _form_factor: ScreenFormFactor) {
@@ -2196,5 +2392,57 @@ mod tests {
             worker_signature: atlantis_protocol::bytes_to_hex(&custom_sig.to_bytes()),
         };
         assert!(custom_challenge.verify_response(&valid_response));
+    }
+
+    #[test]
+    fn test_gaussian_splat_storefront_inspector_and_cart_picking() {
+        let mut app = LemuriaNativeApp::default();
+
+        // 1. Verify 3D Gaussian Splat products are spawned in ECS world
+        assert_eq!(app.splat_world.splat_products.len(), 2);
+        let product1 = &app.splat_world.splat_products[0];
+        assert_eq!(product1.sku_id, "totem_energy_cell_432hz");
+        assert!(product1.is_service_totem);
+
+        let product2 = &app.splat_world.splat_products[1];
+        assert_eq!(product2.sku_id, "item_carbon_wheel_r19");
+        assert!(!product2.is_service_totem);
+
+        // 2. Verify Gaussian Splatting pass populated splats
+        assert!(app.splat_pass.splats.len() >= 128);
+
+        // 3. Raycast pick & drop into customer cart
+        let ray_origin = Vec3::new(-1.0, 1.2, 0.0);
+        let ray_dir = Vec3::new(0.0, 0.0, -1.0);
+        let hit = SplatConvexHullCollider::raycast_shelf_products(
+            &app.splat_world,
+            ray_origin,
+            ray_dir,
+            10.0,
+        )
+        .expect("Raycast should hit totem_energy_cell_432hz");
+        assert_eq!(hit.sku_id, "totem_energy_cell_432hz");
+        assert!(hit.is_service_totem);
+
+        // 4. Test VR hand-grab picking
+        let hand_pos = Vec3::new(-1.0, 1.2, -2.5);
+        let grabbed = app
+            .splat_collider
+            .try_grab_with_hand(&app.splat_world, hand_pos, 0.5);
+        assert_eq!(grabbed, Some(product1.entity_id));
+        assert_eq!(app.splat_collider.grabbed_entity_id, Some(product1.entity_id));
+
+        // Release into cart drop zone
+        let dropped_sku = app
+            .splat_collider
+            .update_or_release_grabbed_product(
+                &mut app.splat_world,
+                Vec3::new(0.0, 0.3, -1.0), // Inside cart_drop_zone
+                Quat::IDENTITY,
+                true,
+            );
+        assert_eq!(dropped_sku.as_deref(), Some("totem_energy_cell_432hz"));
+        assert_eq!(app.splat_collider.cart_sku_items.len(), 1);
+        assert_eq!(app.splat_collider.cart_sku_items[0], "totem_energy_cell_432hz");
     }
 }
