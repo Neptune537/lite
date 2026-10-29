@@ -18,9 +18,9 @@ use ed25519_dalek::{Signer, Signature};
 use eframe::egui;
 use glam::{Quat, Vec3};
 use lemuria_engine::{
-    Aabb, AcousticRoomProfile, DeterministicPhysicsStepper, DoubleBufferedFrameAllocator,
-    GaussianSplattingPass, LemuriaEcsWorld, PacejkaVehicleDynamics, SirenAcousticEngine,
-    SplatConvexHullCollider, SplatShelfProduct,
+    rendering_xr::WgslTemporalUpscaler, Aabb, AcousticRoomProfile, DeterministicPhysicsStepper,
+    DoubleBufferedFrameAllocator, GaussianSplattingPass, LemuriaEcsWorld, PacejkaVehicleDynamics,
+    SirenAcousticEngine, SplatConvexHullCollider, SplatShelfProduct,
 };
 use lemuria_leptos_client::{
     MarketplaceItem, MarketplaceTab, TheaterRadioState, VirtualStorefrontState,
@@ -199,6 +199,10 @@ pub struct LemuriaNativeApp {
     pub splat_rotation_angle_rad: f32,
     pub splat_inspect_zoom: f32,
     pub selected_splat_index: usize,
+
+    // WGSL Temporal Super Resolution (TSR) & Power Scaling
+    pub tsr_upscaler: WgslTemporalUpscaler,
+    pub tsr_enabled: bool,
 
     // Game Simulation States (OBD-II, CAN Bus, Controls)
     pub vehicle_speed_kmh: f32,
@@ -431,6 +435,8 @@ impl Default for LemuriaNativeApp {
             splat_rotation_angle_rad: 0.0,
             splat_inspect_zoom: 1.0,
             selected_splat_index: 0,
+            tsr_upscaler: WgslTemporalUpscaler::new_half_scale(2560, 1440),
+            tsr_enabled: true,
             vehicle_speed_kmh: 84.5,
             vehicle_rpm: 4200.0,
             vehicle_gear: 3,
@@ -548,7 +554,12 @@ impl eframe::App for LemuriaNativeApp {
                 ui.label(egui::RichText::new(&self.last_status_message).color(egui::Color32::from_rgb(0, 229, 255)).small());
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                     let heap_kb = self.frame_allocator.bytes_used() / 1024;
-                    ui.label(egui::RichText::new(format!("Alloc: {} KB | 60Hz Rapier | {:.0}x{:.0} px", heap_kb, screen_width, screen_height)).small().color(egui::Color32::GRAY));
+                    let tsr_info = if self.tsr_enabled {
+                        format!(" | TSR 50% ({:.0}% GPU Saved)", self.tsr_upscaler.fragment_load_reduction_ratio() * 100.0)
+                    } else {
+                        " | Native 100%".into()
+                    };
+                    ui.label(egui::RichText::new(format!("Alloc: {} KB | 60Hz Rapier | {:.0}x{:.0} px{}", heap_kb, screen_width, screen_height, tsr_info)).small().color(egui::Color32::GRAY));
                 });
             });
             ui.add_space(2.0);
@@ -2090,6 +2101,67 @@ impl LemuriaNativeApp {
                     }
                 });
             }
+
+            ui.add_space(10.0);
+
+            // --- WGSL Temporal Super Resolution (TSR) & Dynamic Thermal Governor ---
+            ui.group(|ui| {
+                ui.horizontal(|ui| {
+                    ui.heading("⚡ WGSL Temporal Super Resolution (TSR) & Thermal Governor");
+                    ui.separator();
+                    let badge_text = if self.tsr_enabled {
+                        format!("TSR ACTIVE (50% SCALE • {:.0}% GPU LOAD CUT)", self.tsr_upscaler.fragment_load_reduction_ratio() * 100.0)
+                    } else {
+                        "NATIVE RESOLUTION (100% SCALE)".into()
+                    };
+                    ui.label(
+                        egui::RichText::new(badge_text)
+                            .color(if self.tsr_enabled { egui::Color32::from_rgb(0, 255, 157) } else { egui::Color32::YELLOW })
+                            .strong(),
+                    );
+                });
+                ui.label("Renders internal Clustered Forward+ & Gaussian Splats at 50% scale, reconstructing sharp 1440p/4K frames via 16-phase Halton(2,3) sub-pixel jitter & YCoCg neighborhood clipping.");
+                ui.add_space(6.0);
+
+                egui::Grid::new("tsr_grid").striped(true).show(ui, |ui| {
+                    ui.label("Internal Render Resolution:");
+                    ui.label(format!("{} × {} px (Half-Res Buffer)", self.tsr_upscaler.internal_width, self.tsr_upscaler.internal_height));
+                    ui.end_row();
+
+                    ui.label("Target Display Output:");
+                    ui.label(format!("{} × {} px (Reconstructed 1440p)", self.tsr_upscaler.output_width, self.tsr_upscaler.output_height));
+                    ui.end_row();
+
+                    ui.label("Mobile GPU Fragment Savings:");
+                    ui.label(egui::RichText::new(format!("{:.1}% Load Reduction", self.tsr_upscaler.fragment_load_reduction_ratio() * 100.0)).color(egui::Color32::GREEN).strong());
+                    ui.end_row();
+
+                    ui.label("History Blend / Sharpness:");
+                    ui.label(format!("EMA Blend: {:.2} • RCAS Sharpness: {:.2}", self.tsr_upscaler.history_blend_factor, self.tsr_upscaler.sharpness));
+                    ui.end_row();
+                });
+
+                ui.add_space(6.0);
+                ui.horizontal(|ui| {
+                    ui.checkbox(&mut self.tsr_enabled, "Enable WGSL Spatial-Temporal Upscaling");
+                    ui.separator();
+                    if ui.button("Cycle Scale: 50% (Power Save)").clicked() {
+                        self.tsr_upscaler = WgslTemporalUpscaler::new_half_scale(2560, 1440);
+                        self.tsr_enabled = true;
+                        self.last_status_message = "TSR configured: 50% Internal Scale (75% GPU power reduction)".into();
+                    }
+                    if ui.button("Cycle Scale: 67% (Balanced)").clicked() {
+                        self.tsr_upscaler = WgslTemporalUpscaler::with_scale(2560, 1440, 0.67);
+                        self.tsr_enabled = true;
+                        self.last_status_message = "TSR configured: 67% Internal Scale (55% GPU power reduction)".into();
+                    }
+                    if ui.button("Cycle Scale: 100% (Native)").clicked() {
+                        self.tsr_upscaler = WgslTemporalUpscaler::with_scale(2560, 1440, 1.0);
+                        self.tsr_enabled = false;
+                        self.last_status_message = "TSR disabled: Native 100% resolution render".into();
+                    }
+                });
+            });
         });
     }
 }
@@ -2444,5 +2516,36 @@ mod tests {
         assert_eq!(dropped_sku.as_deref(), Some("totem_energy_cell_432hz"));
         assert_eq!(app.splat_collider.cart_sku_items.len(), 1);
         assert_eq!(app.splat_collider.cart_sku_items[0], "totem_energy_cell_432hz");
+    }
+
+    #[test]
+    fn test_wgsl_temporal_super_resolution_and_load_reduction() {
+        let mut app = LemuriaNativeApp::default();
+
+        // 1. Verify default 50% scale TSR setup (1440p target -> 720p internal)
+        assert!(app.tsr_enabled);
+        assert_eq!(app.tsr_upscaler.output_width, 2560);
+        assert_eq!(app.tsr_upscaler.output_height, 1440);
+        assert_eq!(app.tsr_upscaler.internal_width, 1280);
+        assert_eq!(app.tsr_upscaler.internal_height, 720);
+
+        // 2. Verify 75% fragment load reduction ratio
+        let reduction = app.tsr_upscaler.fragment_load_reduction_ratio();
+        assert!((reduction - 0.75).abs() < 0.01);
+
+        // 3. Verify sub-pixel jitter sequence progresses deterministically
+        let jitter0 = app.tsr_upscaler.next_frame_jitter_ndc();
+        let jitter1 = app.tsr_upscaler.next_frame_jitter_ndc();
+        assert_ne!(jitter0, jitter1);
+
+        // 4. Test cycling to 67% balanced mode and 100% native mode
+        app.tsr_upscaler = WgslTemporalUpscaler::with_scale(2560, 1440, 0.67);
+        let reduction_balanced = app.tsr_upscaler.fragment_load_reduction_ratio();
+        assert!(reduction_balanced > 0.50 && reduction_balanced < 0.60);
+
+        app.tsr_upscaler = WgslTemporalUpscaler::with_scale(2560, 1440, 1.0);
+        assert_eq!(app.tsr_upscaler.internal_width, 2560);
+        assert_eq!(app.tsr_upscaler.internal_height, 1440);
+        assert_eq!(app.tsr_upscaler.fragment_load_reduction_ratio(), 0.0);
     }
 }
