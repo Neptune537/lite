@@ -1,0 +1,7 @@
+{
+  "endpoints": ["wss://radio.tr7n7t7.com/ws/sonar"],
+  "publisher_keys": {
+    "did:atlantis:seed-radio": "0c3be51c1073b651c9528e3f8b97a8342f307f4246e04a875bf87cbce71f924a"
+  },
+  "public_read_only": true
+}
