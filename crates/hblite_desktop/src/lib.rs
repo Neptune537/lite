@@ -3,6 +3,43 @@ pub mod gui;
 pub use gui::LemuriaNativeApp;
 
 #[cfg(target_arch = "wasm32")]
+thread_local! {
+    static LIVE_UPDATES: std::cell::RefCell<std::collections::VecDeque<nautilus_world::live_telemetry::LiveTelemetryUpdate>> = Default::default();
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn ingest_telemetry_update(json: &str, now_ms: f64) -> bool {
+    if json.len() > 65_536 || !now_ms.is_finite() || now_ms < 0.0 { return false; }
+    let Ok(update) = serde_json::from_str::<nautilus_world::live_telemetry::LiveTelemetryUpdate>(json) else { return false; };
+    if !update.is_valid(now_ms as u64) { return false; }
+    LIVE_UPDATES.with(|queue| {
+        let mut queue = queue.borrow_mut();
+        if queue.len() >= 128 { return false; }
+        queue.push_back(update);
+        true
+    })
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = Date, js_name = now)]
+    fn telemetry_now() -> f64;
+}
+
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn apply_live_telemetry(state: &mut nautilus_world::GodsEyeGlobalState) {
+    let now = telemetry_now() as u64;
+    LIVE_UPDATES.with(|queue| {
+        for update in queue.borrow_mut().drain(..) {
+            state.ingest_live_update(update, now);
+        }
+    });
+    state.expire_live_tracks(now);
+}
+
+#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
 /// Web runner handle for embedding the Dashboard into any web page or Cloudflare Pages canvas.

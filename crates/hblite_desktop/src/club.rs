@@ -1435,7 +1435,7 @@ impl ClubState {
                         }
 
                         ui.horizontal(|ui| {
-                            let text_edit = ui.add_sized([ui.available_width() - 80.0, 20.0], egui::TextEdit::singleline(&mut daemon.chat_input).hint_text("Send directive to daemon..."));
+                            let text_edit = ui.add_sized([ui.available_width() - 80.0, 20.0], egui::TextEdit::singleline(&mut daemon.chat_input).hint_text("Demo directive (local scripted reply)..."));
                             let enter_pressed = text_edit.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter));
                             
                             if (ui.button("Send 📤").clicked() || enter_pressed) && !daemon.chat_input.trim().is_empty() {

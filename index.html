@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>HeavenlyBound // Lemuria Pause Menu & Companion HUD</title>
     <meta name="description" content="Pure Rust WebGPU / WebGL2 Pause Menu, Coral Escrow, Siren Radio, and Planetary Geodesics">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link data-trunk rel="copy-file" href="manifest.webmanifest">
+    <link data-trunk rel="copy-file" href="sonar-client.js">
+    <link data-trunk rel="copy-file" href="sonar-config.json">
+    <link data-trunk rel="copy-file" href="station-radio.js">
+    <link data-trunk rel="copy-dir" href="app-icons">
     <style>
         html, body {
             margin: 0;
@@ -29,6 +35,47 @@
             width: 100%;
             height: 100%;
             outline: none;
+        }
+
+        #platform-menu {
+            position: fixed;
+            z-index: 10;
+            bottom: .6rem;
+            right: .6rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: .4rem;
+            padding: .35rem;
+            max-width: calc(100vw - 1.2rem);
+            background: #101b28;
+            border: 1px solid #344b5f;
+            border-radius: .65rem;
+            font-size: .85rem;
+        }
+        #platform-menu > a, #platform-menu summary {
+            display: block;
+            padding: .45rem .6rem;
+            color: #d8eafa;
+            cursor: pointer;
+        }
+        #platform-menu form {
+            position: absolute;
+            bottom: calc(100% + .5rem);
+            right: 0;
+            width: min(20rem, calc(100vw - 2.5rem));
+            display: grid;
+            gap: .6rem;
+            padding: .8rem;
+            color: #d8eafa;
+            background: #101b28;
+            border: 1px solid #344b5f;
+            border-radius: .65rem;
+        }
+        #platform-menu input, #platform-menu audio { display: block; width: 100%; box-sizing: border-box; }
+        #platform-menu input, #platform-menu button {
+            margin-top: .25rem; padding: .45rem; color: #e9f4ff;
+            background: #182b3d; border: 1px solid #43617a; border-radius: .4rem;
         }
 
         #loading-screen {
@@ -67,6 +114,29 @@
     <div id="canvas-container">
         <canvas id="the_canvas_id"></canvas>
     </div>
+    <nav id="platform-menu" aria-label="Platform main menu">
+        <a href="https://heavenlysent-680ac.web.app/">Launch HeavenlyBound</a>
+        <details name="platform-tools">
+        <summary>Radio</summary>
+    <form id="station-radio">
+      <label>Seven Daughters Radio <input id="station-url" type="url" placeholder="https://station.example/live.mp3" required></label>
+      <button type="submit">Tune in</button>
+      <audio id="station-audio" controls preload="none" aria-label="Seven Daughters live radio"></audio>
+      <output id="station-status" aria-live="polite">Enter the live station URL.</output>
+    </form>
+        </details>
+        <details name="platform-tools">
+        <summary>Sonar</summary>
+    <form id="sonar-connection">
+        <label>Sonar endpoint <input name="endpoint" placeholder="wss://relay.example/ws/sonar" required></label>
+        <label>Read-only token <input id="sonar-token" type="password" autocomplete="off"></label>
+        <button type="submit" disabled>Connect</button>
+        <output id="sonar-connection-state" aria-live="polite">Disconnected</output>
+    </form>
+        </details>
+    </nav>
+    <script src="station-radio.js" defer></script>
+    <script src="sonar-client.js?v=signed-telemetry-1" defer></script>
 
     <script type="module">
         window.addEventListener("TrunkApplicationStarted", async (event) => {

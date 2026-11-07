@@ -441,6 +441,9 @@ pub struct LemuriaNativeApp {
 
     // Real Nautilus World Geodesic Navigation & Dynamic Globe Streamer
     pub current_coord: Wgs84GeoCoord,
+    private_node_anchors: [String; 3],
+    earth_texture: Option<egui::TextureHandle>,
+    show_globe_overlays: bool,
     pub active_route: TacticalRouteSpline,
     pub dem_streamer: DemTerrainTileStreamer,
     pub globe_rotation_rad: f32,
@@ -500,14 +503,8 @@ impl Default for LemuriaNativeApp {
             ("gemini-3.8-flash", "local.ai.gate"),
         );
 
-        let current_coord = Wgs84GeoCoord::new(35.6586, 139.7454, 42.0);
-
-        let waypoints = vec![
-            current_coord,
-            Wgs84GeoCoord::new(35.6601, 139.7290, 35.0),
-            Wgs84GeoCoord::new(35.6650, 139.7100, 28.0),
-        ];
-        let active_route = TacticalRouteSpline::new(waypoints);
+        let current_coord = nautilus_world::ATLANTIS_HOME;
+        let active_route = TacticalRouteSpline::new(Vec::new());
 
         let frame_allocator = DoubleBufferedFrameAllocator::new(DoubleBufferedFrameAllocator::DEFAULT_CAPACITY);
         let physics_stepper = DeterministicPhysicsStepper::new();
@@ -531,9 +528,13 @@ impl Default for LemuriaNativeApp {
 
         let mut dem_streamer = DemTerrainTileStreamer::new(15);
         dem_streamer.set_view_mode(NautilusGlobeViewMode::CompleteGlobe);
-        dem_streamer.update_for_camera(current_coord);
+        dem_streamer.update_for_camera(Wgs84GeoCoord::new(
+            current_coord.lat_deg,
+            current_coord.lon_deg,
+            2_500_000.0,
+        ));
 
-        let wh_coord = Wgs84GeoCoord::new(35.6528, 139.7532, 12.0);
+        let warehouse = AnchoredSpatialOverlay::warehouse_training_venue();
         let park_coord = Wgs84GeoCoord::new(35.6717, 139.6949, 38.0);
         let office_overlay = AnchoredSpatialOverlay::team7_headquarters_office();
         let office_coord = office_overlay.anchor_geo;
@@ -596,28 +597,12 @@ impl Default for LemuriaNativeApp {
                     venue_id: "venue_wh_01".into(),
                     title: "Sector-7 Old Iron Warehouse Arcade".into(),
                     venue_type_label: "🏭 1:1 Warehouse Virtual Arcade".into(),
-                    coord: wh_coord,
-                    broadcaster_callsign: "Jules Vance (VR)".into(),
-                    stream_uri: "webtransport://relay.kuroshio.mesh:4433/broadcast/wh_01".into(),
+                    coord: warehouse.anchor_geo,
+                    broadcaster_callsign: "No live broadcast".into(),
+                    stream_uri: String::new(),
                     rt60_seconds: 1.45,
-                    active_viewers: 42,
-                    spatial_overlay: AnchoredSpatialOverlay::new(
-                        "overlay_wh_01",
-                        wh_coord,
-                        SpatialOverlayKind::RealSiteGroundedVenue(RealSiteVenueOverlay {
-                            venue_id: "venue_wh_01".into(),
-                            name: "Sector-7 Old Iron Warehouse Arcade".into(),
-                            venue_type: RealSiteVenueType::WarehouseArcade,
-                            playspace_bounds_m: Vec3::new(40.0, 60.0, 12.0),
-                            is_broadcasting: true,
-                            broadcaster_callsign: Some("Jules Vance (VR)".into()),
-                            spectator_stream_uri: Some(
-                                "webtransport://relay.kuroshio.mesh:4433/broadcast/wh_01".into(),
-                            ),
-                            acoustic_profile_name: "Industrial Warehouse (Sabine RT60 1.45s)".into(),
-                        }),
-                        120.0,
-                    ),
+                    active_viewers: 0,
+                    spatial_overlay: warehouse,
                 },
                 LiveVenueBroadcast {
                     venue_id: "venue_park_02".into(),
@@ -692,11 +677,14 @@ impl Default for LemuriaNativeApp {
             vehicle_dynamics,
             current_coord,
             active_route,
+            private_node_anchors: Default::default(),
+            earth_texture: None,
+            show_globe_overlays: true,
             dem_streamer,
-            globe_rotation_rad: 0.0,
-            globe_tilt_rad: 0.25,
+            globe_rotation_rad: -(nautilus_world::ATLANTIS_HOME.lon_deg as f32).to_radians(),
+            globe_tilt_rad: (nautilus_world::ATLANTIS_HOME.lat_deg as f32).to_radians(),
             is_dragging_globe: false,
-            gods_eye: GodsEyeGlobalState::default(),
+            gods_eye: GodsEyeGlobalState::awaiting_live_feeds(),
             gods_eye_query_input: String::new(),
             guild_bounties_claimed_cyan: 0.0,
             poh_telemetry,
@@ -729,6 +717,9 @@ impl Default for LemuriaNativeApp {
 
 impl eframe::App for LemuriaNativeApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
+        #[cfg(target_arch = "wasm32")]
+        crate::apply_live_telemetry(&mut self.gods_eye);
+        ui.ctx().request_repaint_after(std::time::Duration::from_secs(1));
         // Step 60Hz physics accumulator & zero-GC allocator on each frame tick
         let steer_rad = self.steering_deg.to_radians();
         let throttle = self.throttle_pct;
@@ -774,7 +765,7 @@ impl eframe::App for LemuriaNativeApp {
                             );
                             ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                                 ui.label(
-                                    egui::RichText::new(format!("PoH: {:.1}", self.poh_telemetry.poh_score))
+                                    egui::RichText::new("PoH unavailable")
                                         .color(egui::Color32::from_rgb(255, 215, 0))
                                         .strong(),
                                 );
@@ -803,7 +794,7 @@ impl eframe::App for LemuriaNativeApp {
                         );
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             ui.label(
-                                egui::RichText::new(format!("PoH: {:.1} ({:?})", self.poh_telemetry.poh_score, self.poh_telemetry.tier))
+                                egui::RichText::new("PoH unavailable")
                                     .color(egui::Color32::from_rgb(255, 215, 0))
                                     .strong(),
                             );
@@ -877,11 +868,11 @@ impl eframe::App for LemuriaNativeApp {
         egui::CentralPanel::default().show(ui, |ui| {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 if self.daemons_tab_open {
-                    self.club.render_registered_daemons_tab(ui);
+                    ui.label("Daemon status and messaging unavailable. Connect a live daemon feed.");
                     return;
                 }
                 if self.club_open {
-                    self.club.ui(ui);
+                    ui.label("Club membership and chat are unavailable without a live Club connection.");
                     return;
                 }
                 match self.selected_tab {
@@ -889,19 +880,19 @@ impl eframe::App for LemuriaNativeApp {
                         self.render_tactical_map_tab(ui, form_factor);
                     }
                     MarketplaceTab::TheaterRadio => {
-                        self.render_theater_radio_tab(ui, form_factor);
+                        ui.hyperlink_to("Listen to Seven Daughters live", "https://radio.tr7n7t7.com/live.mp3");
                     }
                     MarketplaceTab::Marketplace => {
-                        self.render_marketplace_tab(ui, form_factor);
+                        ui.label("Live marketplace unavailable.");
                     }
                     MarketplaceTab::VirtualStore => {
-                        self.render_virtual_store_tab(ui, form_factor);
+                        ui.label("Live storefront unavailable.");
                     }
                     MarketplaceTab::VehicleTelemetry => {
-                        self.render_vehicle_telemetry_tab(ui, form_factor);
+                        ui.label("No live vehicle telemetry connected.");
                     }
                     MarketplaceTab::CharacterStatus => {
-                        self.render_character_status_tab(ui, form_factor);
+                        ui.label("Live character profile unavailable.");
                     }
                 }
             });
@@ -970,8 +961,49 @@ impl LemuriaNativeApp {
     }
 
     fn render_tactical_map_tab(&mut self, ui: &mut egui::Ui, _form_factor: ScreenFormFactor) {
-        ui.heading("🗺️ Nautilus Tactical Map & Planetary Guidance");
-        ui.label("Authoritative 64-bit ECEF terrain geodesics with Turn-by-Turn waypoint guidance.");
+        ui.heading("Nautilus · God's Eye");
+        ui.label(format!(
+            "Atlantis · 77034 · Founding clubs: {}",
+            nautilus_world::ATLANTIS_FOUNDING_CLUBS.join(", ")
+        ));
+        ui.horizontal_wrapped(|ui| {
+            if ui.button("Home").clicked() {
+                let anchor = self.private_node_anchor(0)
+                    .or_else(|| self.private_node_anchor(1))
+                    .unwrap_or(nautilus_world::ATLANTIS_HOME);
+                self.globe_rotation_rad = -(anchor.lon_deg as f32).to_radians();
+                self.globe_tilt_rad = (anchor.lat_deg as f32).to_radians();
+                self.current_coord = anchor;
+            }
+            ui.menu_button("Find venue", |ui| {
+                for venue in &self.venue_broadcasts {
+                    if ui.button(&venue.title).clicked() {
+                        self.globe_rotation_rad = -(venue.coord.lon_deg as f32).to_radians();
+                        self.globe_tilt_rad = (venue.coord.lat_deg as f32).to_radians();
+                        self.current_coord = venue.coord;
+                        self.show_globe_overlays = true;
+                        ui.close();
+                    }
+                }
+            });
+            ui.menu_button("Map layers", |ui| {
+                ui.checkbox(&mut self.show_globe_overlays, "Show tactical markers");
+                ui.label(if self.gods_eye.entities.is_empty() {
+                    "Awaiting signed live telemetry"
+                } else {
+                    "Receiving signed live telemetry"
+                });
+                for layer in GodsEyeLayerKind::ALL {
+                    let mut enabled = self.gods_eye.active_layers.contains(&layer);
+                    if ui.checkbox(&mut enabled, layer.display_name()).changed() {
+                        self.gods_eye.toggle_layer(layer, enabled);
+                        self.show_globe_overlays = true;
+                    }
+                }
+            });
+            ui.hyperlink_to("Approach Atlantis", "https://heavenlysent-680ac.web.app/?venue=atlantis");
+        });
+        self.render_nautilus_holographic_globe(ui);
         ui.add_space(8.0);
 
         let ecef_pos = self.current_coord.to_ecef_dvec3();
@@ -1083,17 +1115,44 @@ impl LemuriaNativeApp {
                 ui.heading("🌐 1:1 Grounded Venues & VR Spectator Feeds");
                 ui.separator();
                 ui.label(
-                    egui::RichText::new("● LIVE FROM HEAVENLYBOUND VR")
+                    egui::RichText::new("HEAVENLYBOUND VR VENUE PREVIEW")
                         .color(egui::Color32::from_rgb(255, 82, 82))
                         .strong(),
                 );
             });
-            ui.label("Touch any real-world site beacon on the holographic globe or list below to descend from orbit into 500m Karman SectorSlice LOD & watch in-situ VR gameplay.");
+            ui.label("Touch any real-world site beacon on the holographic globe or list below to open a local SectorSlice venue preview.");
             ui.add_space(6.0);
 
             // --- Interactive Holographic Nautilus 3D Globe Visualizer ---
-            self.render_nautilus_holographic_globe(ui);
-
+            ui.collapsing("Private node anchors", |ui| {
+                ui.label("Enter operator-provided latitude, longitude, altitude (m). These values stay in this session.");
+                for (index, label) in ["Home Node", "Club Node", "Next affiliated node"].into_iter().enumerate() {
+                    ui.horizontal(|ui| {
+                        ui.label(label);
+                        ui.add(egui::TextEdit::singleline(&mut self.private_node_anchors[index])
+                            .password(true).hint_text("lat, lon, altitude"));
+                        if !self.private_node_anchors[index].is_empty() && self.private_node_anchor(index).is_none() {
+                            ui.label("Invalid coordinates");
+                        }
+                    });
+                }
+                let destination = self.private_node_descent();
+                let target_label = if self.private_node_anchor(0).is_some() && self.private_node_anchor(2).is_some() {
+                    "Preview affiliated Home Node"
+                } else {
+                    "Preview Club Node"
+                };
+                if ui.add_enabled(destination.is_some(), egui::Button::new(target_label)).clicked() {
+                    if let Some(target) = destination {
+                        self.active_route = TacticalRouteSpline::new(vec![self.current_coord, target]);
+                        self.current_coord = target;
+                        self.dem_streamer.set_view_mode(NautilusGlobeViewMode::SectorSlice);
+                        self.dem_streamer.update_for_camera(target);
+                        self.active_spectator_session = None;
+                        self.last_status_message = "Private node SectorSlice preview".into();
+                    }
+                }
+            });
             ui.add_space(8.0);
 
             let venues = self.venue_broadcasts.clone();
@@ -1116,12 +1175,10 @@ impl LemuriaNativeApp {
                             ui.separator();
                             ui.label(egui::RichText::new(format!("{:.2} km away", dist_km)).color(egui::Color32::LIGHT_GRAY));
                             ui.separator();
-                            ui.label(egui::RichText::new(format!("👀 {} viewers", venue.active_viewers)).color(egui::Color32::from_rgb(0, 229, 255)));
+                            ui.label("Live broadcast unverified");
                         });
 
                         ui.horizontal(|ui| {
-                            ui.label(format!("Broadcaster: {}", venue.broadcaster_callsign));
-                            ui.separator();
                             ui.label(format!("Sabine RT60: {:.2}s", venue.rt60_seconds));
                             ui.separator();
                             ui.label(format!(
@@ -1134,28 +1191,16 @@ impl LemuriaNativeApp {
 
                         ui.add_space(4.0);
                         ui.horizontal(|ui| {
-                            if ui.button(egui::RichText::new("🥽 Touch to Watch (Descend to Venue)").strong().color(egui::Color32::BLACK))
+                            if ui.button(egui::RichText::new("🥽 Preview Venue").strong().color(egui::Color32::BLACK))
                                 .clicked()
                             {
+                                self.active_route = TacticalRouteSpline::new(vec![self.current_coord, venue.coord]);
                                 self.current_coord = venue.coord;
                                 self.dem_streamer.set_view_mode(NautilusGlobeViewMode::SectorSlice);
                                 self.dem_streamer.update_for_camera(venue.coord);
-                                let tangent = venue.spatial_overlay.tangent_frame();
-                                let gravity_dir = tangent.local_gravity_dir(Vec3::new(0.0, 1.7, 0.0));
-                                self.active_route = TacticalRouteSpline::new(vec![self.current_coord, venue.coord]);
-                                self.active_spectator_session = Some(SpectatorSessionState {
-                                    venue_id: venue.venue_id.clone(),
-                                    title: venue.title.clone(),
-                                    broadcaster_callsign: venue.broadcaster_callsign.clone(),
-                                    stream_uri: venue.stream_uri.clone(),
-                                    elapsed_seconds: 12.4,
-                                    total_tips_cyan: 0.0,
-                                    camera_mode: "Third-Person Orbit (Dual-Quat Kimodo)".into(),
-                                    playspace_bounds_m: playspace_bounds,
-                                    local_gravity_dir: gravity_dir,
-                                });
+                                self.active_spectator_session = None;
                                 self.last_status_message = format!(
-                                    "Descended to <500m SectorSlice LOD ({:?}) • Spectating {}",
+                                    "SectorSlice preview ({:?}) • {}",
                                     self.dem_streamer.active_regime, venue.title
                                 );
                             }
@@ -1163,6 +1208,12 @@ impl LemuriaNativeApp {
                             if ui.button("📍 Lock Waypoint").clicked() {
                                 self.active_route = TacticalRouteSpline::new(vec![self.current_coord, venue.coord]);
                                 self.last_status_message = format!("Locked Waypoint: {} ({:.2} km)", venue.title, dist_km);
+                            }
+                            if matches!(venue.venue_id.as_str(), "venue_wh_01" | "venue_park_02") {
+                                ui.hyperlink_to(
+                                    "Open HeavenlyBound venue preview",
+                                    format!("https://heavenlysent-680ac.web.app/?venue={}", venue.venue_id),
+                                );
                             }
                         });
                     });
@@ -1241,7 +1292,11 @@ impl LemuriaNativeApp {
                     .strong(),
                 );
             });
-            ui.label("Gamified bilawalsidhu/gods-eye-view Command Center: Live ADS-B Aviation, Maritime AIS, Orbital TLE Satellites, Seismic/Wildfire Radar, SDR 7-Daughters Radio, and VR Guild Bounties on a single mandatory globe.");
+            ui.label(if self.gods_eye.entities.is_empty() {
+                "Awaiting signed live telemetry."
+            } else {
+                "Signed live telemetry · tracks expire after 30 seconds."
+            });
 
             ui.add_space(6.0);
             // Layer Toggles
@@ -1340,7 +1395,11 @@ impl LemuriaNativeApp {
                                 format!("[{}] {} • Mag/FRP: {:.1} • Radius: {:.0} km", severity_tag, event_category, magnitude_or_frp_mw, radius_km)
                             }
                             GodsEyeTelemetryKind::SdrRadioStation { frequency_mhz, modulation, active_daughter_or_op, sabine_rt60_sec } => {
-                                format!("{:.1} MHz ({}) • On-Air: {} • Sabine RT60: {:.2}s", frequency_mhz, modulation, active_daughter_or_op, sabine_rt60_sec)
+                                if modulation == "HTTPS MP3" {
+                                    format!("Live internet radio • On air: {active_daughter_or_op}")
+                                } else {
+                                    format!("{:.1} MHz ({}) • On-Air: {} • Sabine RT60: {:.2}s", frequency_mhz, modulation, active_daughter_or_op, sabine_rt60_sec)
+                                }
                             }
                             GodsEyeTelemetryKind::VrGuildContract { guild_house, contract_type, min_poh_score, webxr_store_url, .. } => {
                                 format!("Guild: {} • {} • Min PoH: {:.2} • WebXR: {}", guild_house, contract_type, min_poh_score, webxr_store_url)
@@ -1398,9 +1457,34 @@ impl LemuriaNativeApp {
         });
     }
 
+    fn private_node_anchor(&self, index: usize) -> Option<Wgs84GeoCoord> {
+        let mut fields = self.private_node_anchors[index].split(',').map(str::trim);
+        let latitude: f64 = fields.next()?.parse().ok()?;
+        let longitude: f64 = fields.next()?.parse().ok()?;
+        let altitude: f64 = fields.next()?.parse().ok()?;
+        if fields.next().is_some()
+            || !(-90.0..=90.0).contains(&latitude)
+            || !(-180.0..=180.0).contains(&longitude)
+            || !altitude.is_finite()
+        {
+            return None;
+        }
+        Some(Wgs84GeoCoord::new(latitude, longitude, altitude))
+    }
+
+    fn private_node_descent(&self) -> Option<Wgs84GeoCoord> {
+        let club = self.private_node_anchor(1).or(Some(nautilus_world::ATLANTIS_HOME));
+        if self.private_node_anchor(0).is_some() {
+            self.private_node_anchor(2).or(club)
+        } else {
+            club
+        }
+    }
+
+
     fn render_nautilus_holographic_globe(&mut self, ui: &mut egui::Ui) {
         ui.vertical_centered(|ui| {
-            let desired_size = egui::Vec2::new(ui.available_width().min(600.0), 320.0);
+            let desired_size = egui::Vec2::new(ui.available_width().min(760.0), ui.available_width().clamp(220.0, 500.0));
             let (rect, response) = ui.allocate_exact_size(desired_size, egui::Sense::click_and_drag());
 
             // Drag to rotate globe
@@ -1408,12 +1492,6 @@ impl LemuriaNativeApp {
                 let delta = response.drag_delta();
                 self.globe_rotation_rad += delta.x * 0.01;
                 self.globe_tilt_rad = (self.globe_tilt_rad - delta.y * 0.01).clamp(-1.2, 1.2);
-            } else {
-                // Gentle continuous idle rotation
-                self.globe_rotation_rad += 0.003;
-                if self.globe_rotation_rad > std::f32::consts::TAU {
-                    self.globe_rotation_rad -= std::f32::consts::TAU;
-                }
             }
 
             let painter = ui.painter_at(rect);
@@ -1448,324 +1526,206 @@ impl LemuriaNativeApp {
             let rot = self.globe_rotation_rad;
             let tilt = self.globe_tilt_rad;
 
-            // Parallels (Latitude lines)
-            for lat_deg in [-60.0, -30.0, 0.0, 30.0, 60.0] {
-                let lat_rad: f32 = (lat_deg as f32).to_radians();
-                let y_offset = radius * lat_rad.sin() * tilt.cos();
-                let x_radius = radius * lat_rad.cos();
-                let y_radius = (radius * lat_rad.cos() * tilt.sin()).abs().max(2.0);
-
-                let is_equator = lat_deg == 0.0;
-                let stroke = if is_equator {
-                    egui::Stroke::new(1.2, egui::Color32::from_rgba_unmultiplied(0, 255, 200, 140))
-                } else {
-                    egui::Stroke::new(0.8, egui::Color32::from_rgba_unmultiplied(0, 180, 240, 70))
-                };
-
-                painter.rect_stroke(
-                    egui::Rect::from_center_size(
-                        egui::Pos2::new(center.x, center.y - y_offset),
-                        egui::Vec2::new(x_radius * 2.0, y_radius * 2.0),
-                    ),
-                    y_radius,
-                    stroke,
-                    egui::StrokeKind::Middle,
-                );
-            }
-
-            // Meridians (Longitude arcs)
-            for i in 0..12 {
-                let lng_offset = (i as f32 / 12.0) * std::f32::consts::TAU + rot;
-                let x_offset = lng_offset.cos() * radius;
-                let is_front = lng_offset.sin() > 0.0;
-
-                if is_front {
-                    let stroke = egui::Stroke::new(
-                        0.8,
-                        egui::Color32::from_rgba_unmultiplied(0, 229, 255, 80),
-                    );
-                    painter.rect_stroke(
-                        egui::Rect::from_center_size(
-                            center,
-                            egui::Vec2::new(x_offset.abs() * 2.0, radius * 2.0),
-                        ),
-                        radius,
-                        stroke,
-                        egui::StrokeKind::Middle,
-                    );
+            let (sin_tilt, cos_tilt) = tilt.sin_cos();
+            let project = |lat: f32, lon: f32| {
+                let (sin_lat, cos_lat) = lat.sin_cos();
+                let (sin_lon, cos_lon) = lon.sin_cos();
+                let e2 = nautilus_world::WGS84_ECCENTRICITY_SQ_E2 as f32;
+                let prime_vertical = (1.0 - e2 * sin_lat * sin_lat).sqrt().recip();
+                let up = prime_vertical * (1.0 - e2) * sin_lat;
+                let equatorial = prime_vertical * cos_lat;
+                let facing = equatorial * cos_lon;
+                let y = up * cos_tilt - facing * sin_tilt;
+                let depth = sin_lat * sin_tilt + cos_lat * cos_lon * cos_tilt;
+                (center + egui::vec2(radius * equatorial * sin_lon, -radius * y), depth)
+            };
+            if self.earth_texture.is_none() {
+                if let Ok(image) = image::load_from_memory(include_bytes!(
+                    "../../../../heavenlyBound/dist/assets/earth_atmos_2048.jpg"
+                )) {
+                    let rgba = image.to_rgba8();
+                    let size = [rgba.width() as usize, rgba.height() as usize];
+                    self.earth_texture = Some(ui.ctx().load_texture(
+                        "nautilus-earth-day",
+                        egui::ColorImage::from_rgba_unmultiplied(size, rgba.as_raw()),
+                        egui::TextureOptions::LINEAR,
+                    ));
                 }
             }
-
-            // --- SGP4 Satellite Orbital Tracks (CSS Tianhe & Leopard Arcs - Image 4) ---
-            // 1. CSS (Tianhe) SGP4 Orbit (~395 km equivalent trail, red arc)
-            let css_points = 64;
-            let css_inc = 41.5_f32.to_radians();
-            for i in 0..css_points {
-                let t1 = (i as f32 / css_points as f32) * std::f32::consts::TAU;
-                let t2 = ((i + 1) as f32 / css_points as f32) * std::f32::consts::TAU;
-
-                let effective_lon1 = t1 + rot * 0.4;
-                let lat1 = (t1.sin() * css_inc.sin()).asin();
-                let effective_lon2 = t2 + rot * 0.4;
-                let lat2 = (t2.sin() * css_inc.sin()).asin();
-
-                let is_front = effective_lon1.cos() > -0.2;
-                if is_front {
-                    let r_sat = radius + 14.0;
-                    let px1 = center.x + r_sat * lat1.cos() * effective_lon1.sin();
-                    let py1 = center.y - r_sat * (lat1.sin() * tilt.cos() - lat1.cos() * effective_lon1.cos() * tilt.sin());
-                    let px2 = center.x + r_sat * lat2.cos() * effective_lon2.sin();
-                    let py2 = center.y - r_sat * (lat2.sin() * tilt.cos() - lat2.cos() * effective_lon2.cos() * tilt.sin());
-
-                    painter.line_segment(
-                        [egui::Pos2::new(px1, py1), egui::Pos2::new(px2, py2)],
-                        egui::Stroke::new(1.4, egui::Color32::from_rgba_unmultiplied(255, 60, 60, 180)),
-                    );
-
-                    // Satellite lead icon & badge at leading edge
-                    if i == (css_points * 3 / 4) {
-                        painter.circle_filled(egui::Pos2::new(px1, py1), 3.5, egui::Color32::from_rgb(255, 60, 60));
-                        painter.text(
-                            egui::Pos2::new(px1 + 8.0, py1 - 6.0),
-                            egui::Align2::LEFT_BOTTOM,
-                            "CSS (TIANHE) 395 km - SGP4 orbit",
-                            egui::FontId::proportional(10.0),
-                            egui::Color32::from_rgb(255, 200, 200),
-                        );
-                    }
-                }
-            }
-
-            // 2. LEOPARD SGP4 Polar Orbit (Cyan arc)
-            for i in 0..css_points {
-                let t1 = (i as f32 / css_points as f32) * std::f32::consts::TAU;
-                let t2 = ((i + 1) as f32 / css_points as f32) * std::f32::consts::TAU;
-
-                let effective_lon1 = (t1.sin() * 0.35) + rot * 0.7;
-                let lat1 = t1.cos();
-                let effective_lon2 = (t2.sin() * 0.35) + rot * 0.7;
-                let lat2 = t2.cos();
-
-                if effective_lon1.cos() > -0.2 {
-                    let r_sat = radius + 20.0;
-                    let px1 = center.x + r_sat * lat1.cos() * effective_lon1.sin();
-                    let py1 = center.y - r_sat * (lat1.sin() * tilt.cos() - lat1.cos() * effective_lon1.cos() * tilt.sin());
-                    let px2 = center.x + r_sat * lat2.cos() * effective_lon2.sin();
-                    let py2 = center.y - r_sat * (lat2.sin() * tilt.cos() - lat2.cos() * effective_lon2.cos() * tilt.sin());
-
-                    painter.line_segment(
-                        [egui::Pos2::new(px1, py1), egui::Pos2::new(px2, py2)],
-                        egui::Stroke::new(1.2, egui::Color32::from_rgba_unmultiplied(0, 229, 255, 160)),
-                    );
-
-                    if i == (css_points / 2) {
-                        painter.circle_filled(egui::Pos2::new(px1, py1), 3.0, egui::Color32::from_rgb(0, 229, 255));
-                        painter.text(
-                            egui::Pos2::new(px1 + 8.0, py1 - 6.0),
-                            egui::Align2::LEFT_BOTTOM,
-                            "LEOPARD 480 km",
-                            egui::FontId::proportional(9.5),
-                            egui::Color32::from_rgb(160, 240, 255),
-                        );
-                    }
-                }
-            }
-
-            // --- Snap Map Social Activity Thermal Heatmaps (Image 3) ---
-            let hotspots: [(f32, f32, f32, egui::Color32); 5] = [
-                (-74.0, 40.7, 16.0, egui::Color32::from_rgba_unmultiplied(255, 60, 30, 140)),  // NYC (Red)
-                (-118.2, 34.0, 14.0, egui::Color32::from_rgba_unmultiplied(255, 200, 30, 140)), // LA (Yellow)
-                (-0.12, 51.5, 15.0, egui::Color32::from_rgba_unmultiplied(255, 50, 30, 140)),   // London (Red)
-                (2.35, 48.8, 12.0, egui::Color32::from_rgba_unmultiplied(255, 180, 20, 120)),   // Paris (Yellow)
-                (139.7, 35.6, 18.0, egui::Color32::from_rgba_unmultiplied(255, 40, 20, 160)),  // Tokyo (Intense Red)
-            ];
-
-            for (lon_deg, lat_deg, base_r, color) in hotspots {
-                let lat_rad = lat_deg.to_radians();
-                let lon_rad = lon_deg.to_radians();
-                let effective_lon = lon_rad + rot;
-
-                if effective_lon.cos() > -0.1 {
-                    let px = center.x + radius * lat_rad.cos() * effective_lon.sin();
-                    let py = center.y - radius * (lat_rad.sin() * tilt.cos() - lat_rad.cos() * effective_lon.cos() * tilt.sin());
-                    let hp_pos = egui::Pos2::new(px, py);
-
-                    // Concentric thermal bloom
-                    painter.circle_filled(hp_pos, base_r * 1.6, egui::Color32::from_rgba_unmultiplied(color.r(), color.g(), color.b(), 35));
-                    painter.circle_filled(hp_pos, base_r * 1.0, egui::Color32::from_rgba_unmultiplied(color.r(), color.g(), color.b(), 75));
-                    painter.circle_filled(hp_pos, base_r * 0.5, egui::Color32::from_rgba_unmultiplied(color.r(), color.g(), color.b(), 180));
-                }
-            }
-
-            // 4. Draw Authoritative Geodesic Loci & VR Broadcast Pins
-            let mouse_pos = response.hover_pos();
-
-            let venues = self.venue_broadcasts.clone();
-            for venue in &venues {
-                let lat_rad = (venue.coord.lat_deg as f32).to_radians();
-                let lon_rad = (venue.coord.lon_deg as f32).to_radians();
-                let effective_lon = lon_rad + rot;
-
-                // Spherical projection to 2D screen
-                let cos_lon = effective_lon.cos();
-                let sin_lon = effective_lon.sin();
-                let cos_lat = lat_rad.cos();
-                let sin_lat = lat_rad.sin();
-
-                // Visibility check (front hemisphere facing camera)
-                if cos_lon > -0.15 {
-                    let px = center.x + radius * cos_lat * sin_lon;
-                    let py = center.y - radius * (sin_lat * tilt.cos() - cos_lat * cos_lon * tilt.sin());
-
-                    let pin_pos = egui::Pos2::new(px, py);
-
-                    // Check hover or click
-                    let is_hovered = if let Some(m) = mouse_pos {
-                        (m - pin_pos).length() < 14.0
-                    } else {
-                        false
-                    };
-
-                    // Pulsing beacon ring
-                    let pulse_radius = 5.0 + ((rot * 4.0).sin().abs() * 3.0);
-                    painter.circle_filled(
-                        pin_pos,
-                        pulse_radius + 4.0,
-                        egui::Color32::from_rgba_unmultiplied(255, 82, 82, 70),
-                    );
-                    painter.circle_filled(
-                        pin_pos,
-                        5.0,
-                        egui::Color32::from_rgb(255, 82, 82),
-                    );
-                    painter.circle_stroke(
-                        pin_pos,
-                        6.5,
-                        egui::Stroke::new(1.0, egui::Color32::WHITE),
-                    );
-
-                    // Pin Label
-                    painter.text(
-                        pin_pos + egui::Vec2::new(8.0, -8.0),
-                        egui::Align2::LEFT_BOTTOM,
-                        &venue.title,
-                        egui::FontId::proportional(11.0),
-                        if is_hovered { egui::Color32::YELLOW } else { egui::Color32::from_rgb(0, 229, 255) },
-                    );
-
-                    // Click to touch-to-watch directly from globe
-                    if is_hovered && response.clicked() {
-                        self.current_coord = venue.coord;
-                        self.dem_streamer.set_view_mode(NautilusGlobeViewMode::SectorSlice);
-                        self.dem_streamer.update_for_camera(venue.coord);
-                        let tangent = venue.spatial_overlay.tangent_frame();
-                        let gravity_dir = tangent.local_gravity_dir(Vec3::new(0.0, 1.7, 0.0));
-                        self.active_route = TacticalRouteSpline::new(vec![self.current_coord, venue.coord]);
-                        let playspace_bounds = match &venue.spatial_overlay.overlay_kind {
-                            SpatialOverlayKind::RealSiteGroundedVenue(v) => v.playspace_bounds_m,
-                            _ => Vec3::new(50.0, 50.0, 10.0),
-                        };
-                        self.active_spectator_session = Some(SpectatorSessionState {
-                            venue_id: venue.venue_id.clone(),
-                            title: venue.title.clone(),
-                            broadcaster_callsign: venue.broadcaster_callsign.clone(),
-                            stream_uri: venue.stream_uri.clone(),
-                            elapsed_seconds: 0.0,
-                            total_tips_cyan: 0.0,
-                            camera_mode: "Third-Person Orbit (Globe Touch-to-Watch)".into(),
-                            playspace_bounds_m: playspace_bounds,
-                            local_gravity_dir: gravity_dir,
+            if let Some(texture) = &self.earth_texture {
+                const LAT_STEPS: usize = 80;
+                const LON_STEPS: usize = 160;
+                let mut mesh = egui::Mesh::with_texture(texture.id());
+                let mut visible = Vec::with_capacity((LAT_STEPS + 1) * (LON_STEPS + 1));
+                for row in 0..=LAT_STEPS {
+                    let v = row as f32 / LAT_STEPS as f32;
+                    let lat = (0.5 - v) * std::f32::consts::PI;
+                    for column in 0..=LON_STEPS {
+                        let u = column as f32 / LON_STEPS as f32;
+                        let lon = (u - 0.5) * std::f32::consts::TAU + rot;
+                        let (pos, depth) = project(lat, lon);
+                        visible.push(depth >= 0.0);
+                        let light = (205.0 + 50.0 * depth.max(0.0)) as u8;
+                        mesh.vertices.push(egui::epaint::Vertex {
+                            pos,
+                            uv: egui::pos2(u, v),
+                            color: egui::Color32::from_gray(light),
                         });
-                        self.last_status_message = format!("Holographic Globe: Descended to SectorSlice for {}", venue.title);
                     }
                 }
-            }
-
-            // 5. Draw Mandatory God's-Eye-View Live Multi-Layer Telemetry Entities on Globe
-            let active_layers = self.gods_eye.active_layers.clone();
-            let gods_eye_entities: Vec<_> = self
-                .gods_eye
-                .entities
-                .iter()
-                .filter(|e| active_layers.contains(&e.layer))
-                .cloned()
-                .collect();
-
-            for ent in &gods_eye_entities {
-                let lat_rad = (ent.geo.lat_deg as f32).to_radians();
-                let lon_rad = (ent.geo.lon_deg as f32).to_radians();
-                let effective_lon = lon_rad + rot;
-                let cos_lon = effective_lon.cos();
-                let sin_lon = effective_lon.sin();
-                let cos_lat = lat_rad.cos();
-                let sin_lat = lat_rad.sin();
-
-                if cos_lon > -0.15 {
-                    let alt_boost = if ent.layer == GodsEyeLayerKind::OrbitalSatellites {
-                        1.08
-                    } else if ent.layer == GodsEyeLayerKind::AviationAdsB {
-                        1.03
-                    } else {
-                        1.0
-                    };
-                    let r = radius * alt_boost;
-                    let px = center.x + r * cos_lat * sin_lon;
-                    let py = center.y - r * (sin_lat * tilt.cos() - cos_lat * cos_lon * tilt.sin());
-                    let pt = egui::Pos2::new(px, py);
-
-                    let color = match ent.layer {
-                        GodsEyeLayerKind::AviationAdsB => egui::Color32::from_rgb(0, 242, 254),
-                        GodsEyeLayerKind::MaritimeAis => egui::Color32::from_rgb(0, 255, 157),
-                        GodsEyeLayerKind::OrbitalSatellites => egui::Color32::from_rgb(255, 226, 89),
-                        GodsEyeLayerKind::SeismicWildfireWeather => egui::Color32::from_rgb(255, 110, 30),
-                        GodsEyeLayerKind::SdrSirenRadio => egui::Color32::from_rgb(180, 60, 255),
-                        GodsEyeLayerKind::VrGuildMarketplace => egui::Color32::from_rgb(255, 215, 0),
-                    };
-
-                    let is_hovered = mouse_pos.map(|m| (m - pt).length() < 12.0).unwrap_or(false);
-                    painter.circle_filled(pt, if is_hovered { 5.5 } else { 4.0 }, color);
-                    painter.circle_stroke(pt, 6.5, egui::Stroke::new(1.0, color));
-
-                    if is_hovered {
-                        painter.text(
-                            pt + egui::Vec2::new(8.0, -6.0),
-                            egui::Align2::LEFT_BOTTOM,
-                            format!("{} [{:.0} CYAN]", ent.callsign, ent.attached_bounty_cyan),
-                            egui::FontId::proportional(11.0),
-                            egui::Color32::YELLOW,
-                        );
-                        if response.clicked() {
-                            let _ = self.gods_eye.lock_cockpit_or_guild_target(&ent.entity_id);
-                            self.current_coord = ent.geo;
-                            self.dem_streamer.update_for_camera(ent.geo);
-                            self.last_status_message = format!("Globe Lock: {} ({:?})", ent.callsign, self.gods_eye.camera_mode);
+                for row in 0..LAT_STEPS {
+                    for column in 0..LON_STEPS {
+                        let a = row * (LON_STEPS + 1) + column;
+                        let b = a + LON_STEPS + 1;
+                        for triangle in [[a, b, b + 1], [a, b + 1, a + 1]] {
+                            if triangle.iter().all(|&index| visible[index]) {
+                                mesh.indices.extend(triangle.map(|index| index as u32));
+                            }
                         }
                     }
                 }
+                painter.add(egui::Shape::mesh(mesh));
             }
 
-            // Current player location marker
-            let my_lat_rad = (self.current_coord.lat_deg as f32).to_radians();
-            let my_lon_rad = (self.current_coord.lon_deg as f32).to_radians();
-            let my_effective_lon = my_lon_rad + rot;
-            if my_effective_lon.cos() > -0.15 {
-                let mx = center.x + radius * my_lat_rad.cos() * my_effective_lon.sin();
-                let my = center.y - radius * (my_lat_rad.sin() * tilt.cos() - my_lat_rad.cos() * my_effective_lon.cos() * tilt.sin());
-                let my_pos = egui::Pos2::new(mx, my);
-                painter.circle_filled(my_pos, 4.0, egui::Color32::GREEN);
-                painter.circle_stroke(my_pos, 7.0, egui::Stroke::new(1.0, egui::Color32::GREEN));
-                painter.text(
-                    my_pos + egui::Vec2::new(8.0, 6.0),
-                    egui::Align2::LEFT_TOP,
-                    "📍 YOU",
-                    egui::FontId::proportional(11.0),
-                    egui::Color32::GREEN,
-                );
+            if self.show_globe_overlays {
+                // 4. Draw Authoritative Geodesic Loci & VR Broadcast Pins
+                let mouse_pos = response.hover_pos();
+
+                let venues = self.venue_broadcasts.clone();
+                for venue in &venues {
+                    let lat_rad = (venue.coord.lat_deg as f32).to_radians();
+                    let lon_rad = (venue.coord.lon_deg as f32).to_radians();
+                    let effective_lon = lon_rad + rot;
+
+                    let (pin_pos, depth) = project(lat_rad, effective_lon);
+                    if depth >= 0.0 {
+                        // Check hover or click
+                        let is_hovered = if let Some(m) = mouse_pos {
+                            (m - pin_pos).length() < 14.0
+                        } else {
+                            false
+                        };
+
+                        // Pulsing beacon ring
+                        let pulse_radius = 5.0 + ((rot * 4.0).sin().abs() * 3.0);
+                        painter.circle_filled(
+                            pin_pos,
+                            pulse_radius + 4.0,
+                            egui::Color32::from_rgba_unmultiplied(255, 82, 82, 70),
+                        );
+                        painter.circle_filled(
+                            pin_pos,
+                            5.0,
+                            egui::Color32::from_rgb(255, 82, 82),
+                        );
+                        painter.circle_stroke(
+                            pin_pos,
+                            6.5,
+                            egui::Stroke::new(1.0, egui::Color32::WHITE),
+                        );
+
+                        // Pin Label
+                        painter.text(
+                            pin_pos + egui::Vec2::new(8.0, -8.0),
+                            egui::Align2::LEFT_BOTTOM,
+                            &venue.title,
+                            egui::FontId::proportional(11.0),
+                            if is_hovered { egui::Color32::YELLOW } else { egui::Color32::from_rgb(0, 229, 255) },
+                        );
+
+                        // Click to touch-to-watch directly from globe
+                        if is_hovered && response.clicked() {
+                            self.active_route = TacticalRouteSpline::new(vec![self.current_coord, venue.coord]);
+                            self.current_coord = venue.coord;
+                            self.dem_streamer.set_view_mode(NautilusGlobeViewMode::SectorSlice);
+                            self.dem_streamer.update_for_camera(venue.coord);
+                            self.active_spectator_session = None;
+                            self.last_status_message = format!("Holographic Globe: Descended to SectorSlice for {}", venue.title);
+                        }
+                    }
+                }
+
+                // 5. Draw Mandatory God's-Eye-View Live Multi-Layer Telemetry Entities on Globe
+                let active_layers = self.gods_eye.active_layers.clone();
+                let gods_eye_entities: Vec<_> = self
+                    .gods_eye
+                    .entities
+                    .iter()
+                    .filter(|e| active_layers.contains(&e.layer))
+                    .cloned()
+                    .collect();
+
+                for ent in &gods_eye_entities {
+                    let lat_rad = (ent.geo.lat_deg as f32).to_radians();
+                    let lon_rad = (ent.geo.lon_deg as f32).to_radians();
+                    let effective_lon = lon_rad + rot;
+                    let cos_lon = effective_lon.cos();
+                    let sin_lon = effective_lon.sin();
+                    let cos_lat = lat_rad.cos();
+                    let sin_lat = lat_rad.sin();
+
+                    if cos_lon > -0.15 {
+                        let alt_boost = 1.0 + (ent.geo.alt_meters / nautilus_world::WGS84_SEMI_MAJOR_AXIS_A) as f32;
+                        let r = radius * alt_boost;
+                        let px = center.x + r * cos_lat * sin_lon;
+                        let py = center.y - r * (sin_lat * tilt.cos() - cos_lat * cos_lon * tilt.sin());
+                        let pt = egui::Pos2::new(px, py);
+
+                        let color = match ent.layer {
+                            GodsEyeLayerKind::AviationAdsB => egui::Color32::from_rgb(0, 242, 254),
+                            GodsEyeLayerKind::MaritimeAis => egui::Color32::from_rgb(0, 255, 157),
+                            GodsEyeLayerKind::OrbitalSatellites => egui::Color32::from_rgb(255, 226, 89),
+                            GodsEyeLayerKind::SeismicWildfireWeather => egui::Color32::from_rgb(255, 110, 30),
+                            GodsEyeLayerKind::SdrSirenRadio => egui::Color32::from_rgb(180, 60, 255),
+                            GodsEyeLayerKind::VrGuildMarketplace => egui::Color32::from_rgb(255, 215, 0),
+                        };
+
+                        let is_hovered = mouse_pos.map(|m| (m - pt).length() < 12.0).unwrap_or(false);
+                        painter.circle_filled(pt, if is_hovered { 5.5 } else { 4.0 }, color);
+                        painter.circle_stroke(pt, 6.5, egui::Stroke::new(1.0, color));
+
+                        if is_hovered {
+                            painter.text(
+                                pt + egui::Vec2::new(8.0, -6.0),
+                                egui::Align2::LEFT_BOTTOM,
+                                format!("{} [{:.0} CYAN]", ent.callsign, ent.attached_bounty_cyan),
+                                egui::FontId::proportional(11.0),
+                                egui::Color32::YELLOW,
+                            );
+                            if response.clicked() {
+                                let _ = self.gods_eye.lock_cockpit_or_guild_target(&ent.entity_id);
+                                self.current_coord = ent.geo;
+                                self.dem_streamer.update_for_camera(ent.geo);
+                                self.last_status_message = format!("Globe Lock: {} ({:?})", ent.callsign, self.gods_eye.camera_mode);
+                            }
+                        }
+                    }
+                }
+
             }
+
+            let home = self.private_node_anchor(0);
+            if let Some(anchor) = home.or_else(|| self.private_node_anchor(1)).or(Some(nautilus_world::ATLANTIS_HOME)) {
+                let lat = (anchor.lat_deg as f32).to_radians();
+                let lon = (anchor.lon_deg as f32).to_radians();
+                let (pin, depth) = project(lat, lon + rot);
+                if depth >= 0.0 {
+                    painter.circle_filled(pin, 4.0, egui::Color32::GREEN);
+                    painter.circle_stroke(pin, 7.0, egui::Stroke::new(1.0, egui::Color32::GREEN));
+                    painter.text(
+                        pin + egui::vec2(8.0, 6.0),
+                        egui::Align2::LEFT_TOP,
+                        if home.is_some() { "YOU · HOME NODE" } else if self.private_node_anchor(1).is_some() { "YOU · CLUB NODE" } else { "ATLANTIS · HOME" },
+                        egui::FontId::proportional(11.0),
+                        egui::Color32::GREEN,
+                    );
+                }
+            }
+
 
             ui.add_space(4.0);
             ui.label(
-                egui::RichText::new("👆 Drag to rotate globe • Click any red beacon pin to descend and spectate live VR stream")
+                egui::RichText::new("Drag to rotate · Select a venue marker to preview its sector")
                     .small()
                     .color(egui::Color32::GRAY),
             );
@@ -2736,6 +2696,21 @@ mod tests {
     use nautilus_world::{GodsEyeCameraMode, NautilusAltitudeRegime};
 
     #[test]
+    fn test_private_node_descent_prefers_affiliate_only_with_registered_home() {
+        let mut app = LemuriaNativeApp::default();
+        assert_eq!(app.private_node_descent(), Some(nautilus_world::ATLANTIS_HOME));
+        app.private_node_anchors[1] = "10,20,30".into();
+        app.private_node_anchors[2] = "40,50,60".into();
+        assert_eq!(app.private_node_descent().unwrap().lat_deg, 10.0);
+        app.private_node_anchors[0] = "91,20,30".into();
+        assert_eq!(app.private_node_descent().unwrap().lat_deg, 10.0);
+        app.private_node_anchors[0] = "12,22,32".into();
+        assert_eq!(app.private_node_descent().unwrap().lat_deg, 40.0);
+        app.private_node_anchors[2].clear();
+        assert_eq!(app.private_node_descent().unwrap().lat_deg, 10.0);
+    }
+
+    #[test]
     fn test_lite_app_default_and_touch_to_watch_sector_slice_descent() {
         let mut app = LemuriaNativeApp::default();
         assert_eq!(app.dem_streamer.view_mode, NautilusGlobeViewMode::CompleteGlobe);
@@ -2862,7 +2837,8 @@ mod tests {
     fn test_lite_app_gods_eye_telemetry_and_vr_guild_bounties() {
         let mut app = LemuriaNativeApp::default();
         assert_eq!(app.gods_eye.active_layers.len(), 6);
-        assert!(app.gods_eye.visible_entities().len() >= 10);
+        assert!(app.gods_eye.visible_entities().is_empty());
+        app.gods_eye = GodsEyeGlobalState::new_canonical_global_telemetry();
 
         // Execute voice/AI query to lock onto Kuroshio Vanguard maritime vessel
         let matched = app.gods_eye.execute_gods_eye_query("kuroshio vanguard");

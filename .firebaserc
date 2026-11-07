@@ -1,5 +1,12 @@
 {
   "projects": {
     "default": "heavenlysent-680ac"
+  },
+  "targets": {
+    "heavenlysent-680ac": {
+      "hosting": {
+        "lite": ["heavenlysent-lite-680ac"]
+      }
+    }
   }
 }
