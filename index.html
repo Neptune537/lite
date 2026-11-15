@@ -7,6 +7,7 @@
     <meta name="description" content="Pure Rust WebGPU / WebGL2 Pause Menu, Coral Escrow, Siren Radio, and Planetary Geodesics">
     <link rel="manifest" href="manifest.webmanifest">
     <link data-trunk rel="copy-file" href="manifest.webmanifest">
+    <link data-trunk rel="copy-file" href="_headers">
     <link data-trunk rel="copy-file" href="sonar-client.js">
     <link data-trunk rel="copy-file" href="sonar-config.json">
     <link data-trunk rel="copy-file" href="station-radio.js">
@@ -87,6 +88,7 @@
             pointer-events: none;
             transition: opacity 0.4s ease;
         }
+        #loading-retry { pointer-events: auto; margin-top: .8rem; padding: .5rem .8rem; color: #e9f4ff; background: #182b3d; border: 1px solid #43617a; border-radius: .4rem; cursor: pointer; }
 
         .spinner {
             border: 4px solid rgba(0, 229, 255, 0.1);
@@ -104,18 +106,25 @@
         }
     </style>
     <link rel="rust" data-trunk href="crates/hblite_desktop/Cargo.toml" data-target-name="hblite_desktop" data-wasm-opt="z" />
+    <link data-trunk rel="copy-file" href="platform-auth.js">
+    <link data-trunk rel="copy-file" href="club-comms.js">
+    <link data-trunk rel="copy-file" href="auth-config.json">
+    <script src="platform-auth.js?v=20261111-fedcm"></script>
+    <script src="club-comms.js" defer></script>
 </head>
 <body>
     <div id="loading-screen">
         <div class="spinner"></div>
         <div style="font-size: 1.1rem; font-weight: 600; color: #00e5ff; letter-spacing: 1px;">HEAVENLYBOUND LITE</div>
-        <div style="font-size: 0.85rem; color: #8892b0; margin-top: 4px;">Mounting Lemuria V2 WebAssembly & WebGPU...</div>
+        <div id="loading-detail" role="status" aria-live="polite" style="font-size: 0.85rem; color: #a9bad0; margin-top: 4px;">Downloading Lite's globe and controls…</div>
+        <button id="loading-retry" type="button" hidden onclick="location.reload()">Retry loading</button>
     </div>
     <div id="canvas-container">
         <canvas id="the_canvas_id"></canvas>
     </div>
     <nav id="platform-menu" aria-label="Platform main menu">
-        <a href="https://heavenlysent-680ac.web.app/">Launch HeavenlyBound</a>
+        <button id="embedded-resume" type="button" hidden>Resume HeavenlyBound</button>
+        <a href="https://play.tr7n7t7.com/">Launch HeavenlyBound</a>
         <details name="platform-tools">
         <summary>Radio</summary>
     <form id="station-radio">
@@ -134,11 +143,181 @@
         <output id="sonar-connection-state" aria-live="polite">Disconnected</output>
     </form>
         </details>
+        <details name="platform-tools">
+        <summary>Identity &amp; Wallet</summary>
+    <form id="kuroshio-identity-form" onsubmit="event.preventDefault(); linkDashboardSolanaWallet();">
+        <div style="font-size:.78rem; color:#9bdfff;">Verified Google account: <code>did:atlantis</code> principal:</div>
+        <div style="display:flex; gap:.4rem;">
+            <button type="button" style="flex:1;" onclick="alignDashboardOidc('google')">🌐 Google</button>
+            <button type="button" style="flex:1;" onclick="PlatformAuth.signOut()">Sign out</button>
+        </div>
+        <output id="dash-principal-did" style="font-size:.75rem; word-break:break-all; color:#00e5ff;">Unaligned (Guest Ephemeral DID)</output>
+        <label>Self-Custody Solana Wallet (CYAN / SOL)
+            <span>Connect a Solana wallet and approve its signature request.</span>
+        </label>
+        <button type="submit">Link &amp; Verify Wallet</button>
+        <output id="dash-wallet-status" aria-live="polite" style="font-size:.78rem; color:#00ff9d;">Playable without wallet</output>
+    </form>
+        </details>
+        <details name="platform-tools">
+        <summary>Officer Approver</summary>
+    <form id="officer-approver-form" onsubmit="event.preventDefault(); approvePendingDaemon();" style="width:min(26rem, calc(100vw - 2.5rem)); font-size:0.75rem;">
+        <div style="font-weight:700; color:#ffe259; border-bottom:1px solid #43617a; padding-bottom:4px;">🛡️ Service Approval Gate (Chrysalis)</div>
+        <div style="display:grid; gap:4px; margin-top:4px;">
+            <label>Daemon Service ID
+                <input id="appr-service-id" type="text" value="kokoro_tts_daemon" required>
+            </label>
+            <label>Launch Command
+                <input id="appr-command" type="text" value="python -m kokoro_server --port 8880" required>
+            </label>
+            <label>Working Directory
+                <input id="appr-working-dir" type="text" value="/opt/kokoro" required>
+            </label>
+            <label>Probe URL / Path
+                <input id="appr-probe-url" type="text" value="http://127.0.0.1:8880/health" required>
+            </label>
+            <label>Officer DID Signature
+                <input id="appr-officer-did" type="text" value="did:atlantis:officer_master" required>
+            </label>
+        </div>
+        <div style="display:flex; gap:4px; margin-top:6px;">
+            <button type="button" onclick="fetchServiceSchema()" style="flex:1; font-size:0.75rem;">View Schema</button>
+            <button type="submit" style="flex:1; border-color:#00ff9d; color:#00ff9d; font-size:0.75rem;">Approve &amp; Sign</button>
+        </div>
+        <output id="appr-gate-status" style="font-family:monospace; font-size:0.7rem; color:#8ecae6; margin-top:4px; word-break:break-all;" aria-live="polite">Ready to authorize services</output>
+    </form>
+        </details>
     </nav>
     <script src="station-radio.js" defer></script>
     <script src="sonar-client.js?v=signed-telemetry-1" defer></script>
+    <script>
+        const embedded = window.parent !== window && new URLSearchParams(location.search).get('embed') === 'heavenlybound';
+        const parentOrigins = new Set([
+            'https://play.tr7n7t7.com',
+            'https://heavenlysent-680ac.web.app',
+            'https://lite.tr7n7t7.com',
+            'https://heavenlybound-lite.pages.dev',
+            location.origin
+        ].filter(Boolean));
+        let parentOrigin = '';
+        try { parentOrigin = new URL(document.referrer).origin; } catch {}
+        if(embedded && parentOrigins.has(parentOrigin)) {
+          const resume = () => window.parent.postMessage({type:'kuroshio-dashboard-resume'},parentOrigin);
+          const button = document.getElementById('embedded-resume'); button.hidden=false; button.addEventListener('click',resume);
+          window.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();resume();}},true);
+          window.parent.postMessage({type:'kuroshio-auth-ready'},parentOrigin);
+        }
+        let dashIdentity = {google:false, apple:false, did:'', wallet:'', provider:''};
+        window.addEventListener('platform-auth-change', event => {
+            const p = event.detail.profile;
+            dashIdentity = {google:!!p, apple:false, did:p?.did || '', wallet:p?.wallet || '', provider:p?.provider || 'Google OIDC'};
+            renderDashIdentity();
+            window.wasmBindings?.sync_authenticated_session?.(
+                dashIdentity.did,
+                dashIdentity.wallet,
+                dashIdentity.provider,
+                Boolean(dashIdentity.google && dashIdentity.did)
+            );
+            if (event.detail.error) document.getElementById('dash-wallet-status').textContent = event.detail.error;
+        });
+        window.addEventListener('club-presence-update', event => {
+            window.wasmBindings?.sync_club_presence?.(
+                event.detail?.scene || 'Atlantis:surface',
+                event.detail?.count || 0
+            );
+        });
+
+        async function fetchServiceSchema() {
+            const st = document.getElementById('appr-gate-status');
+            const apiBase = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname) ? "http://127.0.0.1:8081" : "https://node.tr7n7t7.com";
+            st.textContent = "Fetching schema...";
+            try {
+                const res = await fetch(`${apiBase}/api/service/schema`);
+                if (res.ok) {
+                    const schema = await res.json();
+                    st.textContent = `✓ Schema valid: ${schema.title} (${schema.required.join(', ')})`;
+                    st.style.color = '#00ff9d';
+                } else {
+                    st.textContent = `Schema error: HTTP ${res.status}`;
+                    st.style.color = '#ff9b9b';
+                }
+            } catch (e) {
+                st.textContent = `Schema fetch failed: ${e.message}`;
+                st.style.color = '#ff9b9b';
+            }
+        }
+
+        async function approvePendingDaemon() {
+            const st = document.getElementById('appr-gate-status');
+            const apiBase = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname) ? "http://127.0.0.1:8081" : "https://node.tr7n7t7.com";
+            const payload = {
+                spec: {
+                    service_id: document.getElementById('appr-service-id').value.trim(),
+                    command: document.getElementById('appr-command').value.trim(),
+                    working_dir: document.getElementById('appr-working-dir').value.trim(),
+                    setup_steps: ["pip install kokoro-onnx soundfile"],
+                    env_vars: { "PORT": "8880", "DEVICE": "cpu" },
+                    ready_probe_url_or_path: document.getElementById('appr-probe-url').value.trim()
+                },
+                officer_did: document.getElementById('appr-officer-did').value.trim(),
+                auto_restart: true
+            };
+            st.textContent = "Signing & authorizing with Home Node...";
+            st.style.color = '#ffe259';
+            try {
+                const res = await fetch(`${apiBase}/api/service/approve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    st.textContent = `✓ APPROVED: ${data.service_id} (Fingerprint: ${data.approved_fingerprint.slice(0, 16)}...)`;
+                    st.style.color = '#00ff9d';
+                } else {
+                    const err = await res.text();
+                    st.textContent = `Approval rejected: ${err}`;
+                    st.style.color = '#ff9b9b';
+                }
+            } catch (e) {
+                st.textContent = `Approval request error: ${e.message}`;
+                st.style.color = '#ff9b9b';
+            }
+        }
+        function renderDashIdentity() {
+            const didEl = document.getElementById('dash-principal-did');
+            const stEl = document.getElementById('dash-wallet-status');
+            if (didEl) didEl.textContent = dashIdentity.did || 'Unaligned (Guest Ephemeral DID)';
+            if (stEl) {
+                const p = [];
+                if (dashIdentity.google) p.push('Google');
+                if (dashIdentity.apple) p.push('Apple ID');
+                const alignText = p.length ? `Aligned (${p.join(' + ')})` : 'Unaligned';
+                stEl.textContent = dashIdentity.wallet
+                    ? `${alignText} · Wallet: ${dashIdentity.wallet.slice(0, 6)}...${dashIdentity.wallet.slice(-4)}`
+                    : `${alignText} · No wallet linked`;
+            }
+        }
+        async function alignDashboardOidc(provider) { return window.PlatformAuth.signIn(provider); }
+        async function linkDashboardSolanaWallet() { return window.PlatformAuth.linkWallet(); }
+        renderDashIdentity();
+        if (new URLSearchParams(location.search).get('signin') === 'google') {
+            history.replaceState(null, '', location.pathname + location.hash);
+            document.querySelector('#kuroshio-identity-form')?.closest('details')?.setAttribute('open','');
+            document.addEventListener('DOMContentLoaded', () => PlatformAuth.signIn('google'), {once:true});
+        }
+    </script>
 
     <script type="module">
+        const loadingDetail = document.getElementById('loading-detail');
+        const loadingRetry = document.getElementById('loading-retry');
+        let liteMounted = false;
+        const loadingTimeout = setTimeout(() => {
+            if (!liteMounted) {
+                loadingDetail.textContent = 'Lite is taking longer than expected. You can retry; the menu below is still available.';
+                loadingRetry.hidden = false;
+            }
+        }, 20000);
         window.addEventListener("TrunkApplicationStarted", async (event) => {
             console.log("TrunkApplicationStarted event received. Initializing WebHandle...");
             try {
@@ -146,9 +325,18 @@
                 const canvas = document.getElementById("the_canvas_id");
                 
                 if (window.wasmBindings && window.wasmBindings.WebHandle) {
+                    loadingDetail.textContent = 'Starting the globe renderer…';
                     const handle = new window.wasmBindings.WebHandle();
                     console.log("Starting eframe WebRunner on canvas #the_canvas_id...");
                     await handle.start(canvas);
+                    window.wasmBindings?.sync_authenticated_session?.(
+                        dashIdentity.did,
+                        dashIdentity.wallet,
+                        dashIdentity.provider || 'Google OIDC',
+                        Boolean(dashIdentity.google && dashIdentity.did)
+                    );
+                    liteMounted = true;
+                    clearTimeout(loadingTimeout);
                     console.log("HeavenlyBound Lite UI successfully mounted.");
                     
                     if (loadingScreen) {
@@ -156,15 +344,14 @@
                         setTimeout(() => loadingScreen.remove(), 400);
                     }
                 } else {
-                    console.error("WebHandle was not found in wasmBindings:", window.wasmBindings);
+                    throw new Error('The WebAssembly client did not initialize.');
                 }
             } catch (err) {
                 console.error("Failed to start HeavenlyBound Lite WebRunner:", err);
-                const loadingText = document.querySelector("#loading-screen div:last-child");
-                if (loadingText) {
-                    loadingText.innerText = "Error initializing WebGPU/WebGL: " + err;
-                    loadingText.style.color = "#ff4d4f";
-                }
+                clearTimeout(loadingTimeout);
+                loadingDetail.textContent = 'Lite could not start graphics: ' + err + '. Retry or use the menu below.';
+                loadingDetail.style.color = '#ff9b9b';
+                loadingRetry.hidden = false;
             }
         });
     </script>

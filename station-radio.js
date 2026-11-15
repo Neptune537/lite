@@ -5,8 +5,9 @@ const stationUrl = document.getElementById("station-url");
 const stationAudio = document.getElementById("station-audio");
 const stationStatus = document.getElementById("station-status");
 
-if (["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) {
-  stationUrl.value = "http://127.0.0.1:8082/live.mp3";
+const isLoopback = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
+if (isLoopback) {
+  stationUrl.value = "http://127.0.0.1:8080/live.mp3";
 } else {
   stationUrl.value = "https://radio.tr7n7t7.com/live.mp3";
 }
@@ -32,9 +33,35 @@ stationAudio.addEventListener("playing", () => {
 stationAudio.addEventListener("waiting", () => {
   stationStatus.textContent = "Buffering live radio…";
 });
-stationAudio.addEventListener("pause", () => {
-  stationStatus.textContent = "Radio paused";
-});
+async function pollRadioStatus() {
+  try {
+    const statusApiUrl = isLoopback ? "http://127.0.0.1:8080/api/status" : "https://radio.tr7n7t7.com/api/status";
+    const res = await fetch(statusApiUrl, { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.now_playing) {
+        const title = data.now_playing.title || "Unknown Track";
+        const host = data.now_playing.speaker || (data.active_daughter && data.active_daughter.name) || "Seven Daughters";
+        if (!stationAudio.paused && stationAudio.currentTime > 0) {
+          stationStatus.textContent = `📻 [${host}] ${title}`;
+        }
+      }
+    }
+  } catch (_) {}
+}
+
+setInterval(pollRadioStatus, 10000);
+pollRadioStatus();
+
 stationAudio.addEventListener("error", () => {
+  if (isLoopback && stationAudio.src.includes(":8080/")) {
+    stationUrl.value = "http://127.0.0.1:8082/live.mp3";
+    stationAudio.src = stationUrl.value;
+    stationStatus.textContent = "Retrying local fallback (8082)…";
+    stationAudio.play().catch(() => {
+      stationStatus.textContent = "Live stream unavailable.";
+    });
+    return;
+  }
   stationStatus.textContent = "Live stream unavailable.";
 });
