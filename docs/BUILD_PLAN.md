@@ -1,5 +1,7 @@
 # HeavenlyBond Lite Build Plan
 
+> Historical design reference. Reviewed 2026-11-11: Flutter/TithX descriptions and completion claims below do not establish current runtime behavior. Use the [active README](../README.md) and [platform runtime status](../../PLATFORM_RUNTIME_STATUS.md) for the Rust client and remaining integrations.
+
 This document outlines the step-by-step roadmap to build out the remaining features, transitioning from the current MVP to the full HeavenlyBond Lite vision.
 
 ## Sprint 1: Foundation (Current State)

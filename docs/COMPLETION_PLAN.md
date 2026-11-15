@@ -1,5 +1,7 @@
 # HeavenlyBond Lite / Game Maps IRL - Final Completion Plan
 
+> Historical design reference. Reviewed 2026-11-11: Flutter/TithX descriptions and completion claims below do not establish current runtime behavior. Use the [active README](../README.md) and [platform runtime status](../../PLATFORM_RUNTIME_STATUS.md) for the Rust client and remaining integrations.
+
 ## Target Platform Scope: Android and Web Only
 
 > [!IMPORTANT]

@@ -1,5 +1,7 @@
 # HeavenlyBond Lite Documentation
 
+> Historical design reference. Reviewed 2026-11-11: Flutter/TithX descriptions and completion claims below do not establish current runtime behavior. Use the [active README](../README.md) and [platform runtime status](../../PLATFORM_RUNTIME_STATUS.md) for the Rust client and remaining integrations.
+
 ## Overview
 
 HeavenlyBond Lite is a general-purpose community task and service marketplace.

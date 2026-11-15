@@ -1,5 +1,7 @@
 # TithX & Mobile Client Architecture Integration
 
+> Historical design reference. Reviewed 2026-11-11: Flutter/TithX descriptions and completion claims below do not establish current runtime behavior. Use the [active README](../README.md) and [platform runtime status](../../PLATFORM_RUNTIME_STATUS.md) for the Rust client and remaining integrations.
+
 This document outlines the architectural contract between the Mobile Client (HeavenlyBond Lite / Game Maps IRL) and the TithX Core Engine (Nexus Protocol).
 
 To achieve a true decentralized marketplace, the system relies on a **Local-First, Peer-to-Peer (P2P)** architecture.

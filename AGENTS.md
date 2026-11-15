@@ -1,5 +1,15 @@
 # AGENTS.md — Dashboard / Edge Client (Reincarnated in a Different World Companion HUD)
 
+## Active client record
+
+Reviewed 2026-11-11. Read [platform runtime status](../PLATFORM_RUNTIME_STATUS.md) for implementation evidence and pending integrations. The active UI is crates/hblite_desktop, built with Rust, egui and wgpu. Build the web client with trunk build --release from dashboard. The sibling heavenlyBound checkout supplies Cargo path dependencies and embedded Earth textures.
+
+The shared-looking Earth is implemented by src/earth.rs and src/earth.wgsl, with perspective-aligned tactical pins. Preserve the verified telemetry client's signature, freshness and endpoint checks. Normal Club, marketplace and storefront routes currently show service-unavailable states. Bind identity, profile values, chat and wallet actions to authenticated service data before enabling them.
+
+The versioned Nautilus globe render contract lives in the sibling HeavenlyBound tree at `heavenlyBound/dist/assets/globe-render-v1.json`. The Lite renderer embeds that contract and the four Earth maps at build time; HeavenlyBound reads the contract at runtime. Run `node dashboard/scripts/test_globe_contract.cjs` from the projects root after changing lighting, clouds, maps or WGS84 parameters. Rebuild and publish both clients for a contract revision. The clients render locally on each device; a shared live tactical picture still requires authorized venue and presence feeds.
+
+The Android folder wraps the archived Flutter client. The Flutter/TithX plans in docs are historical references. Use the current runtime record for active build commands. The memory, rendering and feature standards below are architecture targets, with device and execution-path verification required for release claims.
+
 This document tracks AI agents working on this repository, their roles, and the strict operational invariants required under the **Lemuria V2 Architecture**.
 
 ---
@@ -117,3 +127,11 @@ This project is part of the unified Kuroshio Gyre & Lemuria V2 ecosystem:
 2. **Coordinate Geodesy:** Never use flat Cartesian coordinates without an explicit `f64` ECEF anchor to the Nautilus world globe.
 3. **Privacy Boundary:** Never broadcast raw high-precision GPS to the public mesh; all external location disclosures must pass through the Club Node's `LocationDisclosurePolicy`.
 4. **Tooling & Assets:** Author all 3D assets, storefront totems, and acoustic zones in **Lemuria Arena** (`tools/lemuria_arena`) and sign envelopes via **Ursula** MCP.
+
+Account web integration reviewed 2026-11-11: platform-auth.js uses verified API sessions in memory. Configure auth-config.json with the registered Google web client ID and HTTPS Home Node API origin. Never restore authenticated identity from localStorage or mark a typed wallet address as linked. Keep shared copies of platform-auth.js identical and run node --test heavenlyBound/scripts/test_platform_auth.cjs from projects. Native identity bridging and real account/device acceptance remain pending.
+
+Auth deployment reviewed 2026-11-11 Chicago: seed Pi zero@10.0.0.60 runs a separate auth-only container on loopback 8087, routed through the apex /api/auth paths. Google client ID and API origin are configured in the shared web clients. The portal Firebase popup was replaced with the Google FedCM button; preserve the game isolation headers. Public negative-auth/CORS checks passed; real Google account/device acceptance remains open, and Sonar still returned 403. See the platform runtime status and Atlantis/deploy/auth_seed_release_20261111.json for the dated record.
+
+Portal flow reviewed 2026-11-11: portal sign-in must open Lite and complete authentication there; keep bearer tokens out of navigation URLs/storage. Legacy /game.html forwards to the current Firebase game. Preserve incremental regional mesh preparation and run the terrain geometry/yield regression after changes. Device and real-account acceptance remain separate from local tests.
+
+Pause integration reviewed 2026-11-13: local Esc / Pause Dashboard opens embedded Lite and stops local match stepping until Resume. Preserve origin AND window checks for session/resume messaging and API revalidation of transferred sessions. This change is staged locally, not published; domain activation and publishing were blocked by automatic approval review usage limits. See portal/APP_DOMAINS.md in the projects root for pending acceptance and deployment steps.

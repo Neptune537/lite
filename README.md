@@ -1,54 +1,30 @@
-# Kuroshio Platform Dashboard & Companion In-App Menu Standard
-*(Formerly HeavenlyBond Lite / Game Maps IRL)*
+# Kuroshio Dashboard / Lite
 
-The **Dashboard** is the official Tier 2 client companion shell and standardized in-app menu interface across the entire Kuroshio Gyre ecosystem. It transitions the legacy Flutter/Firebase/tithX architecture into the modern pure-Rust, Lumeria WASM sandboxed, and Coral-settled platform standard.
+Dashboard is the companion client and intended shared menu for the platform. The active client uses Rust, egui and wgpu in `crates/hblite_desktop`.
 
----
+Read [platform runtime status](../PLATFORM_RUNTIME_STATUS.md) for verified behavior, limitations and next work, and [AGENTS.md](AGENTS.md) before editing.
 
-## 🏛️ Standard Architecture: Dashboard & Companion Shell
+## Build and run
 
-The Dashboard serves two unified modes across the platform:
-1. **Standalone Companion App:** The primary desktop (Windows/macOS/Linux) and mobile (Android/iOS) hub for community task bounties, IRL spatial navigation, guild rosters, 24/7 Siren Radio, and wallet management.
-2. **Standardized In-App Menu Component:** The universal overlay HUD embedded inside all platform applications, games, and sub-apps (e.g., Lemuria AAA, Tactical Wings, and community WASM modules).
+Keep the sibling `heavenlyBound` checkout present: Cargo path dependencies and embedded Earth textures require it. From this directory:
 
-### Core Capabilities:
-- **Decentralized Bounty & Gig Marketplace:** Off-chain 11-stage task lifecycle, ECEF geodetic task totems, and proximity check-ins (
-autilus-world).
-- **Universal Companion In-App Menu:** Standardized HUD overlay containing the Siren Radio player, squad/guild selector, and Coral state channel tipping.
-- **Hardware-Backed Key Vault:** Zero-exposure DID key management using platform-native enclaves (Apple Keychain, AndroidKeyStore StrongBox, Windows DPAPI).
-- **Offline & Low-Spec Resilient:** Runs smoothly on budget laptops and older mobile devices using Slint UI and bounded LRU caches (capped at 250 MB).
-- **Zero Olympus Dependency:** Operates peer-to-peer and offline without creating runtime dependencies on the Olympus Apex Keystone.
+```powershell
+trunk build --release
+python -m http.server 8766 --bind 127.0.0.1 --directory dist
+```
 
----
+Open <http://127.0.0.1:8766>. Provision the Rust WebAssembly target and Trunk before building. CI still needs pinned sibling dependencies and reproducible release inputs.
 
-## The Three Architecture Pillars
+## Current scope
 
-1. **Pillar 1: Client Application (This Repository)**
-   * Mobile (Android) & Web client, Riverpod state management, local SQLite parallel storage (`sqflite`), task & gig booking marketplace, and team/guild workflows.
-2. **Pillar 2: Fluorescent & Fluoderpod 3D Graphics Engine ([`third_party/fluorescent`](third_party/fluorescent))**
-   * GPU-driven compute frustum/occlusion culling, Nanite-style virtual geometry, unified indirect draw pipeline, Android NDK Vulkan zero-copy bridge (`android_vulkan.rs`), and WebGPU Wasm pipeline.
-3. **Pillar 3: TitheX / Fluoridian Blockchain & Nexus Protocol ([`third_party/tithX`](third_party/tithX))**
-   * Parallel storage sync, decentralized event envelopes (`NetworkEvent`), `mobile-vault-sdk` Ed25519 signing, WebSocket gossip relay, double-entry internal ledger, and on-chain escrow/staking settlement.
+The globe uses shared HeavenlyBound Earth image assets through the GPU renderer. Club chat, marketplace and storefront currently display unavailable states on their normal entry paths. Legacy code contains fixed state and authentication toggles that require a service audit before release.
 
----
+Public Sonar availability, two-account messaging/presence and cross-app sessions need end-to-end verification. The `android` folder is the legacy Flutter wrapper; signed Android and Quest packages remain release work.
 
-## Documentation & Architecture
+Run Sonar client checks from the projects directory:
 
-*   **[Documentation](docs/DOCUMENTATION.md):** Application concept, architecture, data models, task state machine, gig booking, Fluonder vector engine, and security rules.
-*   **[Engine Architecture](docs/ENGINE_ARCHITECTURE.md):** Architectural contract covering TithX P2P gossip, Event Envelopes, Fluorescent Vulkan/WebGPU integration, and Fluonder vector math.
-*   **[Final Completion Plan](docs/COMPLETION_PLAN.md):** Multi-pillar roadmap and phased execution checklist for Android & Web.
-*   **[Build Plan](docs/BUILD_PLAN.md):** Step-by-step roadmap for core marketplace and team sprints.
-*   **[AI Agents Tracker](AGENTS.md):** Active agents, roles, and cross-pillar coordination protocols.
+```powershell
+node --test dashboard/sonar-client.test.cjs
+```
 
----
-
-## Getting Started
-
-### Mandatory Initiation Procedure
-At the start of every session or agent handoff:
-* **Windows (PowerShell):** `.\scripts\init.ps1`
-* **Direct Command:** `git submodule update --init --recursive --remote && flutter pub get && dart run build_runner build --delete-conflicting-outputs`
-
-### Running the App
-* **Android:** `flutter run -d android`
-* **Web:** `flutter run -d chrome --web-renderer canvaskit`
+The documents under `docs` preserve earlier Flutter/TithX designs. Their status notices distinguish historical plans from the active runtime. Service deployment evidence belongs in the [operations runbook](../Kuroshio%20Gyre/OPERATIONS_RUNBOOK.md).

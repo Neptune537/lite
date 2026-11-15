@@ -252,12 +252,12 @@ pub struct AuthAccount {
 impl Default for AuthAccount {
     fn default() -> Self {
         Self {
-            email: "team7.operator@gmail.com".into(),
-            display_name: "Team 7 Operator".into(),
-            team_id: "team-7".into(),
-            user_did: "did:atlantis:team7_operator".into(),
-            provider: "Google OAuth2 (OpenID Connect)".into(),
-            is_authenticated: true,
+            email: String::new(),
+            display_name: "Guest".into(),
+            team_id: String::new(),
+            user_did: String::new(),
+            provider: "Not signed in".into(),
+            is_authenticated: false,
         }
     }
 }
@@ -1219,9 +1219,7 @@ impl ClubState {
 
             ui.add_space(4.0);
             ui.horizontal(|ui| {
-                if ui.button(if self.current_user.is_authenticated { "Sign Out" } else { "Sign In via Google" }).clicked() {
-                    self.current_user.is_authenticated = !self.current_user.is_authenticated;
-                }
+                ui.add_enabled(false, egui::Button::new("Use the web account panel to sign in"));
                 ui.separator();
                 ui.checkbox(&mut self.team_filter_only, "Filter: Only Show Daemons Registered to My Team (Team 7)");
             });

@@ -442,7 +442,7 @@ pub struct LemuriaNativeApp {
     // Real Nautilus World Geodesic Navigation & Dynamic Globe Streamer
     pub current_coord: Wgs84GeoCoord,
     private_node_anchors: [String; 3],
-    earth_texture: Option<egui::TextureHandle>,
+    earth_target: Option<eframe::wgpu::TextureFormat>,
     show_globe_overlays: bool,
     pub active_route: TacticalRouteSpline,
     pub dem_streamer: DemTerrainTileStreamer,
@@ -678,7 +678,7 @@ impl Default for LemuriaNativeApp {
             current_coord,
             active_route,
             private_node_anchors: Default::default(),
-            earth_texture: None,
+            earth_target: None,
             show_globe_overlays: true,
             dem_streamer,
             globe_rotation_rad: -(nautilus_world::ATLANTIS_HOME.lon_deg as f32).to_radians(),
@@ -718,7 +718,10 @@ impl Default for LemuriaNativeApp {
 impl eframe::App for LemuriaNativeApp {
     fn ui(&mut self, ui: &mut egui::Ui, _frame: &mut eframe::Frame) {
         #[cfg(target_arch = "wasm32")]
-        crate::apply_live_telemetry(&mut self.gods_eye);
+        {
+            crate::apply_web_bridges(self);
+            crate::apply_live_telemetry(&mut self.gods_eye);
+        }
         ui.ctx().request_repaint_after(std::time::Duration::from_secs(1));
         // Step 60Hz physics accumulator & zero-GC allocator on each frame tick
         let steer_rad = self.steering_deg.to_radians();
@@ -868,11 +871,17 @@ impl eframe::App for LemuriaNativeApp {
         egui::CentralPanel::default().show(ui, |ui| {
             egui::ScrollArea::vertical().show(ui, |ui| {
                 if self.daemons_tab_open {
-                    ui.label("Daemon status and messaging unavailable. Connect a live daemon feed.");
+                    if self.club.viewer_is_officer()
+                        && self.club.active_subtab == crate::club::ClubViewSubTab::OfficerNodeDashboard
+                    {
+                        self.club.render_officer_node_dashboard(ui);
+                    } else {
+                        self.club.render_registered_daemons_tab(ui);
+                    }
                     return;
                 }
                 if self.club_open {
-                    ui.label("Club membership and chat are unavailable without a live Club connection.");
+                    self.club.ui(ui);
                     return;
                 }
                 match self.selected_tab {
@@ -880,19 +889,19 @@ impl eframe::App for LemuriaNativeApp {
                         self.render_tactical_map_tab(ui, form_factor);
                     }
                     MarketplaceTab::TheaterRadio => {
-                        ui.hyperlink_to("Listen to Seven Daughters live", "https://radio.tr7n7t7.com/live.mp3");
+                        self.render_theater_radio_tab(ui, form_factor);
                     }
                     MarketplaceTab::Marketplace => {
-                        ui.label("Live marketplace unavailable.");
+                        self.render_marketplace_tab(ui, form_factor);
                     }
                     MarketplaceTab::VirtualStore => {
-                        ui.label("Live storefront unavailable.");
+                        self.render_virtual_store_tab(ui, form_factor);
                     }
                     MarketplaceTab::VehicleTelemetry => {
-                        ui.label("No live vehicle telemetry connected.");
+                        self.render_vehicle_telemetry_tab(ui, form_factor);
                     }
                     MarketplaceTab::CharacterStatus => {
-                        ui.label("Live character profile unavailable.");
+                        self.render_character_status_tab(ui, form_factor);
                     }
                 }
             });
@@ -1482,6 +1491,61 @@ impl LemuriaNativeApp {
     }
 
 
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        Self {
+            earth_target: cc.wgpu_render_state.as_ref().map(|state| state.target_format),
+            ..Default::default()
+        }
+    }
+
+    pub fn apply_session_update(
+        &mut self,
+        did: &str,
+        wallet: &str,
+        provider: &str,
+        is_authenticated: bool,
+    ) {
+        if is_authenticated && !did.is_empty() {
+            self.club.viewer_did = did.to_string();
+            let team_id = if self.club.viewer_is_officer() {
+                "team-7".into()
+            } else {
+                "atlantis".into()
+            };
+            self.club.current_user = crate::club::AuthAccount {
+                email: if wallet.is_empty() {
+                    "Verified OIDC Session".into()
+                } else {
+                    format!("Wallet: {}", wallet)
+                },
+                display_name: did.chars().take(28).collect(),
+                team_id,
+                user_did: did.to_string(),
+                provider: if provider.is_empty() {
+                    "Google OIDC".into()
+                } else {
+                    provider.to_string()
+                },
+                is_authenticated: true,
+            };
+            self.last_status_message = format!("Session active: {}", did);
+        } else {
+            self.club.current_user = crate::club::AuthAccount::default();
+            self.club.viewer_did = self.club.current_user.user_did.clone();
+            self.last_status_message = "Signed out (Guest session)".into();
+        }
+    }
+
+    pub fn apply_club_presence_update(&mut self, scene: &str, peer_count: u32) {
+        let label = if scene.is_empty() { "Atlantis:surface" } else { scene };
+        self.last_status_message = format!(
+            "Club room {} · {} signed-in peer{}",
+            label,
+            peer_count,
+            if peer_count == 1 { "" } else { "s" }
+        );
+    }
+
     fn render_nautilus_holographic_globe(&mut self, ui: &mut egui::Ui) {
         ui.vertical_centered(|ui| {
             let desired_size = egui::Vec2::new(ui.available_width().min(760.0), ui.available_width().clamp(220.0, 500.0));
@@ -1498,93 +1562,12 @@ impl LemuriaNativeApp {
             let center = rect.center();
             let radius = (rect.height() * 0.42).min(rect.width() * 0.42);
 
-            // 1. Atmosphere / Outer Glow
-            painter.circle_filled(
-                center,
-                radius + 12.0,
-                egui::Color32::from_rgba_unmultiplied(0, 229, 255, 18),
-            );
-            painter.circle_filled(
-                center,
-                radius + 4.0,
-                egui::Color32::from_rgba_unmultiplied(0, 160, 255, 30),
-            );
-
-            // 2. Abyssal Ocean Sphere Base
-            painter.circle_filled(
-                center,
-                radius,
-                egui::Color32::from_rgb(10, 15, 28),
-            );
-            painter.circle_stroke(
-                center,
-                radius,
-                egui::Stroke::new(1.5, egui::Color32::from_rgb(0, 229, 255)),
-            );
-
-            // 3. Holographic Geodesic Latitude & Longitude Graticules
             let rot = self.globe_rotation_rad;
-            let tilt = self.globe_tilt_rad;
-
-            let (sin_tilt, cos_tilt) = tilt.sin_cos();
-            let project = |lat: f32, lon: f32| {
-                let (sin_lat, cos_lat) = lat.sin_cos();
-                let (sin_lon, cos_lon) = lon.sin_cos();
-                let e2 = nautilus_world::WGS84_ECCENTRICITY_SQ_E2 as f32;
-                let prime_vertical = (1.0 - e2 * sin_lat * sin_lat).sqrt().recip();
-                let up = prime_vertical * (1.0 - e2) * sin_lat;
-                let equatorial = prime_vertical * cos_lat;
-                let facing = equatorial * cos_lon;
-                let y = up * cos_tilt - facing * sin_tilt;
-                let depth = sin_lat * sin_tilt + cos_lat * cos_lon * cos_tilt;
-                (center + egui::vec2(radius * equatorial * sin_lon, -radius * y), depth)
-            };
-            if self.earth_texture.is_none() {
-                if let Ok(image) = image::load_from_memory(include_bytes!(
-                    "../../../../heavenlyBound/dist/assets/earth_atmos_2048.jpg"
-                )) {
-                    let rgba = image.to_rgba8();
-                    let size = [rgba.width() as usize, rgba.height() as usize];
-                    self.earth_texture = Some(ui.ctx().load_texture(
-                        "nautilus-earth-day",
-                        egui::ColorImage::from_rgba_unmultiplied(size, rgba.as_raw()),
-                        egui::TextureOptions::LINEAR,
-                    ));
-                }
-            }
-            if let Some(texture) = &self.earth_texture {
-                const LAT_STEPS: usize = 80;
-                const LON_STEPS: usize = 160;
-                let mut mesh = egui::Mesh::with_texture(texture.id());
-                let mut visible = Vec::with_capacity((LAT_STEPS + 1) * (LON_STEPS + 1));
-                for row in 0..=LAT_STEPS {
-                    let v = row as f32 / LAT_STEPS as f32;
-                    let lat = (0.5 - v) * std::f32::consts::PI;
-                    for column in 0..=LON_STEPS {
-                        let u = column as f32 / LON_STEPS as f32;
-                        let lon = (u - 0.5) * std::f32::consts::TAU + rot;
-                        let (pos, depth) = project(lat, lon);
-                        visible.push(depth >= 0.0);
-                        let light = (205.0 + 50.0 * depth.max(0.0)) as u8;
-                        mesh.vertices.push(egui::epaint::Vertex {
-                            pos,
-                            uv: egui::pos2(u, v),
-                            color: egui::Color32::from_gray(light),
-                        });
-                    }
-                }
-                for row in 0..LAT_STEPS {
-                    for column in 0..LON_STEPS {
-                        let a = row * (LON_STEPS + 1) + column;
-                        let b = a + LON_STEPS + 1;
-                        for triangle in [[a, b, b + 1], [a, b + 1, a + 1]] {
-                            if triangle.iter().all(|&index| visible[index]) {
-                                mesh.indices.extend(triangle.map(|index| index as u32));
-                            }
-                        }
-                    }
-                }
-                painter.add(egui::Shape::mesh(mesh));
+            let view = crate::earth::EarthView::new(rot, self.globe_tilt_rad);
+            let project = |geo| view.project(geo).map(|point| center + radius * point);
+            if let Some(target) = self.earth_target {
+                view.paint(&painter, rect, radius, target, ui.input(|input| input.time));
+                ui.ctx().request_repaint_after(std::time::Duration::from_millis(100));
             }
 
             if self.show_globe_overlays {
@@ -1593,12 +1576,7 @@ impl LemuriaNativeApp {
 
                 let venues = self.venue_broadcasts.clone();
                 for venue in &venues {
-                    let lat_rad = (venue.coord.lat_deg as f32).to_radians();
-                    let lon_rad = (venue.coord.lon_deg as f32).to_radians();
-                    let effective_lon = lon_rad + rot;
-
-                    let (pin_pos, depth) = project(lat_rad, effective_lon);
-                    if depth >= 0.0 {
+                    if let Some(pin_pos) = project(venue.coord) {
                         // Check hover or click
                         let is_hovered = if let Some(m) = mouse_pos {
                             (m - pin_pos).length() < 14.0
@@ -1656,21 +1634,7 @@ impl LemuriaNativeApp {
                     .collect();
 
                 for ent in &gods_eye_entities {
-                    let lat_rad = (ent.geo.lat_deg as f32).to_radians();
-                    let lon_rad = (ent.geo.lon_deg as f32).to_radians();
-                    let effective_lon = lon_rad + rot;
-                    let cos_lon = effective_lon.cos();
-                    let sin_lon = effective_lon.sin();
-                    let cos_lat = lat_rad.cos();
-                    let sin_lat = lat_rad.sin();
-
-                    if cos_lon > -0.15 {
-                        let alt_boost = 1.0 + (ent.geo.alt_meters / nautilus_world::WGS84_SEMI_MAJOR_AXIS_A) as f32;
-                        let r = radius * alt_boost;
-                        let px = center.x + r * cos_lat * sin_lon;
-                        let py = center.y - r * (sin_lat * tilt.cos() - cos_lat * cos_lon * tilt.sin());
-                        let pt = egui::Pos2::new(px, py);
-
+                    if let Some(pt) = project(ent.geo) {
                         let color = match ent.layer {
                             GodsEyeLayerKind::AviationAdsB => egui::Color32::from_rgb(0, 242, 254),
                             GodsEyeLayerKind::MaritimeAis => egui::Color32::from_rgb(0, 255, 157),
@@ -1706,10 +1670,7 @@ impl LemuriaNativeApp {
 
             let home = self.private_node_anchor(0);
             if let Some(anchor) = home.or_else(|| self.private_node_anchor(1)).or(Some(nautilus_world::ATLANTIS_HOME)) {
-                let lat = (anchor.lat_deg as f32).to_radians();
-                let lon = (anchor.lon_deg as f32).to_radians();
-                let (pin, depth) = project(lat, lon + rot);
-                if depth >= 0.0 {
+                if let Some(pin) = project(anchor) {
                     painter.circle_filled(pin, 4.0, egui::Color32::GREEN);
                     painter.circle_stroke(pin, 7.0, egui::Stroke::new(1.0, egui::Color32::GREEN));
                     painter.text(
@@ -2531,7 +2492,14 @@ impl LemuriaNativeApp {
             ui.label(egui::RichText::new("Player Profile").strong().size(15.0));
             egui::Grid::new("char_grid").striped(true).show(ui, |ui| {
                 ui.label("Identity DID:");
-                ui.label("did:atlantis:pelagic_commander_07");
+                let active_did = if self.club.current_user.is_authenticated
+                    && !self.club.current_user.user_did.is_empty()
+                {
+                    self.club.current_user.user_did.as_str()
+                } else {
+                    "Unaligned Guest (Sign in via Google to bind DID)"
+                };
+                ui.label(active_did);
                 ui.end_row();
 
                 ui.label("Gyre Node Classification:");
@@ -2776,9 +2744,9 @@ mod tests {
     #[test]
     fn test_registered_daemons_tab_team7_and_google_auth() {
         let mut app = LemuriaNativeApp::default();
-        assert_eq!(app.club.current_user.team_id, "team-7");
-        assert!(app.club.current_user.is_authenticated);
-        assert_eq!(app.club.current_user.email, "team7.operator@gmail.com");
+        assert!(app.club.current_user.team_id.is_empty());
+        assert!(!app.club.current_user.is_authenticated);
+        assert!(app.club.current_user.email.is_empty());
 
         // Verify Team 7 daemons are registered
         let team7_daemons: Vec<_> = app.club.daemons.iter().filter(|d| d.team_id.as_deref() == Some("team-7")).collect();
@@ -2809,7 +2777,12 @@ mod tests {
     #[test]
     fn test_officer_dashboard_accessible_when_officer() {
         let mut app = LemuriaNativeApp::default();
-        // Default viewer is did:atlantis:team7_operator, who is TeamDirector (Officer)
+        // Starts unauthenticated as Guest without officer privileges
+        assert!(!app.club.viewer_is_officer());
+        assert_eq!(app.club.viewer_officer_role(), None);
+
+        // Bind verified officer session (did:atlantis:team7_operator -> TeamDirector)
+        app.apply_session_update("did:atlantis:team7_operator", "", "Google OAuth2", true);
         assert!(app.club.viewer_is_officer());
         assert_eq!(
             app.club.viewer_officer_role(),
@@ -2827,7 +2800,9 @@ mod tests {
             crate::club::ClubViewSubTab::OfficerNodeDashboard
         );
 
-        // Verify demoting to a non-officer candidate role revokes officer status
+        // Verify sign-out / demoting to a non-officer candidate role revokes officer status
+        app.apply_session_update("", "", "", false);
+        assert!(!app.club.viewer_is_officer());
         app.club.viewer_did = "did:atlantis:guest_unverified".into();
         assert!(!app.club.viewer_is_officer());
         assert_eq!(app.club.viewer_officer_role(), None);

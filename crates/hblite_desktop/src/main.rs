@@ -46,7 +46,7 @@ fn main() {
         if let Err(e) = eframe::run_native(
             "Dashboard // Reincarnated in a Different World",
             native_options,
-            Box::new(|_cc| Ok(Box::new(LemuriaNativeApp::default()))),
+            Box::new(|cc| Ok(Box::new(LemuriaNativeApp::new(cc)))),
         ) {
             eprintln!("Failed to launch native eframe GUI: {:?}", e);
         }

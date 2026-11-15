@@ -1,10 +1,80 @@
 pub mod club;
+mod earth;
 pub mod gui;
 pub use gui::LemuriaNativeApp;
 
 #[cfg(target_arch = "wasm32")]
+#[derive(Clone)]
+struct WebAuthUpdate {
+    did: String,
+    wallet: String,
+    provider: String,
+    is_authenticated: bool,
+}
+
+#[cfg(target_arch = "wasm32")]
+#[derive(Clone)]
+struct WebClubPresenceUpdate {
+    scene: String,
+    peer_count: u32,
+}
+
+#[cfg(target_arch = "wasm32")]
 thread_local! {
     static LIVE_UPDATES: std::cell::RefCell<std::collections::VecDeque<nautilus_world::live_telemetry::LiveTelemetryUpdate>> = Default::default();
+    static AUTH_UPDATES: std::cell::RefCell<std::collections::VecDeque<WebAuthUpdate>> = Default::default();
+    static CLUB_PRESENCE_UPDATES: std::cell::RefCell<std::collections::VecDeque<WebClubPresenceUpdate>> = Default::default();
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn sync_authenticated_session(did: &str, wallet: &str, provider: &str, is_authenticated: bool) {
+    AUTH_UPDATES.with(|queue| {
+        let mut queue = queue.borrow_mut();
+        if queue.len() >= 16 {
+            queue.pop_front();
+        }
+        queue.push_back(WebAuthUpdate {
+            did: did.trim().to_string(),
+            wallet: wallet.trim().to_string(),
+            provider: provider.trim().to_string(),
+            is_authenticated,
+        });
+    });
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen::prelude::wasm_bindgen]
+pub fn sync_club_presence(scene: &str, peer_count: u32) {
+    CLUB_PRESENCE_UPDATES.with(|queue| {
+        let mut queue = queue.borrow_mut();
+        if queue.len() >= 32 {
+            queue.pop_front();
+        }
+        queue.push_back(WebClubPresenceUpdate {
+            scene: scene.trim().to_string(),
+            peer_count,
+        });
+    });
+}
+
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn apply_web_bridges(app: &mut crate::gui::LemuriaNativeApp) {
+    AUTH_UPDATES.with(|queue| {
+        for update in queue.borrow_mut().drain(..) {
+            app.apply_session_update(
+                &update.did,
+                &update.wallet,
+                &update.provider,
+                update.is_authenticated,
+            );
+        }
+    });
+    CLUB_PRESENCE_UPDATES.with(|queue| {
+        for update in queue.borrow_mut().drain(..) {
+            app.apply_club_presence_update(&update.scene, update.peer_count);
+        }
+    });
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -67,7 +137,7 @@ impl WebHandle {
             .start(
                 canvas,
                 eframe::WebOptions::default(),
-                Box::new(|_cc| Ok(Box::new(LemuriaNativeApp::default()))),
+                Box::new(|cc| Ok(Box::new(LemuriaNativeApp::new(cc)))),
             )
             .await
     }
