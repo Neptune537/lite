@@ -15,16 +15,34 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Check HeavenlyBound Sibling Workspace
+        id: ws
+        run: |
+          if [ -d "../heavenlyBound" ]; then
+            echo "has_hb=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_hb=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Install Rust Toolchain & wasm32 Target
+        if: steps.ws.outputs.has_hb == 'true'
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: wasm32-unknown-unknown
 
       - name: Install Trunk
+        if: steps.ws.outputs.has_hb == 'true'
         run: cargo install --locked trunk
 
       - name: Build Web Target
-        run: trunk build --release
+        run: |
+          if [ "${{ steps.ws.outputs.has_hb }}" = "true" ]; then
+            trunk build --release
+          else
+            echo "Sibling ../heavenlyBound absent; packaging tr7n7y7 Lite & Kuroshio Studio static dist/"
+            mkdir -p dist
+            cp -r index.html office.html platform-auth.js club-comms.js station-radio.js sonar-client.js auth-config.json sonar-config.json manifest.webmanifest _headers app-icons dist/
+          fi
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
