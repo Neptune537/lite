@@ -44,9 +44,33 @@ jobs:
             cp -r index.html office.html platform-auth.js club-comms.js station-radio.js sonar-client.js auth-config.json sonar-config.json manifest.webmanifest _headers app-icons dist/
           fi
 
+      - name: Upload Packaged dist Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: heavenlybound-lite-dist
+          path: dist/
+
+      - name: Check Cloudflare Secrets
+        id: cf
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -n "$CF_TOKEN" ]; then
+            echo "has_cf_token=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_cf_token=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Deploy to Cloudflare Pages
+        if: steps.cf.outputs.has_cf_token == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=heavenlybound-lite
+
+      - name: Deploy Notice (Native Cloudflare Git Integration / Missing GH Secret)
+        if: steps.cf.outputs.has_cf_token != 'true'
+        run: |
+          echo "### dist/ Built Successfully (heavenlybound-lite-dist artifact uploaded)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Note: CLOUDFLARE_API_TOKEN GitHub Secret is not set, so wrangler CLI push was skipped in GitHub Actions (Cloudflare Pages native Git connector deploys on push)." >> "$GITHUB_STEP_SUMMARY"
