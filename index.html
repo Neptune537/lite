@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>HeavenlyBound // Lemuria Pause Menu & Companion HUD</title>
+    <title>tr7n7y7 // HeavenlyBound Lite & Kuroshio Studio (tr7n7t7.com)</title>
     <meta name="description" content="Pure Rust WebGPU / WebGL2 Pause Menu, Coral Escrow, Siren Radio, and Planetary Geodesics">
     <link rel="manifest" href="manifest.webmanifest">
     <link data-trunk rel="copy-file" href="manifest.webmanifest">
@@ -104,8 +104,44 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        #kuroshio-office-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 25;
+            background: #090c14;
+            display: none;
+            flex-direction: column;
+        }
+        #kuroshio-office-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(15, 23, 42, 0.96);
+            border-bottom: 1px solid #264057;
+            font-size: 0.78rem;
+        }
+        #kuroshio-office-bar button, #kuroshio-office-bar a {
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: 1px solid #43617a;
+            background: #182b3d;
+            color: #e9f4ff;
+            text-decoration: none;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        #kuroshio-office-frame {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: #090c14;
+        }
     </style>
     <link rel="rust" data-trunk href="crates/hblite_desktop/Cargo.toml" data-target-name="hblite_desktop" data-wasm-opt="z" />
+    <link data-trunk rel="copy-file" href="office.html">
     <link data-trunk rel="copy-file" href="platform-auth.js">
     <link data-trunk rel="copy-file" href="club-comms.js">
     <link data-trunk rel="copy-file" href="auth-config.json">
@@ -114,10 +150,25 @@
 </head>
 <body>
     <div id="loading-screen">
-        <div class="spinner"></div>
-        <div style="font-size: 1.1rem; font-weight: 600; color: #00e5ff; letter-spacing: 1px;">HEAVENLYBOUND LITE</div>
+        <div class="spinner" id="loading-spinner"></div>
+        <div style="font-size: 1.1rem; font-weight: 600; color: #00e5ff; letter-spacing: 1px;">HEAVENLYBOUND LITE // tr7n7y7</div>
         <div id="loading-detail" role="status" aria-live="polite" style="font-size: 0.85rem; color: #a9bad0; margin-top: 4px;">Downloading Lite's globe and controls…</div>
-        <button id="loading-retry" type="button" hidden onclick="location.reload()">Retry loading</button>
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+            <button id="loading-retry" type="button" hidden onclick="location.reload()">Retry loading</button>
+            <button id="loading-open-studio" type="button" style="pointer-events:auto;margin-top:.8rem;padding:.5rem .8rem;color:#00e5ff;background:#102235;border:1px solid #00e5ff;border-radius:.4rem;cursor:pointer;" onclick="openKuroshioOffice('office')">Open tr7n7y7 Office &amp; Kuroshio Studio</button>
+        </div>
+    </div>
+    <div id="kuroshio-office-modal" aria-label="tr7n7y7 3D Office & Kuroshio Studio">
+        <div id="kuroshio-office-bar">
+            <strong style="color:#00e5ff;letter-spacing:0.6px;">tr7n7y7 // tr7n7t7.com</strong>
+            <button type="button" onclick="openKuroshioOffice('office')">🏢 3D Office</button>
+            <button type="button" style="border-color:#00e5ff;color:#00e5ff;" onclick="openKuroshioOffice('studio')">🎮 Kuroshio Studio</button>
+            <button type="button" style="border-color:#c084fc;color:#e9d5ff;" onclick="openKuroshioOffice('blackboard')">📋 Strategy Blackboard</button>
+            <span style="flex:1;"></span>
+            <a href="office.html" target="_blank" rel="noopener">Open Fullscreen Tab ↗</a>
+            <button type="button" onclick="closeKuroshioOffice()">← Lite HUD</button>
+        </div>
+        <iframe id="kuroshio-office-frame" title="tr7n7y7 3D Office and Kuroshio Studio"></iframe>
     </div>
     <div id="canvas-container">
         <canvas id="the_canvas_id"></canvas>
@@ -125,6 +176,9 @@
     <nav id="platform-menu" aria-label="Platform main menu">
         <button id="embedded-resume" type="button" hidden>Resume HeavenlyBound</button>
         <a href="https://play.tr7n7t7.com/">Launch HeavenlyBound</a>
+        <button type="button" onclick="openKuroshioOffice('office')">🏢 tr7n7y7 3D Office</button>
+        <button type="button" style="border-color:#00e5ff;color:#00e5ff;" onclick="openKuroshioOffice('studio')">🎮 Kuroshio Studio</button>
+        <button type="button" style="border-color:#c084fc;color:#e9d5ff;" onclick="openKuroshioOffice('blackboard')">📋 Strategy Blackboard</button>
         <details name="platform-tools">
         <summary>Radio</summary>
     <form id="station-radio">
@@ -193,12 +247,36 @@
     <script>
         const embedded = window.parent !== window && new URLSearchParams(location.search).get('embed') === 'heavenlybound';
         const parentOrigins = new Set([
+            'https://tr7n7t7.com',
+            'https://www.tr7n7t7.com',
             'https://play.tr7n7t7.com',
             'https://heavenlysent-680ac.web.app',
             'https://lite.tr7n7t7.com',
             'https://heavenlybound-lite.pages.dev',
             location.origin
         ].filter(Boolean));
+        function openKuroshioOffice(section = 'office') {
+            const modal = document.getElementById('kuroshio-office-modal');
+            const frame = document.getElementById('kuroshio-office-frame');
+            const targetUrl = 'office.html#' + section;
+            if (!frame.getAttribute('data-loaded')) {
+                frame.src = targetUrl;
+                frame.setAttribute('data-loaded', '1');
+            } else {
+                try {
+                    frame.contentWindow.location.hash = '#' + section;
+                } catch {
+                    frame.src = targetUrl;
+                }
+            }
+            modal.style.display = 'flex';
+        }
+        function closeKuroshioOffice() {
+            const modal = document.getElementById('kuroshio-office-modal');
+            modal.style.display = 'none';
+        }
+        window.openKuroshioOffice = openKuroshioOffice;
+        window.closeKuroshioOffice = closeKuroshioOffice;
         let parentOrigin = '';
         try { parentOrigin = new URL(document.referrer).origin; } catch {}
         if(embedded && parentOrigins.has(parentOrigin)) {
@@ -311,10 +389,30 @@
     <script type="module">
         const loadingDetail = document.getElementById('loading-detail');
         const loadingRetry = document.getElementById('loading-retry');
+        const loadingScreen = document.getElementById('loading-screen');
         let liteMounted = false;
+        const isRawTemplate = !!document.querySelector('link[rel="rust"][data-trunk]');
+        const hasTrunkWasm = !isRawTemplate && (
+            Array.from(document.scripts).some(s => /hblite_desktop/.test((s.src || '') + (s.textContent || '')))
+            || !!document.querySelector('link[rel="modulepreload"][href*="hblite_desktop"]')
+        );
+        if (location.hash === '#studio') openKuroshioOffice('studio');
+        else if (location.hash === '#blackboard') openKuroshioOffice('blackboard');
+        else if (location.hash === '#office') openKuroshioOffice('office');
+        if (!hasTrunkWasm) {
+            if (loadingDetail) loadingDetail.textContent = 'Opening tr7n7y7 3D Office & Kuroshio Studio…';
+            setTimeout(() => {
+                if (!liteMounted) {
+                    const spin = document.getElementById('loading-spinner');
+                    if (spin) spin.style.display = 'none';
+                    if (loadingScreen) loadingScreen.style.display = 'none';
+                    if (!location.hash) openKuroshioOffice('office');
+                }
+            }, 350);
+        }
         const loadingTimeout = setTimeout(() => {
-            if (!liteMounted) {
-                loadingDetail.textContent = 'Lite is taking longer than expected. You can retry; the menu below is still available.';
+            if (!liteMounted && hasTrunkWasm) {
+                loadingDetail.textContent = 'Lite is taking longer than expected. You can retry, use the menu, or launch Kuroshio Studio.';
                 loadingRetry.hidden = false;
             }
         }, 20000);
