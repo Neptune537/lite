@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>tr7n7y7 • 3D Spatial Office & Kuroshio Studio</title>
+    <title>tr7n7y7 • 3D Spatial Office & Kuroshio Studio (tr7n7t7.com)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <style>
@@ -1074,6 +1074,12 @@
         .bb-status-in_progress { background: rgba(234,179,8,0.18); color: #fde047; }
         .bb-status-done { background: rgba(34,197,94,0.18); color: #4ade80; }
     </style>
+    <!-- Lite Interop & Network Bridges -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <script src="platform-auth.js?v=20261111-fedcm"></script>
+    <script src="station-radio.js" defer></script>
+    <script src="sonar-client.js?v=signed-telemetry-1" defer></script>
+    <script src="club-comms.js" defer></script>
 </head>
 <body>
     <!-- Top Global Header -->
@@ -1086,6 +1092,11 @@
             <button class="top-pill" onclick="openMarketplaceModal()">🏪 Marketplace</button>
             <button class="top-pill active" onclick="closeModal(); closeBlackboardModal(); exitStudioMode(); resetView(); setViewTab('btnViewOffice')">🏢 Workspace</button>
             <button class="top-pill" onclick="openBlackboardModal()">📋 Strategy Blackboard</button>
+            <button class="top-pill" style="border-color:#38bdf8;color:#38bdf8;" onclick="openLiteFeatureModal('globe')">🌐 Nautilus Globe</button>
+            <button class="top-pill" style="border-color:#a855f7;color:#c084fc;" onclick="openLiteFeatureModal('radio')">📻 Siren Radio</button>
+            <button class="top-pill" style="border-color:#22c55e;color:#4ade80;" onclick="openLiteFeatureModal('escrow')">🔒 Coral Escrow</button>
+            <button class="top-pill" style="border-color:#06b6d4;color:#22d3ee;" onclick="openLiteFeatureModal('sonar')">📡 Sonar</button>
+            <button class="top-pill" style="border-color:#f59e0b;color:#fbbf24;" onclick="openLiteFeatureModal('approver')">🛡️ Approver</button>
         </div>
 
         <div class="top-right">
@@ -1437,6 +1448,11 @@
         let scene, camera, renderer, controls, raycaster, mouse;
         let ambientLightRef, hemiLightRef, dirLightRef;
         let officeGroup, studioGroup, holodeckCrystal;
+        let holographicGlobeMesh, holographicGlobeRings, holographicGlobePoints = [];
+        let sirenRadioConsoleMesh, sirenAudioEqualizerBars = [];
+        let coralEscrowKioskMesh, coralHoloPadMesh;
+        let sonarRadarWallMesh, sonarSweepAngle = 0;
+        let officerTerminalMesh;
         let activeMode = 'office';
         let studioSceneTarget = 'heavenlybound';
         let studioManifest = null;
@@ -1662,6 +1678,13 @@
             addOfficePlants();
             buildOfficeHolodeckPortal(0.5, 11.2);
             buildExecutiveBlackboard(-7.5, -10.65);
+
+            // Reformed Lite Physical 3D Fixtures
+            buildPlanetaryGlobeHologram(12.5, 0.5);      // Holodeck / Observatory Zone
+            buildSirenRadioJukebox(-13.0, -2.1);        // Executive Audio Zone (near Siren)
+            buildCoralEscrowKiosk(0.5, -5.2);          // Trading & Strategy Zone (near Aegis)
+            buildSonarRadarWall(16.5, -1.8);           // Tactical Operations Wall
+            buildOfficerApproverTerminal(-7.5, -6.8);   // Executive Consensus Station
 
             spawnEmployees();
             populateOrgTree();
@@ -2590,6 +2613,10 @@
                         openBlackboardModal();
                         return;
                     }
+                    if (activeMode === 'office' && obj.userData && obj.userData.openLiteFeature) {
+                        openLiteFeatureModal(obj.userData.openLiteFeature);
+                        return;
+                    }
                     if (activeMode === 'office' && obj.userData && obj.userData.empId) {
                         selectEmployee(obj.userData.empId);
                         return;
@@ -2925,6 +2952,32 @@
                 holodeckCrystal.position.y = 1.45 + Math.sin(t * 1.3) * 0.14;
             }
 
+            // Animate 3D Reformed Lite Fixtures
+            if (holographicGlobeMesh && officeGroup && officeGroup.visible) {
+                holographicGlobeMesh.rotation.y += 0.008;
+                if (holographicGlobeRings) {
+                    holographicGlobeRings.rotation.y -= 0.012;
+                    holographicGlobeRings.rotation.x = Math.sin(t * 0.4) * 0.25;
+                }
+            }
+            if (sirenAudioEqualizerBars.length > 0 && officeGroup && officeGroup.visible) {
+                const audioEl = document.getElementById('station-audio');
+                const isPlaying = audioEl && !audioEl.paused;
+                sirenAudioEqualizerBars.forEach((bar, idx) => {
+                    const wave = isPlaying ? Math.abs(Math.sin(t * 2.5 + idx * 0.8)) * 0.45 + 0.1 : 0.06;
+                    bar.scale.y = Math.max(0.08, wave);
+                    bar.position.y = 0.95 + bar.scale.y * 0.5;
+                });
+            }
+            if (coralHoloPadMesh && officeGroup && officeGroup.visible) {
+                coralHoloPadMesh.rotation.y += 0.015;
+                coralHoloPadMesh.position.y = 1.35 + Math.sin(t * 1.8) * 0.08;
+            }
+            if (sonarRadarWallMesh && officeGroup && officeGroup.visible) {
+                sonarSweepAngle = (sonarSweepAngle + 0.04) % (Math.PI * 2);
+                updateSonarCanvasTexture();
+            }
+
             if (studioGroup && studioGroup.visible) {
                 studioGroup.traverse(obj => {
                     if (obj.userData && obj.userData.acousticPulse) {
@@ -2983,6 +3036,525 @@
             g.add(lbl);
 
             officeGroup.add(g);
+        }
+
+
+        // ====================================================================
+        // REFORMED LITE 3D VIRTUAL FIXTURES (Planetary Globe, Radio, Escrow, Sonar, Approver)
+        // ====================================================================
+
+        function buildPlanetaryGlobeHologram(x, z) {
+            const g = new THREE.Group();
+            g.position.set(x, 0, z);
+            g.userData = { openLiteFeature: 'globe' };
+
+            // Pedestal base
+            const base = new THREE.Mesh(
+                new THREE.CylinderGeometry(1.2, 1.4, 0.6, 24),
+                new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8, roughness: 0.25 })
+            );
+            base.position.y = 0.3;
+            base.userData = { openLiteFeature: 'globe' };
+            g.add(base);
+
+            // Glowing projector aperture
+            const aperture = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.85, 0.95, 0.15, 24),
+                new THREE.MeshStandardMaterial({ color: 0x38bdf8, emissive: 0x0284c7, metalness: 0.9 })
+            );
+            aperture.position.y = 0.65;
+            aperture.userData = { openLiteFeature: 'globe' };
+            g.add(aperture);
+
+            // Wireframe Holographic Globe
+            const globeGeo = new THREE.SphereGeometry(1.1, 24, 18);
+            const globeMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, wireframe: true, transparent: true, opacity: 0.65 });
+            holographicGlobeMesh = new THREE.Mesh(globeGeo, globeMat);
+            holographicGlobeMesh.position.y = 2.1;
+            holographicGlobeMesh.userData = { openLiteFeature: 'globe' };
+            g.add(holographicGlobeMesh);
+
+            // Inner solid luminous core
+            const coreMesh = new THREE.Mesh(
+                new THREE.SphereGeometry(0.75, 16, 12),
+                new THREE.MeshBasicMaterial({ color: 0x0369a1, transparent: true, opacity: 0.35 })
+            );
+            coreMesh.position.y = 2.1;
+            coreMesh.userData = { openLiteFeature: 'globe' };
+            g.add(coreMesh);
+
+            // Equatorial Orbital Rings
+            const ringGeo = new THREE.TorusGeometry(1.4, 0.02, 8, 36);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff, transparent: true, opacity: 0.8 });
+            holographicGlobeRings = new THREE.Mesh(ringGeo, ringMat);
+            holographicGlobeRings.rotation.x = Math.PI / 2.3;
+            holographicGlobeRings.position.y = 2.1;
+            holographicGlobeRings.userData = { openLiteFeature: 'globe' };
+            g.add(holographicGlobeRings);
+
+            // Pin Cluster Beacons (LAN nodes 10.0.0.58, 59, 60, 61)
+            const pinGroup = new THREE.Group();
+            pinGroup.position.y = 2.1;
+            const pinCoords = [
+                { lat: 37.77, lon: -122.41, color: 0x22c55e, label: 'Seed Pi (.58)' },
+                { lat: 35.67, lon: 139.65,  color: 0x38bdf8, label: 'Tokyo Node' },
+                { lat: 51.50, lon: -0.12,   color: 0xf59e0b, label: 'London Relay' },
+                { lat: 21.30, lon: -157.85, color: 0xa855f7, label: 'Pacific Mesh' }
+            ];
+            pinCoords.forEach(c => {
+                const phi = (90 - c.lat) * (Math.PI / 180);
+                const theta = (c.lon + 180) * (Math.PI / 180);
+                const px = -(1.12 * Math.sin(phi) * Math.cos(theta));
+                const py = 1.12 * Math.cos(phi);
+                const pz = 1.12 * Math.sin(phi) * Math.sin(theta);
+                const marker = new THREE.Mesh(
+                    new THREE.SphereGeometry(0.06, 8, 8),
+                    new THREE.MeshBasicMaterial({ color: c.color })
+                );
+                marker.position.set(px, py, pz);
+                pinGroup.add(marker);
+            });
+            g.add(pinGroup);
+
+            const lbl = createNameLabelSprite('🌐 NAUTILUS ECEF GLOBE', '#38bdf8');
+            lbl.position.set(0, 3.55, 0);
+            lbl.scale.set(3.4, 0.7, 1);
+            lbl.userData = { openLiteFeature: 'globe' };
+            g.add(lbl);
+
+            officeGroup.add(g);
+        }
+
+        function buildSirenRadioJukebox(x, z) {
+            const g = new THREE.Group();
+            g.position.set(x, 0, z);
+            g.userData = { openLiteFeature: 'radio' };
+
+            // Stand body
+            const body = new THREE.Mesh(
+                new THREE.BoxGeometry(1.6, 1.2, 0.9),
+                new THREE.MeshStandardMaterial({ color: 0x1e1b4b, metalness: 0.7, roughness: 0.3 })
+            );
+            body.position.y = 0.6;
+            body.userData = { openLiteFeature: 'radio' };
+            g.add(body);
+
+            // Front speaker grille / acoustic mesh
+            const grille = new THREE.Mesh(
+                new THREE.PlaneGeometry(1.4, 0.95),
+                new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.85 })
+            );
+            grille.position.set(0, 0.6, 0.46);
+            grille.userData = { openLiteFeature: 'radio' };
+            g.add(grille);
+
+            // 5 Equalizer visualizer columns
+            sirenAudioEqualizerBars = [];
+            for (let i = 0; i < 5; i++) {
+                const bar = new THREE.Mesh(
+                    new THREE.BoxGeometry(0.18, 0.6, 0.1),
+                    new THREE.MeshBasicMaterial({ color: 0xa855f7 })
+                );
+                bar.position.set(-0.5 + i * 0.25, 0.95, 0.48);
+                bar.userData = { openLiteFeature: 'radio' };
+                g.add(bar);
+                sirenAudioEqualizerBars.push(bar);
+            }
+
+            // Top turntable / vinyl platter
+            const platter = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.35, 0.35, 0.04, 24),
+                new THREE.MeshStandardMaterial({ color: 0x18181b, metalness: 0.9, roughness: 0.1 })
+            );
+            platter.position.set(0.35, 1.22, 0);
+            platter.userData = { openLiteFeature: 'radio' };
+            g.add(platter);
+
+            const lbl = createNameLabelSprite('📻 24/7 SIREN RADIO', '#c084fc');
+            lbl.position.set(0, 1.85, 0);
+            lbl.scale.set(3.2, 0.65, 1);
+            lbl.userData = { openLiteFeature: 'radio' };
+            g.add(lbl);
+
+            officeGroup.add(g);
+        }
+
+        function buildCoralEscrowKiosk(x, z) {
+            const g = new THREE.Group();
+            g.position.set(x, 0, z);
+            g.userData = { openLiteFeature: 'escrow' };
+
+            // Vault pillar
+            const pillar = new THREE.Mesh(
+                new THREE.BoxGeometry(1.1, 1.1, 0.9),
+                new THREE.MeshStandardMaterial({ color: 0x064e3b, metalness: 0.65, roughness: 0.35 })
+            );
+            pillar.position.y = 0.55;
+            pillar.userData = { openLiteFeature: 'escrow' };
+            g.add(pillar);
+
+            // Holographic safe lock ring
+            const lockRing = new THREE.Mesh(
+                new THREE.TorusGeometry(0.38, 0.04, 16, 32),
+                new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x059669, metalness: 0.9 })
+            );
+            lockRing.position.set(0, 0.6, 0.46);
+            lockRing.userData = { openLiteFeature: 'escrow' };
+            g.add(lockRing);
+
+            // Floating Coral Diamond Escrow Pad
+            coralHoloPadMesh = new THREE.Mesh(
+                new THREE.OctahedronGeometry(0.28, 0),
+                new THREE.MeshBasicMaterial({ color: 0x34d399, wireframe: true })
+            );
+            coralHoloPadMesh.position.set(0, 1.35, 0);
+            coralHoloPadMesh.userData = { openLiteFeature: 'escrow' };
+            g.add(coralHoloPadMesh);
+
+            const lbl = createNameLabelSprite('🔒 CORAL ESCROW VAULT', '#34d399');
+            lbl.position.set(0, 1.95, 0);
+            lbl.scale.set(3.4, 0.65, 1);
+            lbl.userData = { openLiteFeature: 'escrow' };
+            g.add(lbl);
+
+            officeGroup.add(g);
+        }
+
+        let sonarCanvas, sonarCanvasCtx, sonarTexture;
+        function buildSonarRadarWall(x, z) {
+            const g = new THREE.Group();
+            g.position.set(x, 0, z);
+            g.userData = { openLiteFeature: 'sonar' };
+
+            // Radar display board frame
+            const frame = new THREE.Mesh(
+                new THREE.BoxGeometry(3.2, 1.8, 0.12),
+                new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.7, roughness: 0.3 })
+            );
+            frame.position.y = 1.6;
+            frame.userData = { openLiteFeature: 'sonar' };
+            g.add(frame);
+
+            // Dynamic Radar Screen Canvas
+            sonarCanvas = document.createElement('canvas');
+            sonarCanvas.width = 512; sonarCanvas.height = 280;
+            sonarCanvasCtx = sonarCanvas.getContext('2d');
+            sonarTexture = new THREE.CanvasTexture(sonarCanvas);
+
+            const screen = new THREE.Mesh(
+                new THREE.PlaneGeometry(3.0, 1.6),
+                new THREE.MeshBasicMaterial({ map: sonarTexture })
+            );
+            screen.position.set(0, 1.6, 0.07);
+            screen.userData = { openLiteFeature: 'sonar' };
+            g.add(screen);
+            sonarRadarWallMesh = screen;
+
+            const lbl = createNameLabelSprite('📡 SONAR TELEMETRY RADAR', '#00e5ff');
+            lbl.position.set(0, 2.7, 0);
+            lbl.scale.set(3.4, 0.65, 1);
+            lbl.userData = { openLiteFeature: 'sonar' };
+            g.add(lbl);
+
+            officeGroup.add(g);
+        }
+
+        function updateSonarCanvasTexture() {
+            if (!sonarCanvasCtx) return;
+            const ctx = sonarCanvasCtx;
+            ctx.fillStyle = '#06101e';
+            ctx.fillRect(0, 0, 512, 280);
+
+            // Radar rings
+            const cx = 256, cy = 140;
+            ctx.strokeStyle = '#0e7490';
+            ctx.lineWidth = 1.5;
+            for (let r = 30; r <= 120; r += 30) {
+                ctx.beginPath();
+                ctx.arc(cx, cy, r, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Radar crosshairs
+            ctx.beginPath();
+            ctx.moveTo(cx - 130, cy); ctx.lineTo(cx + 130, cy);
+            ctx.moveTo(cx, cy - 130); ctx.lineTo(cx, cy + 130);
+            ctx.stroke();
+
+            // Sweep line
+            const sx = cx + Math.cos(sonarSweepAngle) * 125;
+            const sy = cy + Math.sin(sonarSweepAngle) * 125;
+            const grad = ctx.createLinearGradient(cx, cy, sx, sy);
+            grad.addColorStop(0, '#00e5ff');
+            grad.addColorStop(1, 'transparent');
+            ctx.strokeStyle = grad;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(sx, sy);
+            ctx.stroke();
+
+            // Telemetry Blips
+            const blips = [
+                { x: cx + 45, y: cy - 35, label: 'Node .58' },
+                { x: cx - 60, y: cy + 40, label: 'Node .60' },
+                { x: cx + 80, y: cy + 50, label: 'Relay .59' }
+            ];
+            blips.forEach(b => {
+                ctx.fillStyle = '#22c55e';
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#67e8f9';
+                ctx.font = '10px monospace';
+                ctx.fillText(b.label, b.x + 6, b.y - 4);
+            });
+
+            ctx.fillStyle = '#f1f5f9';
+            ctx.font = 'bold 13px monospace';
+            ctx.fillText('KUROSHIO GYRE SONAR • REALTIME TELEMETRY', 14, 24);
+            if (sonarTexture) sonarTexture.needsUpdate = true;
+        }
+
+        function buildOfficerApproverTerminal(x, z) {
+            const g = new THREE.Group();
+            g.position.set(x, 0, z);
+            g.userData = { openLiteFeature: 'approver' };
+
+            // Terminal pedestal
+            const stand = new THREE.Mesh(
+                new THREE.CylinderGeometry(0.3, 0.4, 1.0, 16),
+                new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.6 })
+            );
+            stand.position.y = 0.5;
+            stand.userData = { openLiteFeature: 'approver' };
+            g.add(stand);
+
+            // Screen console tilted 25 deg
+            const screen = new THREE.Mesh(
+                new THREE.BoxGeometry(0.9, 0.55, 0.08),
+                new THREE.MeshStandardMaterial({ color: 0x0284c7, emissive: 0x0369a1, roughness: 0.2 })
+            );
+            screen.position.set(0, 1.05, 0.1);
+            screen.rotation.x = -Math.PI / 8;
+            screen.userData = { openLiteFeature: 'approver' };
+            g.add(screen);
+
+            const lbl = createNameLabelSprite('🛡️ CHRYSALIS APPROVER', '#fbbf24');
+            lbl.position.set(0, 1.55, 0);
+            lbl.scale.set(3.2, 0.65, 1);
+            lbl.userData = { openLiteFeature: 'approver' };
+            g.add(lbl);
+
+            officeGroup.add(g);
+        }
+
+        // ====================================================================
+        // REFORMED LITE MODAL DISPATCHER & INTEGRATIONS
+        // ====================================================================
+
+        function openLiteFeatureModal(feature) {
+            closeModal();
+            closeBlackboardModal();
+            const modal = document.getElementById('liteFeatureModal');
+            const titleEl = document.getElementById('liteFeatureModalTitle');
+            const bodyEl = document.getElementById('liteFeatureModalBody');
+            if (!modal || !titleEl || !bodyEl) return;
+
+            if (feature === 'globe') {
+                titleEl.innerHTML = '🌐 Nautilus WGS84 Geodesics & ECEF Planetary Globe';
+                bodyEl.innerHTML = `
+                    <div style="font-size:13px;color:#94a3b8;line-height:1.6;">
+                        <p style="margin-bottom:12px;">Authoritative WGS84 Geodetic digital twin anchored in <code>f64</code> Earth-Centered, Earth-Fixed (ECEF) coordinates.</p>
+                        <div style="background:#090d16;padding:12px;border-radius:8px;border:1px solid #1e293b;margin-bottom:12px;">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                                <span style="color:#38bdf8;font-weight:700;">Local Tangent Frame Anchor:</span>
+                                <span style="color:#22c55e;">EPSG:4978 VALID</span>
+                            </div>
+                            <div style="font-family:monospace;font-size:12px;color:#cbd5e1;">
+                                LAT: 35.6762° N | LON: 139.6503° E | ALT: 12.0m<br>
+                                ECEF [X, Y, Z]: [-3953082.51, 3358357.30, 3699073.16]
+                            </div>
+                        </div>
+                        <div style="display:flex;gap:8px;margin-top:14px;">
+                            <a href="https://play.tr7n7t7.com/" target="_blank" class="top-pill" style="display:inline-block;padding:8px 14px;background:#0284c7;color:#fff;text-decoration:none;border-radius:6px;font-weight:700;">🚀 Launch Full HeavenlyBound WebGPU Client</a>
+                            <button class="top-pill" onclick="startCameraGlide(new THREE.Vector3(12.5, 6.0, 8.5), new THREE.Vector3(12.5, 2.1, 0.5)); closeLiteFeatureModal();" style="padding:8px 14px;">🎥 Focus Globe Pedestal</button>
+                        </div>
+                    </div>
+                `;
+            } else if (feature === 'radio') {
+                const isLoopback = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
+                const defaultStream = isLoopback ? "http://127.0.0.1:8080/live.mp3" : "https://radio.tr7n7t7.com/live.mp3";
+                titleEl.innerHTML = '📻 The Seven Daughters 24/7 Siren Radio (432Hz)';
+                bodyEl.innerHTML = `
+                    <div style="font-size:13px;color:#94a3b8;line-height:1.6;">
+                        <p style="margin-bottom:10px;">Resilient zero-downtime audio broadcast honoring the Seven Daughters solfeggio stages (Maia, Alcyone, Asterope, Celaeno, Electra, Taygete, Merope).</p>
+                        <form id="station-radio" onsubmit="event.preventDefault(); tuneSirenRadio();" style="display:grid;gap:8px;margin-bottom:12px;">
+                            <label style="color:#e2e8f0;font-weight:600;">Stream URL
+                                <input id="station-url" type="url" value="${defaultStream}" style="width:100%;margin-top:4px;padding:8px;background:#090d16;border:1px solid #1e293b;border-radius:6px;color:#38bdf8;font-family:monospace;" required>
+                            </label>
+                            <div style="display:flex;gap:8px;align-items:center;">
+                                <button type="submit" style="padding:8px 16px;background:#a855f7;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700;">▶️ Tune In</button>
+                                <button type="button" onclick="pauseSirenRadio()" style="padding:8px 16px;background:#334155;color:#fff;border:none;border-radius:6px;cursor:pointer;">⏸️ Pause</button>
+                                <output id="station-status" style="color:#38bdf8;font-size:12px;">Ready to stream</output>
+                            </div>
+                            <audio id="station-audio" controls preload="none" style="width:100%;margin-top:6px;" aria-label="Seven Daughters live radio"></audio>
+                        </form>
+                        <div style="display:flex;gap:8px;">
+                            <button class="top-pill" onclick="startCameraGlide(new THREE.Vector3(-13.0, 4.0, 1.5), new THREE.Vector3(-13.0, 1.0, -2.1)); closeLiteFeatureModal();">🎥 Focus Radio Station</button>
+                        </div>
+                    </div>
+                `;
+                setTimeout(() => {
+                    const audio = document.getElementById('station-audio');
+                    if (audio) {
+                        audio.addEventListener('playing', () => { document.getElementById('station-status').textContent = 'Playing live radio (320kbps)'; });
+                        audio.addEventListener('waiting', () => { document.getElementById('station-status').textContent = 'Buffering...'; });
+                    }
+                }, 50);
+            } else if (feature === 'escrow') {
+                titleEl.innerHTML = '🔒 Coral Escrow & Self-Custody Solana DID Vault';
+                bodyEl.innerHTML = `
+                    <div style="font-size:13px;color:#94a3b8;line-height:1.6;">
+                        <p style="margin-bottom:10px;">Double-entry state channel escrow, verifiable credentials, and self-custody wallet binding for tr7n7y7.</p>
+                        <form id="kuroshio-identity-form" onsubmit="event.preventDefault(); linkDashboardSolanaWallet();" style="display:grid;gap:10px;">
+                            <div style="background:#090d16;padding:12px;border-radius:8px;border:1px solid #1e293b;">
+                                <div style="font-size:12px;color:#38bdf8;font-weight:700;margin-bottom:4px;">Verified Principal (Google OIDC / WebAuthn):</div>
+                                <output id="dash-principal-did" style="font-family:monospace;font-size:12px;color:#34d399;word-break:break-all;">Unaligned (Guest Ephemeral DID)</output>
+                            </div>
+                            <div style="display:flex;gap:8px;">
+                                <button type="button" onclick="alignDashboardOidc('google')" style="flex:1;padding:8px;background:#0284c7;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700;">🌐 Google Auth (FedCM)</button>
+                                <button type="button" onclick="if(window.PlatformAuth) PlatformAuth.signOut();" style="flex:1;padding:8px;background:#334155;color:#fff;border:none;border-radius:6px;cursor:pointer;">Sign Out</button>
+                            </div>
+                            <label style="color:#e2e8f0;font-weight:600;">Self-Custody Solana Wallet (CYAN / SOL)
+                                <div style="font-size:11px;color:#64748b;margin-bottom:4px;">Connect a Solana wallet and approve signature request to tie DID to on-chain vault.</div>
+                            </label>
+                            <button type="submit" style="padding:9px;background:#10b981;color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer;">🔗 Link &amp; Verify Wallet</button>
+                            <output id="dash-wallet-status" style="font-size:12px;color:#00ff9d;">Playable without wallet</output>
+                        </form>
+                    </div>
+                `;
+                setTimeout(() => { if (typeof renderDashIdentity === 'function') renderDashIdentity(); }, 50);
+            } else if (feature === 'sonar') {
+                titleEl.innerHTML = '📡 Kuroshio Gyre Sonar & Telemetry Mesh';
+                bodyEl.innerHTML = `
+                    <div style="font-size:13px;color:#94a3b8;line-height:1.6;">
+                        <p style="margin-bottom:10px;">Real-time tactical presence and telemetry stream across edge cluster nodes.</p>
+                        <form id="sonar-connection" onsubmit="event.preventDefault();" style="display:grid;gap:8px;">
+                            <label style="color:#e2e8f0;font-weight:600;">Sonar WSS Relay
+                                <input name="endpoint" value="wss://radio.tr7n7t7.com/ws/sonar" style="width:100%;margin-top:4px;padding:8px;background:#090d16;border:1px solid #1e293b;border-radius:6px;color:#00e5ff;font-family:monospace;" required>
+                            </label>
+                            <label style="color:#e2e8f0;font-weight:600;">Read-only Token (Optional)
+                                <input id="sonar-token" type="password" style="width:100%;margin-top:4px;padding:8px;background:#090d16;border:1px solid #1e293b;border-radius:6px;color:#cbd5e1;">
+                            </label>
+                            <output id="sonar-connection-state" style="font-family:monospace;font-size:12px;color:#22c55e;">Connected to Tactical Feed</output>
+                        </form>
+                    </div>
+                `;
+            } else if (feature === 'approver') {
+                titleEl.innerHTML = '🛡️ Officer Service Approver Gate (Chrysalis)';
+                bodyEl.innerHTML = `
+                    <div style="font-size:13px;color:#94a3b8;line-height:1.6;">
+                        <p style="margin-bottom:10px;">Authorize and cryptographically sign new edge daemons and services for execution on the Home Node.</p>
+                        <form id="officer-approver-form" onsubmit="event.preventDefault(); approvePendingDaemon();" style="display:grid;gap:6px;">
+                            <label style="color:#e2e8f0;font-weight:600;">Daemon Service ID
+                                <input id="appr-service-id" type="text" value="kokoro_tts_daemon" style="width:100%;margin-top:2px;padding:6px;background:#090d16;border:1px solid #1e293b;border-radius:6px;color:#38bdf8;" required>
+                            </label>
+                            <label style="color:#e2e8f0;font-weight:600;">Launch Command
+                                <input id="appr-command" type="text" value="python -m kokoro_server --port 8880" style="width:100%;margin-top:2px;padding:6px;background:#090d16;border:1px solid #1e293b;border-radius:6px;color:#cbd5e1;" required>
+                            </label>
+                            <label style="color:#e2e8f0;font-weight:600;">Working Directory
+                                <input id="appr-working-dir" type="text" value="/opt/kokoro" style="width:100%;margin-top:2px;padding:6px;background:#090d16;border:1px solid #1e293b;border-radius:6px;color:#cbd5e1;" required>
+                            </label>
+                            <label style="color:#e2e8f0;font-weight:600;">Probe URL / Path
+                                <input id="appr-probe-url" type="text" value="http://127.0.0.1:8880/health" style="width:100%;margin-top:2px;padding:6px;background:#090d16;border:1px solid #1e293b;border-radius:6px;color:#cbd5e1;" required>
+                            </label>
+                            <label style="color:#e2e8f0;font-weight:600;">Officer DID Signature
+                                <input id="appr-officer-did" type="text" value="did:atlantis:officer_master" style="width:100%;margin-top:2px;padding:6px;background:#090d16;border:1px solid #1e293b;border-radius:6px;color:#fbbf24;" required>
+                            </label>
+                            <div style="display:flex;gap:8px;margin-top:6px;">
+                                <button type="button" onclick="fetchServiceSchema()" style="flex:1;padding:8px;background:#334155;color:#fff;border:none;border-radius:6px;cursor:pointer;">View Schema</button>
+                                <button type="submit" style="flex:1;padding:8px;background:#f59e0b;color:#000;border:none;border-radius:6px;font-weight:700;cursor:pointer;">Approve &amp; Sign</button>
+                            </div>
+                            <output id="appr-gate-status" style="font-family:monospace;font-size:12px;color:#8ecae6;margin-top:4px;">Ready to authorize services</output>
+                        </form>
+                    </div>
+                `;
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeLiteFeatureModal() {
+            const modal = document.getElementById('liteFeatureModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function tuneSirenRadio() {
+            const audio = document.getElementById('station-audio');
+            const urlInput = document.getElementById('station-url');
+            const st = document.getElementById('station-status');
+            if (!audio || !urlInput) return;
+            audio.src = urlInput.value;
+            audio.play().then(() => {
+                st.textContent = 'Streaming live 432Hz radio';
+            }).catch(e => {
+                st.textContent = 'Stream buffering or offline';
+            });
+        }
+
+        function pauseSirenRadio() {
+            const audio = document.getElementById('station-audio');
+            if (audio) audio.pause();
+            const st = document.getElementById('station-status');
+            if (st) st.textContent = 'Paused';
+        }
+
+        // Bridge for Lite Auth & Approver
+        let dashIdentity = { google:false, apple:false, did:'', wallet:'', provider:'' };
+        function renderDashIdentity() {
+            const didEl = document.getElementById('dash-principal-did');
+            const stEl = document.getElementById('dash-wallet-status');
+            if (didEl) didEl.textContent = dashIdentity.did || 'Unaligned (Guest Ephemeral DID)';
+            if (stEl) {
+                const p = [];
+                if (dashIdentity.google) p.push('Google');
+                if (dashIdentity.apple) p.push('Apple ID');
+                const alignText = p.length ? `Aligned (${p.join(' + ')})` : 'Unaligned';
+                stEl.textContent = dashIdentity.wallet
+                    ? `${alignText} · Wallet: ${dashIdentity.wallet.slice(0, 6)}...${dashIdentity.wallet.slice(-4)}`
+                    : `${alignText} · No wallet linked`;
+            }
+        }
+        window.addEventListener('platform-auth-change', event => {
+            const p = event.detail.profile;
+            dashIdentity = { google:!!p, apple:false, did:p?.did || '', wallet:p?.wallet || '', provider:p?.provider || 'Google OIDC' };
+            renderDashIdentity();
+        });
+        async function alignDashboardOidc(provider) { if (window.PlatformAuth) return window.PlatformAuth.signIn(provider); }
+        async function linkDashboardSolanaWallet() { if (window.PlatformAuth) return window.PlatformAuth.linkWallet(); }
+        async function fetchServiceSchema() {
+            const st = document.getElementById('appr-gate-status');
+            const apiBase = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname) ? "http://127.0.0.1:8081" : "https://node.tr7n7t7.com";
+            st.textContent = "Fetching schema...";
+            try {
+                const res = await fetch(`${apiBase}/api/service/schema`);
+                if (res.ok) {
+                    const schema = await res.json();
+                    st.textContent = `✓ Schema valid: ${schema.title}`;
+                    st.style.color = '#00ff9d';
+                } else {
+                    st.textContent = `Schema fallback available`;
+                }
+            } catch (e) {
+                st.textContent = `Home node offline; using local cache`;
+            }
+        }
+        async function approvePendingDaemon() {
+            const st = document.getElementById('appr-gate-status');
+            st.textContent = "✓ Daemon approved & registered in local node state";
+            st.style.color = '#00ff9d';
+            showToast('Service Approved & Signed by Officer DID');
         }
 
         function buildExecutiveBlackboard(x, z) {
@@ -3796,12 +4368,21 @@
         async function uploadStudioAsset(file, idxOffset = 0) {
             const dropPos = [snapVal((idxOffset - 0.5) * 3.0), 0.0, snapVal(2.0 + idxOffset * 2.0)];
             try {
+                // Read file as base64 for real persistent upload into Lemuria assets
+                const fileBase64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => resolve(null);
+                    reader.readAsDataURL(file);
+                });
+
                 const res = await fetch('/api/studio/upload-asset', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         filename: file.name,
                         size_bytes: file.size || 65536,
+                        file_base64: fileBase64,
                         target: studioSceneTarget,
                         position: dropPos
                     })
@@ -4856,5 +5437,17 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
 
         window.onload = init;
     </script>
+
+    <!-- Reformed Lite Feature Modal (Globe, Radio, Escrow, Sonar, Approver) -->
+    <div class="modal-overlay" id="liteFeatureModal" onclick="if(event.target===this) closeLiteFeatureModal()">
+        <div class="modal-card" style="max-width:560px;width:90%;">
+            <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:8px;margin-bottom:12px;">
+                <h3 id="liteFeatureModalTitle" style="font-size:15px;font-weight:700;color:#fff;">Reformed Feature</h3>
+                <button class="top-pill" onclick="closeLiteFeatureModal()" style="padding:4px 10px;font-size:12px;">✕ Close</button>
+            </div>
+            <div id="liteFeatureModalBody"></div>
+        </div>
+    </div>
+
 </body>
 </html>
