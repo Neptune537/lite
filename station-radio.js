@@ -5,9 +5,10 @@ const stationUrl = document.getElementById("station-url");
 const stationAudio = document.getElementById("station-audio");
 const stationStatus = document.getElementById("station-status");
 
+if (stationForm && stationUrl && stationAudio && stationStatus) {
 const isLoopback = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
 if (isLoopback) {
-  stationUrl.value = "http://127.0.0.1:8080/live.mp3";
+  stationUrl.value = "http://127.0.0.1:8082/live.mp3";
 } else {
   stationUrl.value = "https://radio.tr7n7t7.com/live.mp3";
 }
@@ -35,7 +36,7 @@ stationAudio.addEventListener("waiting", () => {
 });
 async function pollRadioStatus() {
   try {
-    const statusApiUrl = isLoopback ? "http://127.0.0.1:8080/api/status" : "https://radio.tr7n7t7.com/api/status";
+    const statusApiUrl = isLoopback ? "http://127.0.0.1:8082/api/status" : "https://radio.tr7n7t7.com/api/status";
     const res = await fetch(statusApiUrl, { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
@@ -65,3 +66,4 @@ stationAudio.addEventListener("error", () => {
   }
   stationStatus.textContent = "Live stream unavailable.";
 });
+}
