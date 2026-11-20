@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>tr7n7y7 • 3D Spatial Office & Kuroshio Studio (tr7n7t7.com)</title>
+    <title>Kuroshio Office • 3D Spatial Command & Kuroshio Studio (tr7n7t7.com)</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/PLYLoader.js" crossorigin="anonymous"></script>
     <style>
         :root {
             --bg-void: #07090e;
@@ -1099,14 +1101,14 @@
         <div class="top-left">
             <div class="brand-mark">
                 <div class="cube-icon">🧊</div>
-                <span>tr7n7y7</span>
+                <span>Kuroshio Office</span>
             </div>
             <button class="top-pill" id="embeddedResumeBtn" style="display:none;border-color:#22c55e;background:rgba(34,197,94,0.16);color:#86efac;font-weight:700;" onclick="resumeHeavenlyBound()">▶ Resume HeavenlyBound</button>
             <button class="top-pill" onclick="openMarketplaceModal()">🏪 Marketplace</button>
-            <button class="top-pill active" onclick="closeModal(); closeBlackboardModal(); exitStudioMode(); resetView(); setViewTab('btnViewOffice')">🏢 Workspace</button>
+            <button class="top-pill active" onclick="closeModal(); closeBlackboardModal(); exitStudioMode(); resetView(); setViewTab('btnViewOffice')">🏢 Kuroshio Office</button>
             <button class="top-pill" onclick="openBlackboardModal()">📋 Strategy Blackboard</button>
             <button class="top-pill" style="border-color:#38bdf8;color:#38bdf8;" onclick="openLiteFeatureModal('globe')">🌐 Nautilus Globe</button>
-            <button class="top-pill" style="border-color:#a855f7;color:#c084fc;" onclick="openLiteFeatureModal('radio')">📻 Siren Radio</button>
+            <button class="top-pill" style="border-color:#a855f7;color:#c084fc;" onclick="openLiteFeatureModal('radio')">📻 Theater Radio</button>
             <button class="top-pill" style="border-color:#22c55e;color:#4ade80;" onclick="openLiteFeatureModal('escrow')">🔒 Coral Escrow</button>
             <button class="top-pill" style="border-color:#06b6d4;color:#22d3ee;" onclick="openLiteFeatureModal('sonar')">📡 Sonar</button>
             <button class="top-pill" style="border-color:#f59e0b;color:#fbbf24;" onclick="openLiteFeatureModal('approver')">🛡️ Approver</button>
@@ -1137,7 +1139,7 @@
             <div class="nav-scroll">
                 <div class="nav-group-label">HOME</div>
                 <div class="rail-item" onclick="setActiveNav(this); closeBlackboardModal(); exitStudioMode(); resetView(); openOverviewModal()"><span>🏠</span> Overview</div>
-                <div class="rail-item active" id="navOffice" onclick="setActiveNav(this); closeModal(); closeBlackboardModal(); exitStudioMode(); resetView(); setViewTab('btnViewOffice')"><span>🧊</span> 3D Office</div>
+                <div class="rail-item active" id="navOffice" onclick="setActiveNav(this); closeModal(); closeBlackboardModal(); exitStudioMode(); resetView(); setViewTab('btnViewOffice')"><span>🧊</span> Kuroshio Office</div>
                 <div class="rail-item" id="navStudio" onclick="setActiveNav(this); closeModal(); closeBlackboardModal(); enterStudioMode()"><span>🎮</span> Kuroshio Studio</div>
                 <div class="rail-item" id="navBlackboard" onclick="setActiveNav(this); closeModal(); openBlackboardModal()"><span>📋</span> Blackboard</div>
 
@@ -1197,12 +1199,12 @@
             <div class="canvas-top-left">
                 <div class="crumb-pill">
                     <span style="color:var(--accent);">💠</span>
-                    <span>tr7n7t7.com • tr7n7y7</span>
+                    <span>tr7n7t7.com • Kuroshio Office</span>
                 </div>
                 <div class="view-switcher">
                     <button class="switch-btn" id="btnViewOrg" onclick="exitStudioMode(); toggleOrgDrawer(); setViewTab('btnViewOrg')">🏢 Organization</button>
                     <button class="switch-btn" id="btnViewGraph" onclick="exitStudioMode(); focusOverhead(); setViewTab('btnViewGraph')">🕸️ Graph</button>
-                    <button class="switch-btn active" id="btnViewOffice" onclick="exitStudioMode(); resetView(); setViewTab('btnViewOffice')">🧊 Office</button>
+                    <button class="switch-btn active" id="btnViewOffice" onclick="exitStudioMode(); resetView(); setViewTab('btnViewOffice')">🧊 Kuroshio Office</button>
                     <button class="switch-btn" id="btnViewStudio" onclick="enterStudioMode()">🎮 Kuroshio Studio</button>
                     <button class="switch-btn" id="btnViewBlackboard" onclick="openBlackboardModal()">📋 Blackboard</button>
                 </div>
@@ -1346,6 +1348,131 @@
                         Ready to bake lemuria_manifest.json
                     </div>
                 </div>
+
+                <!-- 🎵 Baton Audio Core & Sabine Studio DSP -->
+                <div class="studio-section" id="studioBatonAudioSection">
+                    <div class="studio-hdr">
+                        <span>🎵 Baton Audio & Sabine DSP</span>
+                        <span class="count-badge" style="background:rgba(56,189,248,0.15);color:#38bdf8;">Rust Core</span>
+                    </div>
+
+                    <!-- Autotune Tuning -->
+                    <div style="background:#090d16;border:1px solid var(--border);border-radius:7px;padding:8px;display:flex;flex-direction:column;gap:6px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:11px;font-weight:700;color:#38bdf8;">🎯 Autotune Pitch Snap</span>
+                            <span id="autotuneStatusBadge" style="font-size:9.5px;color:var(--muted);">Ready</span>
+                        </div>
+                        <div class="studio-grid-2">
+                            <div>
+                                <div class="box-label">Input Hz</div>
+                                <input type="number" id="audioTestFreq" class="studio-input" value="445.0" step="1">
+                            </div>
+                            <div>
+                                <div class="box-label">Scale Snap</div>
+                                <select id="audioScaleSelect" class="studio-input" style="background:#0e1524;">
+                                    <option value="major" selected>Major (Ionian)</option>
+                                    <option value="minor">Natural Minor (Aeolian)</option>
+                                    <option value="pentatonic">Pentatonic</option>
+                                    <option value="dorian">Dorian</option>
+                                    <option value="mixolydian">Mixolydian</option>
+                                    <option value="chromatic">Chromatic</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="studio-btn" style="text-align:center;font-size:11px;" onclick="runBatonAutotuneTest()">Snap Pitch (POST /api/audio/autotune)</button>
+                        <div id="autotuneResultBox" style="font-size:10.5px;color:#94a3b8;font-family:monospace;white-space:pre-wrap;display:none;background:#030712;padding:6px;border-radius:5px;"></div>
+                    </div>
+
+                    <!-- Room Sabine RT60 Acoustics -->
+                    <div style="background:#090d16;border:1px solid var(--border);border-radius:7px;padding:8px;display:flex;flex-direction:column;gap:6px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:11px;font-weight:700;color:#c084fc;">🏛️ Sabine RT60 Room Tuning</span>
+                            <span id="rt60Badge" style="font-size:9.5px;color:#c084fc;font-weight:700;">-- s</span>
+                        </div>
+                        <div class="studio-grid-2">
+                            <div>
+                                <div class="box-label">Vol (m³)</div>
+                                <input type="number" id="audioRoomVol" class="studio-input" value="500" step="50">
+                            </div>
+                            <div>
+                                <div class="box-label">Area (m²)</div>
+                                <input type="number" id="audioRoomArea" class="studio-input" value="350" step="50">
+                            </div>
+                        </div>
+                        <div class="studio-grid-2">
+                            <div>
+                                <div class="box-label">Alpha α</div>
+                                <input type="number" id="audioAbsorptionAlpha" class="studio-input" value="0.18" step="0.02" min="0.01" max="1.0">
+                            </div>
+                            <div>
+                                <div class="box-label">Siren (Hz)</div>
+                                <select id="audioSolfeggioSelect" class="studio-input" style="background:#0e1524;">
+                                    <option value="432">432 Hz (Maia)</option>
+                                    <option value="528" selected>528 Hz (Alcyone)</option>
+                                    <option value="639">639 Hz (Asterope)</option>
+                                    <option value="741">741 Hz (Celaeno)</option>
+                                    <option value="852">852 Hz (Electra)</option>
+                                    <option value="963">963 Hz (Taygete)</option>
+                                    <option value="396">396 Hz (Merope)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="studio-btn" style="text-align:center;font-size:11px;" onclick="calculateSabineRT60()">Compute Sabine RT60 & Resonate</button>
+                    </div>
+
+                    <!-- Diatonic Chord Progression Generator -->
+                    <div style="background:#090d16;border:1px solid var(--border);border-radius:7px;padding:8px;display:flex;flex-direction:column;gap:6px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:11px;font-weight:700;color:#facc15;">🎹 Diatonic Chord Matrix</span>
+                            <span style="font-size:9.5px;color:var(--muted);">baton_audio_core</span>
+                        </div>
+                        <div class="studio-grid-2">
+                            <div>
+                                <div class="box-label">Progression Style</div>
+                                <select id="audioProgGenre" class="studio-input" style="background:#0e1524;">
+                                    <option value="uplifting" selected>Uplifting (I-V-vi-IV)</option>
+                                    <option value="emotional">Emotional (vi-IV-I-V)</option>
+                                    <option value="dark">Dark / Minor (i-VI-III-VII)</option>
+                                    <option value="jazz">Jazz 2-5-1 (ii-V-I-vi)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <div class="box-label">Root Key</div>
+                                <select id="audioProgRoot" class="studio-input" style="background:#0e1524;">
+                                    <option value="C" selected>C</option>
+                                    <option value="D">D</option>
+                                    <option value="E">E</option>
+                                    <option value="F">F</option>
+                                    <option value="G">G</option>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button class="studio-btn" style="text-align:center;font-size:11px;" onclick="generateChordsBaton()">Generate Progression</button>
+                        <div id="chordProgResult" style="font-size:11px;font-weight:700;color:#facc15;text-align:center;display:none;background:#030712;padding:6px;border-radius:5px;"></div>
+                    </div>
+
+                    <!-- Taste Profile Training -->
+                    <div style="background:#090d16;border:1px solid var(--border);border-radius:7px;padding:8px;display:flex;flex-direction:column;gap:6px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:11px;font-weight:700;color:#4ade80;">🧠 AI Taste Pack Training</span>
+                            <span id="tasteTrainStatus" style="font-size:9.5px;color:var(--muted);">Idle</span>
+                        </div>
+                        <div class="studio-grid-2">
+                            <div>
+                                <div class="box-label">Epochs</div>
+                                <input type="number" id="audioTrainEpochs" class="studio-input" value="15" min="3" max="50">
+                            </div>
+                            <div>
+                                <div class="box-label">User Tag</div>
+                                <input type="text" id="audioTrainUser" class="studio-input" value="triton_lead">
+                            </div>
+                        </div>
+                        <button class="studio-btn-primary" style="text-align:center;font-size:11px;" id="btnTrainTaste" onclick="triggerTasteTraining()">Train Sound Taste LoRA</button>
+                        <div id="tasteTrainingResult" style="font-size:10.5px;color:#86efac;font-family:monospace;white-space:pre-wrap;display:none;background:#030712;padding:6px;border-radius:5px;"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- Conversation / Inspection Card -->
@@ -1373,11 +1500,18 @@
                 </div>
 
                 <div class="activity-box" id="cReplyBox" style="border-color:rgba(56,189,248,0.45);background:rgba(10,18,36,0.9);">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
                         <div class="box-label" style="color:#4ade80;">💬 Agent Response</div>
-                        <button type="button" class="ui-btn" style="padding:2px 7px;font-size:10px;" title="Read response aloud" onclick="speakAgentReply()">🔊 Speak</button>
+                        <div style="display:flex;gap:4px;">
+                            <button type="button" class="ui-btn" id="autoSpeakToggleBtn" style="padding:2px 7px;font-size:10px;border-color:#22c55e;color:#86efac;" title="Automatically speak replies aloud" onclick="toggleAutoSpeak()">🔊 Auto-Speak: ON</button>
+                            <button type="button" class="ui-btn" style="padding:2px 7px;font-size:10px;" title="Read response aloud" onclick="speakAgentReply()">🔊 Speak</button>
+                        </div>
                     </div>
                     <div id="cReply" style="color:#f8fafc;font-size:12.5px;line-height:1.45;margin-top:3px;">Online and ready for instructions.</div>
+                </div>
+
+                <div id="cRadioQuickAction" style="display:none;">
+                    <button type="button" class="ui-btn-solid" style="width:100%;font-size:11.5px;background:linear-gradient(135deg,#0284c7,#7c3aed);" onclick="openLiteFeatureModal('radio')">🎛️ Open Theater 24/7 Dual-Deck Console</button>
                 </div>
 
                 <div class="activity-box">
@@ -1473,6 +1607,9 @@
         let radioWallCanvas, radioWallCtx, radioWallTexture;
         let djBoothFrontCanvas, djBoothFrontCtx, djBoothFrontTexture;
         let activeDaughterName = 'Taygete', nextDaughterName = 'Merope', radioStatusData = null;
+        let radioCrates = [], deckATrack = null, deckBTrack = null, activeDeck = 'A', nextDeck = 'B', faderPosition = 0.0, transitionActive = false;
+        let autoSpeakReplies = true, dissolveAnimInterval = null, crateSearchQuery = '';
+        let DAUGHTER_REPLIES = {};
         let lastRadioWallDraw = 0, lastChatterSwap = 0, autoCycleTimer = null;
         let studioAudioCtx = null, studioAnalyser = null, studioFreqData = null, studioMediaSourceAttached = false;
         let solfeggioSynth = null;
@@ -1715,8 +1852,17 @@
             spawnSevenDaughters();
             populateOrgTree();
             initHeavenlyBoundEmbedBridge();
+            loadRadioCrates();
             pollRadioStationStatus();
-            setInterval(pollRadioStationStatus, 10000);
+            setInterval(pollRadioStationStatus, 4000);
+            const persistentAudio = document.getElementById('sirenPersistentAudio');
+            if (persistentAudio) {
+                ['play', 'playing', 'pause', 'ended', 'error', 'waiting'].forEach(ev => {
+                    persistentAudio.addEventListener(ev, () => {
+                        if (typeof updateRadioAudioStateUI === 'function') updateRadioAudioStateUI();
+                    });
+                });
+            }
 
             raycaster = new THREE.Raycaster();
             mouse = new THREE.Vector2();
@@ -2665,8 +2811,7 @@
                         return;
                     }
                     if (activeMode === 'office' && obj.userData && obj.userData.daughterId) {
-                        focusRoom('radio');
-                        openLiteFeatureModal('radio', obj.userData.daughterId);
+                        selectDaughterForTalk(obj.userData.daughterId);
                         return;
                     }
                     if (activeMode === 'office' && obj.userData && obj.userData.openLiteFeature) {
@@ -2692,13 +2837,59 @@
             };
         }
 
+        function getTalkTargetProfile(rawId) {
+            const key = String(rawId || '').trim().toLowerCase();
+            if (WORKFORCE[key]) {
+                return { isDaughter: false, id: key, data: WORKFORCE[key], obj: employees[key] };
+            }
+            const daughterMeta = SEVEN_DAUGHTERS.find(d => d.id === key || d.name.toLowerCase() === key);
+            if (daughterMeta) {
+                const state = DAUGHTER_REPLIES[daughterMeta.id] || {};
+                const slot = daughters3D[daughterMeta.id]?.slotRole || (daughterMeta.name === activeDaughterName ? 'on_air' : daughterMeta.name === nextDaughterName ? 'on_deck' : 'green_room');
+                const slotLabel = slot === 'on_air' ? 'On Air • DJ Booth' : slot === 'on_deck' ? 'On Deck • Prep Console' : 'Siren Studio Lounge';
+                const np = radioStatusData?.now_playing || {};
+                const playingSummary = np.title ? `"${np.title}"` : 'Theater 24/7 Live Mix';
+                const statusText = slot === 'on_air' ? 'working' : slot === 'on_deck' ? 'waiting' : 'available';
+                return {
+                    isDaughter: true,
+                    id: daughterMeta.id,
+                    obj: daughters3D[daughterMeta.id],
+                    meta: daughterMeta,
+                    data: {
+                        id: daughterMeta.id,
+                        name: daughterMeta.name,
+                        avatar: daughterMeta.avatar,
+                        color: daughterMeta.color,
+                        role: `Siren Radio DJ • ${daughterMeta.freqHz} Hz (${daughterMeta.genre})`,
+                        node: `Theater 24/7 (${radioStatusData?.source_node || '10.0.0.60:8082'})`,
+                        room: slotLabel,
+                        status: statusText,
+                        activity: state.activity || (slot === 'on_air' ? `On Air: ${playingSummary}` : `${daughterMeta.windowUtc} • ${daughterMeta.bpm} BPM`),
+                        last_directive: state.last_directive || 'None yet',
+                        last_reply: state.last_reply || `Hey Operator! I'm ${daughterMeta.name} (${daughterMeta.freqHz} Hz • ${daughterMeta.genre}). Currently spinning ${playingSummary} on Deck ${activeDeck}. Ask me about the live track, weather, news wire, or tell me what to cue from the Crates!`
+                    }
+                };
+            }
+            return null;
+        }
+
+        function unfreezeSelectedTarget() {
+            if (!selectedEmpId) return;
+            if (employees[selectedEmpId]) employees[selectedEmpId].frozen = false;
+            if (daughters3D[selectedEmpId]) daughters3D[selectedEmpId].frozen = false;
+        }
+
+        function selectDaughterForTalk(daughterId) {
+            const prof = getTalkTargetProfile(daughterId);
+            if (prof) selectEmployee(prof.id);
+        }
+
         function selectEmployee(empId) {
-            if (!WORKFORCE[empId]) return;
+            const prof = getTalkTargetProfile(empId);
+            if (!prof) return;
             if (activeMode === 'studio') exitStudioMode();
 
-            if (selectedEmpId && employees[selectedEmpId]) {
-                employees[selectedEmpId].frozen = false;
-            }
+            unfreezeSelectedTarget();
             if (!selectedEmpId) {
                 savedCamPos = camera.position.clone();
                 savedCamTarget = controls.target.clone();
@@ -2707,49 +2898,56 @@
             isTouring = false;
             document.getElementById('tourBtn').classList.remove('active');
 
-            selectedEmpId = empId;
-            const emp = WORKFORCE[empId];
-            const empObj = employees[empId];
-            empObj.frozen = true;
+            selectedEmpId = prof.id;
+            const emp = prof.data;
+            const empObj = prof.obj;
+            if (empObj) empObj.frozen = true;
 
             document.getElementById('cAvatar').innerText = emp.avatar;
             document.getElementById('cAvatar').style.borderColor = emp.color;
             document.getElementById('cName').innerText = emp.name;
             document.getElementById('cRole').innerText = emp.role;
             document.getElementById('cActivity').innerText = emp.activity;
-            document.getElementById('cReply').innerText = emp.last_reply || generateLocalAgentReply(empId, 'hello').reply;
+            document.getElementById('cReply').innerText = emp.last_reply || generateLocalAgentReply(prof.id, 'hello').reply;
             document.getElementById('cNode').innerText = emp.node;
             document.getElementById('cLastDirective').innerText = emp.last_directive || 'None yet';
 
             const statusEl = document.getElementById('cStatus');
             if (emp.status === 'working') {
-                statusEl.innerText = '● WORKING';
+                statusEl.innerText = prof.isDaughter ? '● ON AIR / ACTIVE' : '● WORKING';
                 statusEl.style.color = 'var(--green)';
             } else if (emp.status === 'waiting') {
-                statusEl.innerText = '● AWAITING INPUT';
+                statusEl.innerText = prof.isDaughter ? '● ON DECK NEXT' : '● AWAITING INPUT';
                 statusEl.style.color = 'var(--amber)';
             } else {
                 statusEl.innerText = '● AVAILABLE';
                 statusEl.style.color = 'var(--accent)';
             }
 
-            const locPrefix = (emp.status === 'available' || emp.id === 'echo' || emp.id === 'kraken') ? 'Roaming' : 'At Desk';
+            const locPrefix = prof.isDaughter ? 'Booth' : ((emp.status === 'available' || emp.id === 'echo' || emp.id === 'kraken') ? 'Roaming' : 'At Desk');
             document.getElementById('cLocation').innerText = `${locPrefix} • ${emp.room}`;
-            document.getElementById('cMsgInput').placeholder = `Message ${emp.name.replace(' ★', '')}...`;
+            document.getElementById('cMsgInput').placeholder = `Talk to ${emp.name.replace(' ★', '')}...`;
+            const radioQuickBtn = document.getElementById('cRadioQuickAction');
+            if (radioQuickBtn) {
+                const showRadioBtn = prof.isDaughter || prof.id === 'siren' || prof.id === 'sebastian';
+                radioQuickBtn.style.display = showRadioBtn ? 'block' : 'none';
+                radioQuickBtn.onclick = () => openLiteFeatureModal('radio', prof.isDaughter ? prof.id : '');
+            }
             document.getElementById('charCard').style.display = 'flex';
             populateOrgTree();
             setTimeout(() => document.getElementById('cMsgInput')?.focus(), 180);
 
-            // Glide camera along current viewing angle to conversation shot
-            const p = empObj.group.position;
-            const targetPt = new THREE.Vector3(p.x, 1.0, p.z);
-            const curDir = new THREE.Vector3().subVectors(camera.position, controls.target);
-            curDir.y = 0;
-            if (curDir.lengthSq() < 0.01) curDir.set(0, 0, 1);
-            curDir.normalize();
-            const shotPos = targetPt.clone().add(curDir.multiplyScalar(5.8));
-            shotPos.y = 3.6;
-            startCameraGlide(shotPos, targetPt);
+            if (empObj && empObj.group) {
+                const p = empObj.group.position;
+                const targetPt = new THREE.Vector3(p.x, 1.0, p.z);
+                const curDir = new THREE.Vector3().subVectors(camera.position, controls.target);
+                curDir.y = 0;
+                if (curDir.lengthSq() < 0.01) curDir.set(0, 0, 1);
+                curDir.normalize();
+                const shotPos = targetPt.clone().add(curDir.multiplyScalar(prof.isDaughter ? 5.2 : 5.8));
+                shotPos.y = prof.isDaughter ? 3.2 : 3.6;
+                startCameraGlide(shotPos, targetPt);
+            }
         }
 
         function selectFirstOrDefault() {
@@ -2759,9 +2957,7 @@
         }
 
         function closeCard() {
-            if (selectedEmpId && employees[selectedEmpId]) {
-                employees[selectedEmpId].frozen = false;
-            }
+            unfreezeSelectedTarget();
             document.getElementById('charCard').style.display = 'none';
             selectedEmpId = null;
             populateOrgTree();
@@ -2773,9 +2969,7 @@
         }
 
         function resetView() {
-            if (selectedEmpId && employees[selectedEmpId]) {
-                employees[selectedEmpId].frozen = false;
-            }
+            unfreezeSelectedTarget();
             document.getElementById('charCard').style.display = 'none';
             selectedEmpId = null;
             savedCamPos = null;
@@ -2821,9 +3015,9 @@
             const url = renderer.domElement.toDataURL('image/png');
             const a = document.createElement('a');
             a.href = url;
-            a.download = `tr7n7y7-office-snapshot-${Date.now()}.png`;
+            a.download = `kuroshio-office-snapshot-${Date.now()}.png`;
             a.click();
-            showToast('Captured 3D Office Snapshot!');
+            showToast('Captured Kuroshio Office Snapshot!');
         }
 
         function initWebSpeech() {
@@ -2838,43 +3032,65 @@
                     handleWhisperResult(txt);
                     toggleWhisperFlow(false);
                 };
-                recognition.onerror = () => toggleWhisperFlow(false);
+                recognition.onerror = (err) => {
+                    toggleWhisperFlow(false);
+                    if (err && err.error !== 'aborted' && err.error !== 'no-speech') {
+                        if (!selectedEmpId) selectEmployee('triton');
+                        setTimeout(() => document.getElementById('cMsgInput')?.focus(), 100);
+                        showToast('🎙️ Mic blocked/unavailable — type & press Enter to talk');
+                    }
+                };
                 recognition.onend = () => { if (isRecording) toggleWhisperFlow(false); };
             }
         }
 
-        function handleWhisperResult(txt) {
+        async function handleWhisperResult(txt) {
             if (!selectedEmpId) selectEmployee('triton');
-            document.getElementById('cMsgInput').value = txt;
+            const targetId = selectedEmpId || 'triton';
+            const inputEl = document.getElementById('cMsgInput');
+            if (inputEl) inputEl.value = txt;
             fetch('/api/whisper', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ transcript: txt, target_id: selectedEmpId || 'triton' })
+                body: JSON.stringify({ transcript: txt, target_id: targetId })
             }).catch(() => {});
-            showToast('WhisperFlow transcribed: "' + txt + '"');
+            showToast('WhisperFlow: "' + txt + '"');
+            if (inputEl) inputEl.value = '';
+            await sendAgentDirective(targetId, txt, 'WhisperFlow_Voice', true);
         }
 
         function toggleWhisperFlow(forceState) {
-            isRecording = typeof forceState === 'boolean' ? forceState : !isRecording;
             const btn = document.getElementById('whisperBtn');
             const label = document.getElementById('whisperLabel');
+            const wantStart = typeof forceState === 'boolean' ? forceState : !isRecording;
 
-            if (isRecording) {
-                btn.classList.add('recording');
-                label.innerText = 'Listening...';
-                if (recognition) {
-                    try { recognition.start(); } catch (e) {}
-                } else {
-                    setTimeout(() => {
-                        if (isRecording) {
-                            toggleWhisperFlow(false);
-                            handleWhisperResult('Audit latest blocks and verify node consensus stability.');
-                        }
-                    }, 1200);
+            if (wantStart) {
+                if (!recognition) {
+                    isRecording = false;
+                    if (btn) btn.classList.remove('recording');
+                    if (label) label.innerText = 'WhisperFlow';
+                    if (!selectedEmpId) selectEmployee('triton');
+                    setTimeout(() => document.getElementById('cMsgInput')?.focus(), 140);
+                    showToast('🎙️ Browser voice mic unavailable — type & press Enter to talk (Auto-Speak is ON)');
+                    return;
+                }
+                isRecording = true;
+                if (btn) btn.classList.add('recording');
+                if (label) label.innerText = 'Listening...';
+                try {
+                    recognition.start();
+                } catch (e) {
+                    isRecording = false;
+                    if (btn) btn.classList.remove('recording');
+                    if (label) label.innerText = 'WhisperFlow';
+                    if (!selectedEmpId) selectEmployee('triton');
+                    setTimeout(() => document.getElementById('cMsgInput')?.focus(), 140);
+                    showToast('🎙️ Mic permission needed — type & press Enter to talk');
                 }
             } else {
-                btn.classList.remove('recording');
-                label.innerText = 'WhisperFlow';
+                isRecording = false;
+                if (btn) btn.classList.remove('recording');
+                if (label) label.innerText = 'WhisperFlow';
                 if (recognition) {
                     try { recognition.stop(); } catch (e) {}
                 }
@@ -2887,18 +3103,51 @@
             if (!directive) return;
             const targetId = selectedEmpId || 'triton';
             input.value = '';
-            await sendAgentDirective(targetId, directive, 'Operator_Workstation');
+            await sendAgentDirective(targetId, directive, 'Operator_Workstation', autoSpeakReplies);
         }
 
-        function speakAgentReply() {
-            const txt = document.getElementById('cReply')?.innerText;
-            if (!txt || !('speechSynthesis' in window)) {
-                showToast('Speech synthesis unavailable in this browser');
+        function toggleAutoSpeak() {
+            autoSpeakReplies = !autoSpeakReplies;
+            const btn = document.getElementById('autoSpeakToggleBtn');
+            if (btn) {
+                btn.innerText = autoSpeakReplies ? '🔊 Auto-Speak: ON' : '🔇 Auto-Speak: OFF';
+                btn.style.borderColor = autoSpeakReplies ? 'rgba(56,189,248,0.45)' : 'rgba(148,163,184,0.3)';
+                btn.style.color = autoSpeakReplies ? 'var(--accent)' : 'var(--muted)';
+            }
+            if (!autoSpeakReplies && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            showToast(autoSpeakReplies ? 'Auto-Speak voice replies enabled' : 'Auto-Speak muted');
+        }
+
+        function speakAgentReply(customText, agentId) {
+            const txt = (customText || document.getElementById('cReply')?.innerText || '').trim();
+            if (!txt) return;
+            const targetId = (agentId || selectedEmpId || 'triton').toLowerCase();
+            const talkDuration = Math.min(8500, Math.max(2400, txt.length * 52));
+            if (employees[targetId]) employees[targetId].talkingUntil = performance.now() + talkDuration;
+            if (daughters3D[targetId]) daughters3D[targetId].talkingUntil = performance.now() + talkDuration;
+
+            if (!('speechSynthesis' in window)) {
+                if (customText === undefined) showToast('Speech synthesis unavailable in this browser');
                 return;
             }
             window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(txt);
-            u.rate = 1.04;
+            const isDaughter = Boolean(daughters3D[targetId]);
+            if (isDaughter) {
+                u.pitch = 1.22;
+                u.rate = 1.03;
+            } else if (targetId === 'echo' || targetId === 'nova') {
+                u.pitch = 1.15;
+                u.rate = 1.05;
+            } else if (targetId === 'triton' || targetId === 'orion' || targetId === 'kuro') {
+                u.pitch = 0.88;
+                u.rate = 1.01;
+            } else {
+                u.pitch = 1.02;
+                u.rate = 1.05;
+            }
             window.speechSynthesis.speak(u);
         }
 
@@ -3042,9 +3291,15 @@
                     bar.position.y = 0.28 + 0.70 * bar.scale.y;
                 });
 
-                if (djPlatterLeft) djPlatterLeft.rotation.y += 0.048;
-                if (djPlatterRight) djPlatterRight.rotation.y -= 0.042;
-                if (djCrossfader) djCrossfader.position.x = Math.sin(t * 0.65) * 0.22;
+                if (djPlatterLeft) {
+                    if (activeDeck === 'A' || transitionActive) djPlatterLeft.rotation.y += 0.055;
+                }
+                if (djPlatterRight) {
+                    if (activeDeck === 'B' || transitionActive) djPlatterRight.rotation.y -= 0.055;
+                }
+                if (djCrossfader) {
+                    djCrossfader.position.x = -0.24 + (Math.max(0, Math.min(1, faderPosition)) * 0.48);
+                }
 
                 const kick = Math.pow(Math.max(0, Math.sin(beatRad)), 4);
                 djCuePads.forEach((pad, idx) => {
@@ -3717,10 +3972,41 @@
             obj.group.add(obj.speechSprite);
         }
 
+        function shortenTrackLabel(str, maxLen = 28) {
+            const s = String(str || '').trim();
+            if (!s) return '';
+            return s.length > maxLen ? s.slice(0, maxLen - 1) + '…' : s;
+        }
+
+        function findCrateTrack(title) {
+            const q = String(title || '').trim().toLowerCase();
+            if (!q || !radioCrates.length) return null;
+            return radioCrates.find(c => String(c.title || '').toLowerCase() === q)
+                || radioCrates.find(c => String(c.title || '').toLowerCase().includes(q) || q.includes(String(c.title || '').toLowerCase()))
+                || null;
+        }
+
+        async function loadRadioCrates() {
+            for (const url of ['/api/radio/crates', '/crates.json']) {
+                try {
+                    const r = await fetch(url, { cache: 'no-store' });
+                    if (r.ok && (r.headers.get('content-type') || '').includes('json')) {
+                        const data = await r.json();
+                        if (Array.isArray(data) && data.length > 0) {
+                            radioCrates = data;
+                            if (typeof updateRadioModalInPlace === 'function') updateRadioModalInPlace();
+                            return;
+                        }
+                    }
+                } catch (_) {}
+            }
+        }
+
         function assignDaughterBoothPositions(snapNow = false) {
             const onAirMeta = getDaughterMeta(activeDaughterName);
             nextDaughterName = getNextDaughterName(onAirMeta.name);
             const onDeckMeta = getDaughterMeta(nextDaughterName);
+            const np = radioStatusData?.now_playing || {};
 
             const greenRoomSlots = [
                 { pos: [-23.2, 0.0, -4.2], rotY: 0.4 },
@@ -3738,12 +4024,18 @@
                     obj.slotRole = 'on_air';
                     obj.targetPos.set(-20.4, 0.28, -7.85);
                     obj.targetRotY = 0;
-                    setDaughterSpeech(obj, `ON AIR • ${d.freqHz}Hz ${d.bpm}BPM`);
+                    const onAirBubble = np.title
+                        ? `ON AIR D${activeDeck}: ${shortenTrackLabel(np.title, 20)}`
+                        : `ON AIR • ${d.freqHz}Hz ${d.bpm}BPM`;
+                    setDaughterSpeech(obj, onAirBubble);
                 } else if (d.id === onDeckMeta.id) {
                     obj.slotRole = 'on_deck';
                     obj.targetPos.set(-16.8, 0.0, -4.1);
                     obj.targetRotY = 2.55;
-                    setDaughterSpeech(obj, `NEXT UP • ${d.windowUtc.slice(0, 5)}`);
+                    const nextBubble = np.next_title
+                        ? `NEXT D${nextDeck}: ${shortenTrackLabel(np.next_title, 18)}`
+                        : `NEXT UP • ${d.windowUtc.slice(0, 5)}`;
+                    setDaughterSpeech(obj, nextBubble);
                 } else {
                     const slot = greenRoomSlots[grIdx % greenRoomSlots.length];
                     grIdx++;
@@ -3758,7 +4050,6 @@
                 }
             });
 
-            // Sync Studio lights, equalizer bars, fascia & LED backdrop to Active Daughter
             if (djStageLight) djStageLight.color.setHex(onAirMeta.hex);
             if (djStageTrimMat) djStageTrimMat.color.setHex(onAirMeta.hex);
             if (djDanceRing) djDanceRing.material.color.setHex(onAirMeta.hex);
@@ -3773,13 +4064,17 @@
         function animateSevenDaughters(now, t) {
             const onAirMeta = getDaughterMeta(activeDaughterName);
             const beatRad = (now / 1000) * (onAirMeta.bpm / 60) * Math.PI * 2;
+            const np = radioStatusData?.now_playing || {};
 
             if (now - lastChatterSwap > 9000) {
                 lastChatterSwap = now;
-                const offDuty = SEVEN_DAUGHTERS.filter(d => daughters3D[d.id] && daughters3D[d.id].slotRole === 'green_room');
+                const offDuty = SEVEN_DAUGHTERS.filter(d => daughters3D[d.id] && daughters3D[d.id].slotRole === 'green_room' && !daughters3D[d.id].frozen && !(daughters3D[d.id].talkingUntil && now < daughters3D[d.id].talkingUntil));
                 if (offDuty.length > 0) {
                     const pick = offDuty[Math.floor(Math.random() * offDuty.length)];
-                    const line = pick.chatter[Math.floor(Math.random() * pick.chatter.length)];
+                    const lines = [...pick.chatter];
+                    if (np.title) lines.push(`Spinning "${shortenTrackLabel(np.title, 18)}"`);
+                    if (np.weather) lines.push(shortenTrackLabel(np.weather, 24));
+                    const line = lines[Math.floor(Math.random() * lines.length)];
                     setDaughterSpeech(daughters3D[pick.id], line);
                 }
             }
@@ -3787,6 +4082,35 @@
             for (const id in daughters3D) {
                 const obj = daughters3D[id];
                 const pos = obj.group.position;
+                const isTalking = Boolean(obj.talkingUntil && now < obj.talkingUntil);
+
+                if (obj.frozen || isTalking) {
+                    const lookX = camera.position.x - pos.x;
+                    const lookZ = camera.position.z - pos.z;
+                    let faceDiff = Math.atan2(lookX, lookZ) - obj.group.rotation.y;
+                    while (faceDiff > Math.PI) faceDiff -= Math.PI * 2;
+                    while (faceDiff < -Math.PI) faceDiff += Math.PI * 2;
+                    obj.group.rotation.y += faceDiff * 0.14;
+                    obj.leftLeg.rotation.x = 0;
+                    obj.rightLeg.rotation.x = 0;
+                    if (isTalking) {
+                        obj.rightArm.rotation.x = -0.78 + Math.sin(t * 7.5) * 0.34;
+                        obj.rightArm.rotation.z = Math.sin(t * 5.2) * 0.16;
+                        obj.leftArm.rotation.x = -0.25 + Math.cos(t * 6.0) * 0.18;
+                        obj.head.rotation.x = Math.sin(t * 6.5) * 0.12;
+                        obj.head.rotation.y = Math.sin(t * 3.1) * 0.14;
+                        obj.halo.rotation.y += 0.08;
+                        obj.disc.material.opacity = 0.42;
+                    } else {
+                        obj.rightArm.rotation.x *= 0.85;
+                        obj.leftArm.rotation.x *= 0.85;
+                        obj.head.rotation.x = Math.sin(t * 1.5) * 0.05;
+                        obj.head.rotation.y = 0;
+                        obj.halo.rotation.y += 0.03;
+                    }
+                    continue;
+                }
+
                 const dx = obj.targetPos.x - pos.x;
                 const dz = obj.targetPos.z - pos.z;
                 const dist = Math.hypot(dx, dz);
@@ -3847,20 +4171,26 @@
             if (!djBoothFrontCtx) return;
             const ctx = djBoothFrontCtx;
             const m = getDaughterMeta(activeDaughterName);
+            const np = radioStatusData?.now_playing || {};
+            const liveTitle = np.title ? `♪ ${shortenTrackLabel(np.title, 30)}` : `${m.freqHz} Hz SOLFEGGIO • ${m.bpm} BPM`;
+            const subLine = np.next_title
+                ? `NEXT DECK ${nextDeck}: ${shortenTrackLabel(np.next_title, 28)}`
+                : m.genre;
+
             ctx.fillStyle = '#070b14';
             ctx.fillRect(0, 0, 512, 160);
             ctx.strokeStyle = m.color;
             ctx.lineWidth = 4;
             ctx.strokeRect(4, 4, 504, 152);
             ctx.fillStyle = m.color;
-            ctx.font = 'bold 28px Inter, monospace';
-            ctx.fillText(`ON AIR: ${m.avatar} ${m.name.toUpperCase()}`, 22, 54);
+            ctx.font = 'bold 24px Inter, monospace';
+            ctx.fillText(`THEATER 24/7 • ${m.avatar} ${m.name.toUpperCase()} [D${activeDeck}]`, 20, 48);
             ctx.fillStyle = '#f8fafc';
-            ctx.font = 'bold 20px monospace';
-            ctx.fillText(`${m.freqHz} Hz SOLFEGGIO  •  ${m.bpm} BPM`, 22, 95);
-            ctx.fillStyle = '#94a3b8';
-            ctx.font = '16px Inter, sans-serif';
-            ctx.fillText(m.genre, 22, 132);
+            ctx.font = 'bold 21px Inter, sans-serif';
+            ctx.fillText(liveTitle, 20, 92);
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = '15px monospace';
+            ctx.fillText(subLine, 20, 130);
             if (djBoothFrontTexture) djBoothFrontTexture.needsUpdate = true;
         }
 
@@ -3869,8 +4199,10 @@
             const ctx = radioWallCtx;
             const m = getDaughterMeta(activeDaughterName);
             const nextM = getDaughterMeta(nextDaughterName);
-            const isSim = Boolean(radioStatusData?.simulated || clientSimOverride);
-            const listeners = radioStatusData?.listeners_active ?? 1;
+            const np = radioStatusData?.now_playing || {};
+            const isLive = Boolean(radioStatusData?.live && !clientSimOverride);
+            const listeners = radioStatusData?.listeners ?? radioStatusData?.listeners_active ?? 1;
+            const sourceTag = radioStatusData?.source_node || '10.0.0.60:8082';
             const dNow = new Date();
             const utcStr = dNow.toISOString().slice(11, 19) + ' UTC';
             const beatRad = (now / 1000) * (m.bpm / 60) * Math.PI * 2;
@@ -3881,36 +4213,53 @@
             ctx.lineWidth = 4;
             ctx.strokeRect(6, 6, 628, 244);
 
-            // Top ON AIR pill & Clock
             const blink = Math.floor(now / 500) % 2 === 0;
             ctx.fillStyle = blink ? '#ef4444' : '#991b1b';
             ctx.beginPath();
-            ctx.arc(34, 34, 8, 0, Math.PI * 2);
+            ctx.arc(30, 32, 7, 0, Math.PI * 2);
             ctx.fill();
             ctx.fillStyle = '#f8fafc';
-            ctx.font = 'bold 18px monospace';
-            ctx.fillText(isSim ? 'SIMULATED DJ SHIFT • BOOTH PREVIEW' : '24/7 SIREN RADIO • LIVE BROADCAST', 52, 40);
+            ctx.font = 'bold 16px monospace';
+            const headerLabel = clientSimOverride
+                ? 'SIMULATED HOST OVERRIDE • THEATER 24/7'
+                : (isLive ? `THEATER 24/7 LIVE • ${sourceTag}` : 'THEATER 24/7 • CYAN NETWORK');
+            ctx.fillText(headerLabel, 46, 38);
             ctx.fillStyle = '#38bdf8';
             ctx.textAlign = 'right';
-            ctx.fillText(`${utcStr}  •  👂 ${listeners}`, 616, 40);
+            ctx.fillText(`${utcStr} • 👂 ${listeners}`, 616, 38);
             ctx.textAlign = 'left';
 
-            // Main Host & Solfeggio Hz
+            // Main Live Track Title + Artist
+            const trackHeadline = np.title ? `♪ ${shortenTrackLabel(np.title, 33)}` : `${m.avatar} ${m.name} — ${m.freqHz} Hz`;
             ctx.fillStyle = m.color;
-            ctx.font = 'bold 38px Inter, sans-serif';
-            ctx.fillText(`${m.avatar} ${m.name}  —  ${m.freqHz} Hz`, 26, 98);
+            ctx.font = 'bold 31px Inter, sans-serif';
+            ctx.fillText(trackHeadline, 24, 84);
+
             ctx.fillStyle = '#e2e8f0';
-            ctx.font = '19px Inter, sans-serif';
-            ctx.fillText(`${m.genre} (${m.bpm} BPM • ${m.windowUtc})`, 28, 132);
+            ctx.font = '16px Inter, sans-serif';
+            const artistOrRole = np.live_broadcaster
+                ? `${np.live_broadcaster} • DECK ${activeDeck} (${Math.round((1 - faderPosition) * 100)}/${Math.round(faderPosition * 100)})`
+                : `${m.avatar} ${m.name} • ${m.genre}`;
+            ctx.fillText(shortenTrackLabel(artistOrRole, 60), 24, 114);
 
-            // Next Up & Deck Status
+            // Next Deck & Telemetry
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 14px monospace';
+            const nextLine = np.next_title
+                ? `CUE DECK ${nextDeck}: ${shortenTrackLabel(np.next_title, 34)} (${nextM.avatar} ${nextM.name})`
+                : `NEXT ON DECKS: ${nextM.avatar} ${nextM.name} (${nextM.freqHz} Hz)`;
+            ctx.fillText(nextLine, 24, 144);
+
             ctx.fillStyle = '#94a3b8';
-            ctx.font = 'bold 16px monospace';
-            ctx.fillText(`NEXT ON DECKS: ${nextM.avatar} ${nextM.name} (${nextM.freqHz} Hz • ${nextM.windowUtc})`, 28, 166);
+            ctx.font = '13px monospace';
+            const telLine = np.weather
+                ? `${shortenTrackLabel(np.weather, 38)} • WIRE: ${np.bulletin_countdown ?? '--'}s`
+                : `${m.windowUtc} • Chaos: ${np.chaos_level || 'NOMINAL'}`;
+            ctx.fillText(telLine, 24, 170);
 
-            // Bottom Animated Broadcast Waveform
+            // Bottom Waveform + Crossfader Indicator
             for (let i = 0; i < 42; i++) {
-                const h = 10 + Math.abs(Math.sin(beatRad * 0.5 + i * 0.35) * Math.cos(now * 0.002 + i * 0.2)) * 46;
+                const h = 8 + Math.abs(Math.sin(beatRad * 0.5 + i * 0.35) * Math.cos(now * 0.002 + i * 0.2)) * 40;
                 ctx.fillStyle = i % 3 === 0 ? '#f8fafc' : m.color;
                 ctx.fillRect(26 + i * 14, 236 - h, 9, h);
             }
@@ -3922,7 +4271,7 @@
             const isLoopback = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
             let fetched = null;
 
-            // 1. Primary Office Backend endpoint (on local Rust office :8899)
+            // 1. Primary Office Backend endpoint (proxies 10.0.0.60:8082 / 10.0.0.58:8082 / local)
             try {
                 const r = await fetch('/api/radio/status', { cache: 'no-store' });
                 if (r.ok && (r.headers.get('content-type') || '').includes('json')) {
@@ -3930,42 +4279,85 @@
                 }
             } catch (_) {}
 
-            // 2. Direct local or public Siren Radio endpoint fallback (for static Lite / Pages)
-            if (!fetched) {
-                const statusUrl = isLoopback ? 'http://127.0.0.1:8082/api/status' : 'https://radio.tr7n7t7.com/api/status';
-                try {
-                    const r2 = await fetch(statusUrl, { cache: 'no-store' });
-                    if (r2.ok) fetched = await r2.json();
-                } catch (_) {}
+            // 2. Direct LAN Pi fallback when on loopback without local backend
+            if (!fetched && isLoopback) {
+                for (const lanUrl of ['http://10.0.0.60:8082/api/status', 'http://10.0.0.58:8082/api/status', 'http://127.0.0.1:8082/api/status']) {
+                    try {
+                        const r2 = await fetch(lanUrl, { cache: 'no-store' });
+                        if (r2.ok && (r2.headers.get('content-type') || '').includes('json')) {
+                            fetched = await r2.json();
+                            if (!fetched.source_node) fetched.source_node = lanUrl.replace('http://', '').split('/')[0];
+                            break;
+                        }
+                    } catch (_) {}
+                }
             }
 
             const utcName = computeUtcDaughterName();
             if (!fetched) {
+                const crateFallback = radioCrates.length ? radioCrates[0] : null;
                 fetched = {
                     live: false,
                     simulated: Boolean(clientSimOverride),
+                    source_node: 'radio.tr7n7t7.com/live.mp3',
+                    stream_public: 'https://radio.tr7n7t7.com/live.mp3',
                     live_utc_daughter: utcName,
-                    listeners_active: 1,
-                    now_playing: { daughter: clientSimOverride || utcName }
+                    listeners: 1,
+                    now_playing: {
+                        active_deck: 'A',
+                        next_deck: 'B',
+                        title: crateFallback ? crateFallback.title : 'Theater 24/7 • Cyan Network Live Stream',
+                        artist: crateFallback ? crateFallback.artist : 'The Seven Daughters',
+                        next_title: radioCrates[1]?.title || 'Next Crate Selection',
+                        next_artist: radioCrates[1]?.artist || 'Cyan Network',
+                        fader_position: 0.0,
+                        speaker: clientSimOverride || utcName
+                    }
                 };
-            } else if (clientSimOverride && !fetched.simulated) {
+            }
+
+            const np = fetched.now_playing || {};
+            if (clientSimOverride) {
                 fetched.simulated = true;
-                fetched.live_utc_daughter = fetched.now_playing?.daughter || utcName;
-                fetched.now_playing = fetched.now_playing || {};
-                fetched.now_playing.daughter = clientSimOverride;
+                np.daughter = clientSimOverride;
+                np.speaker = clientSimOverride;
+            }
+            fetched.now_playing = np;
+
+            activeDeck = String(np.active_deck || activeDeck || 'A').toUpperCase() === 'B' ? 'B' : 'A';
+            nextDeck = String(np.next_deck || (activeDeck === 'A' ? 'B' : 'A')).toUpperCase() === 'B' ? 'B' : 'A';
+            if (!dissolveAnimInterval && typeof np.fader_position === 'number') {
+                faderPosition = Math.max(0, Math.min(1, np.fader_position));
+            }
+            transitionActive = Boolean(np.transition_active);
+
+            const curTrackObj = {
+                title: np.title || 'Live Rotation',
+                artist: np.artist || 'Cyan Network',
+                ...(findCrateTrack(np.title) || {})
+            };
+            const nextTrackObj = {
+                title: np.next_title || 'Queued Selection',
+                artist: np.next_artist || 'Cyan Network',
+                ...(findCrateTrack(np.next_title) || {})
+            };
+            if (activeDeck === 'A') {
+                deckATrack = curTrackObj;
+                deckBTrack = nextTrackObj;
+            } else {
+                deckBTrack = curTrackObj;
+                deckATrack = nextTrackObj;
             }
 
             radioStatusData = fetched;
-            const reportedDaughter = fetched.now_playing?.daughter || utcName;
-            if (reportedDaughter.toLowerCase() !== activeDaughterName.toLowerCase()) {
-                activeDaughterName = getDaughterMeta(reportedDaughter).name;
-                assignDaughterBoothPositions(false);
-            } else {
-                updateRadioWallCanvas(Date.now());
-                updateDjBoothFrontCanvas();
+            const reportedDaughter = clientSimOverride || np.speaker || np.daughter || fetched.live_utc_daughter || utcName;
+            const resolvedName = getDaughterMeta(reportedDaughter).name;
+            if (resolvedName.toLowerCase() !== activeDaughterName.toLowerCase()) {
+                activeDaughterName = resolvedName;
             }
+            assignDaughterBoothPositions(false);
 
-            if (solfeggioSynth) {
+            if (solfeggioSynth && studioAudioCtx) {
                 const m = getDaughterMeta(activeDaughterName);
                 try {
                     solfeggioSynth.osc1.frequency.setTargetAtTime(m.freqHz, studioAudioCtx.currentTime, 0.25);
@@ -3973,10 +4365,7 @@
                 } catch (_) {}
             }
 
-            const modal = document.getElementById('liteFeatureModal');
-            if (modal && modal.style.display === 'flex' && modal.getAttribute('data-feature') === 'radio') {
-                refreshRadioModalUi();
-            }
+            updateRadioModalInPlace();
         }
 
         async function setSimulatedDaughter(daughterName) {
@@ -3993,7 +4382,8 @@
                 }
             } catch (_) {}
 
-            activeDaughterName = target || radioStatusData?.live_utc_daughter || computeUtcDaughterName();
+            const np = radioStatusData?.now_playing || {};
+            activeDaughterName = target || np.speaker || radioStatusData?.live_utc_daughter || computeUtcDaughterName();
             assignDaughterBoothPositions(false);
             if (solfeggioSynth && studioAudioCtx) {
                 const m = getDaughterMeta(activeDaughterName);
@@ -4002,12 +4392,9 @@
                     solfeggioSynth.osc2.frequency.setTargetAtTime(m.freqHz * 1.5, studioAudioCtx.currentTime, 0.2);
                 } catch (_) {}
             }
-            const modal = document.getElementById('liteFeatureModal');
-            if (modal && modal.style.display === 'flex' && modal.getAttribute('data-feature') === 'radio') {
-                refreshRadioModalUi();
-            }
+            updateRadioModalInPlace();
             const activeM = getDaughterMeta(activeDaughterName);
-            showToast(target ? `🎛️ Shifted DJ Booth -> ${activeM.name} (${activeM.freqHz}Hz)` : `🔄 Resynced DJ Booth -> Live UTC (${activeM.name})`);
+            showToast(target ? `🎛️ Shifted DJ Booth -> ${activeM.name} (${activeM.freqHz}Hz)` : `🔄 Synced to Live Station (${activeM.name})`);
         }
 
         function toggleAutoCycleDaughters() {
@@ -4024,7 +4411,7 @@
                 autoCycleTimer = setInterval(stepShift, 15000);
                 showToast('⏭️ Auto-Cycling Seven Daughters shifts every 15s');
             }
-            refreshRadioModalUi();
+            updateRadioModalInPlace();
         }
 
         function ensureStudioAudioAnalyser() {
@@ -4104,9 +4491,13 @@
             refreshRadioModalUi();
         }
 
-        function refreshRadioModalUi() {
+        function refreshRadioModalUi(forceRebuild = false) {
             const modal = document.getElementById('liteFeatureModal');
             if (!modal || modal.style.display !== 'flex' || modal.getAttribute('data-feature') !== 'radio') return;
+            if (!forceRebuild && document.getElementById('radioConsoleRoot')) {
+                updateRadioModalInPlace();
+                return;
+            }
             const focusId = modal.getAttribute('data-focus-daughter') || '';
             renderRadioModalContents(focusId);
         }
@@ -4448,76 +4839,486 @@
             }
         }
 
-        function renderRadioModalContents(focusDaughterId = '') {
-            const titleEl = document.getElementById('liteFeatureModalTitle');
-            const bodyEl = document.getElementById('liteFeatureModalBody');
-            if (!titleEl || !bodyEl) return;
-
+        async function postRadioControl(payload) {
             const isLoopback = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
-            const audioEl = document.getElementById('sirenPersistentAudio');
-            const defaultStream = (audioEl && audioEl.getAttribute('src')) || (isLoopback ? 'http://127.0.0.1:8082/live.mp3' : 'https://radio.tr7n7t7.com/live.mp3');
+            const endpoints = ['/api/radio/control'];
+            if (isLoopback) endpoints.push('http://10.0.0.60:8082/api/control', 'http://127.0.0.1:8082/api/control');
+            for (const url of endpoints) {
+                try {
+                    const r = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (r.ok) return await r.json().catch(() => ({ status: 'ok' }));
+                } catch (_) {}
+            }
+            return null;
+        }
+
+        async function postRadioCrossfader(position, mode = 'MANUAL') {
+            const isLoopback = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+            const payload = { position: Number(position.toFixed(2)), mode };
+            const endpoints = ['/api/radio/crossfader'];
+            if (isLoopback) endpoints.push('http://10.0.0.60:8082/api/crossfader', 'http://127.0.0.1:8082/api/crossfader');
+            for (const url of endpoints) {
+                try {
+                    const r = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (r.ok) return await r.json().catch(() => ({ status: 'ok' }));
+                } catch (_) {}
+            }
+            return null;
+        }
+
+        function getDeckDisplayInfo(deckLetter) {
+            const isA = deckLetter === 'A';
+            const isOnAir = activeDeck === deckLetter;
+            const np = radioStatusData?.now_playing || {};
+            const stored = isA ? deckATrack : deckBTrack;
+            const title = (isOnAir ? np.title : np.next_title) || stored?.title || (isA ? 'Deck A Rotation' : 'Deck B Standby');
+            const artist = (isOnAir ? np.artist : np.next_artist) || stored?.artist || 'Cyan Network Spotify & YouTube Rotation';
+            const crate = stored?.cover_url ? stored : findCrateTrack(title);
+            return {
+                deck: deckLetter,
+                isOnAir,
+                title,
+                artist,
+                cover_url: crate?.cover_url || '',
+                bpm: crate?.bpm || '',
+                accent: isA ? '#38bdf8' : '#ec4899'
+            };
+        }
+
+        function renderDeckCardHtml(deckLetter) {
+            const info = getDeckDisplayInfo(deckLetter);
+            const onAirBadge = info.isOnAir
+                ? `<span style="background:rgba(34,197,94,0.2);color:#4ade80;border:1px solid #22c55e;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:800;">● ON AIR</span>`
+                : `<span style="background:rgba(148,163,184,0.12);color:#94a3b8;border:1px solid #334155;padding:2px 7px;border-radius:999px;font-size:10px;font-weight:700;">◐ CUED NEXT</span>`;
+            const coverBox = info.cover_url
+                ? `<img src="${escHtml(info.cover_url)}" alt="" onerror="this.style.display='none'" style="width:52px;height:52px;border-radius:8px;object-fit:cover;border:1px solid ${info.accent};flex-shrink:0;">`
+                : `<div style="width:52px;height:52px;border-radius:8px;background:#0f172a;border:1px solid ${info.accent};display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">💿</div>`;
+            return `
+                <div style="background:#060a14;border:1.5px solid ${info.isOnAir ? info.accent : '#1e293b'};border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-size:12px;font-weight:800;color:${info.accent};">TURNTABLE DECK ${info.deck}</span>
+                        ${onAirBadge}
+                    </div>
+                    <div style="display:flex;gap:10px;align-items:center;">
+                        ${coverBox}
+                        <div style="min-width:0;flex:1;">
+                            <div style="color:#f8fafc;font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escHtml(info.title)}">${escHtml(info.title)}</div>
+                            <div style="color:#94a3b8;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${escHtml(info.artist)}">${escHtml(info.artist)}</div>
+                            ${info.bpm ? `<div style="color:#64748b;font-size:10px;margin-top:2px;">${escHtml(info.bpm)} BPM</div>` : ''}
+                        </div>
+                    </div>
+                    <button type="button" onclick="takeoverRadioDeck('${info.deck}')" style="padding:6px 10px;border-radius:6px;border:1px solid ${info.accent};background:${info.isOnAir ? 'rgba(56,189,248,0.14)' : 'rgba(236,72,153,0.16)'};color:${info.accent};font-size:11px;font-weight:700;cursor:pointer;">
+                        ⚡ SPIN ON-AIR (TAKE OVER DECK ${info.deck})
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderTelemetryRibbonHtml() {
+            const np = radioStatusData?.now_playing || {};
+            const countdown = np.bulletin_countdown ?? np.top_of_hour_countdown ?? '--';
+            const cells = [
+                { lbl: 'WEATHER WIRE', val: np.weather || 'Houston / Gulf Node • Nominal', color: '#38bdf8' },
+                { lbl: 'BREAKING HEADLINE', val: np.news_headline || 'No breaking wire alert active', color: '#f8fafc' },
+                { lbl: '15-MIN BULLETIN', val: `${countdown}s • ${np.chaos_level || 'MODERATE'}`, color: '#fbbf24' },
+                { lbl: 'NEXT TRANSITION', val: np.target_next_action || `Deck ${activeDeck} active -> Cue Deck ${nextDeck}`, color: '#4ade80' },
+                { lbl: 'ACOUSTIC & ECEF', val: `${np.sabine_rt60 || '0.62s RT60'} • ${np.nautilus_geo || 'WGS84 Anchored'}`, color: '#c084fc' },
+                { lbl: 'DECK CONTROL', val: `${np.vinyl_control || 'AUTO_ROTATION'} • Source ${radioStatusData?.source_node || '10.0.0.60:8082'}`, color: '#67e8f9' }
+            ];
+            return cells.map(c => `
+                <div style="background:#060a14;border:1px solid #1e293b;border-radius:8px;padding:7px 9px;">
+                    <div style="font-size:9.5px;font-weight:700;color:#64748b;letter-spacing:0.05em;">${escHtml(c.lbl)}</div>
+                    <div style="font-size:11px;font-weight:600;color:${c.color};margin-top:2px;line-height:1.35;">${escHtml(c.val)}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderCratesListHtml() {
+            if (!radioCrates.length) {
+                return `<div style="padding:14px;text-align:center;color:#64748b;font-size:11.5px;">Loading 351 tracks from crates.json...</div>`;
+            }
+            const q = crateSearchQuery.trim().toLowerCase();
+            const matched = [];
+            for (let i = 0; i < radioCrates.length; i++) {
+                const c = radioCrates[i];
+                if (!q || String(c.title || '').toLowerCase().includes(q) || String(c.artist || '').toLowerCase().includes(q) || String(c.source || '').toLowerCase().includes(q)) {
+                    matched.push({ idx: i, item: c });
+                }
+                if (matched.length >= 45) break;
+            }
+            if (!matched.length) {
+                return `<div style="padding:14px;text-align:center;color:#64748b;font-size:11.5px;">No crate tracks match "${escHtml(crateSearchQuery)}".</div>`;
+            }
+            return matched.map(({ idx, item }) => `
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-bottom:1px solid #0f172a;">
+                    <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1;">
+                        ${item.cover_url ? `<img src="${escHtml(item.cover_url)}" alt="" onerror="this.style.display='none'" style="width:32px;height:32px;border-radius:5px;object-fit:cover;flex-shrink:0;">` : `<span style="font-size:16px;">🎵</span>`}
+                        <div style="min-width:0;flex:1;">
+                            <div style="color:#f1f5f9;font-weight:600;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(item.title)}</div>
+                            <div style="color:#94a3b8;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(item.artist)} ${item.bpm ? '• ' + escHtml(item.bpm) + ' BPM' : ''}</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:4px;flex-shrink:0;">
+                        <button type="button" onclick="cueCrateTrack(${idx}, 'A')" style="padding:3px 7px;border-radius:5px;border:1px solid #38bdf8;background:rgba(56,189,248,0.1);color:#38bdf8;font-size:10px;font-weight:700;cursor:pointer;">Cue A</button>
+                        <button type="button" onclick="cueCrateTrack(${idx}, 'B')" style="padding:3px 7px;border-radius:5px;border:1px solid #ec4899;background:rgba(236,72,153,0.1);color:#ec4899;font-size:10px;font-weight:700;cursor:pointer;">Cue B</button>
+                        <button type="button" onclick="spinCrateTrackNow(${idx})" style="padding:3px 7px;border-radius:5px;border:none;background:#22c55e;color:#052e16;font-size:10px;font-weight:800;cursor:pointer;">▶ Spin</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderEventsListHtml() {
+            const events = radioStatusData?.recent_events;
+            if (!Array.isArray(events) || !events.length) {
+                return `<div style="padding:10px;color:#64748b;font-size:11px;">Waiting for live Pi broadcast events (/api/radio/status)...</div>`;
+            }
+            return events.slice().reverse().slice(0, 12).map(ev => `
+                <div style="padding:6px 8px;border-bottom:1px solid #0f172a;font-size:11px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;">
+                        <span style="color:#38bdf8;font-weight:700;">${escHtml(ev.type || 'EVENT')}</span>
+                        <span style="color:#64748b;font-family:monospace;font-size:10px;">${escHtml(ev.timestamp || '')}</span>
+                    </div>
+                    <div style="color:#e2e8f0;margin-top:2px;">${escHtml(ev.actual || '')}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderDaughterRosterHtml(focusDaughterId = '') {
             const activeM = getDaughterMeta(activeDaughterName);
             const nextM = getDaughterMeta(nextDaughterName);
-            const isSim = Boolean(radioStatusData?.simulated || clientSimOverride);
-            const isStreamPlaying = Boolean(audioEl && !audioEl.paused && audioEl.currentTime > 0);
-            const listeners = radioStatusData?.listeners_active ?? 1;
-
-            titleEl.innerHTML = '📻 Seven Daughters 24/7 Siren Radio Broadcast Studio & DJ Booth';
-
-            const rosterCards = SEVEN_DAUGHTERS.map(d => {
+            return SEVEN_DAUGHTERS.map(d => {
                 const role = daughters3D[d.id]?.slotRole || (d.name === activeM.name ? 'on_air' : d.name === nextM.name ? 'on_deck' : 'green_room');
                 const badge = role === 'on_air'
                     ? `<span style="color:#4ade80;font-weight:800;">● ON AIR</span>`
-                    : (role === 'on_deck' ? `<span style="color:#38bdf8;font-weight:700;">◐ ON DECK</span>` : `<span style="color:#94a3b8;">○ GREEN ROOM</span>`);
+                    : (role === 'on_deck' ? `<span style="color:#38bdf8;font-weight:700;">◐ ON DECK</span>` : `<span style="color:#94a3b8;">○ LOUNGE</span>`);
                 const isSelected = focusDaughterId === d.id || d.name === activeM.name;
                 return `
-                    <div style="background:#090d16;border:1.5px solid ${isSelected ? d.color : '#1e293b'};border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:5px;">
+                    <div style="background:#090d16;border:1.5px solid ${isSelected ? d.color : '#1e293b'};border-radius:9px;padding:9px;display:flex;flex-direction:column;gap:5px;">
                         <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <strong style="color:${d.color};font-size:13px;">${d.avatar} ${d.name}</strong>
-                            <span style="font-size:10.5px;">${badge}</span>
+                            <strong style="color:${d.color};font-size:12.5px;">${d.avatar} ${d.name}</strong>
+                            <span style="font-size:10px;">${badge}</span>
                         </div>
-                        <div style="font-size:11px;color:#e2e8f0;font-weight:600;">${d.freqHz} Hz • ${d.bpm} BPM • <span style="color:#94a3b8;">${d.windowUtc}</span></div>
-                        <div style="font-size:11px;color:#94a3b8;line-height:1.35;">${d.genre}</div>
-                        <div style="font-size:10.5px;color:#64748b;line-height:1.35;">${d.bio}</div>
-                        <button type="button" onclick="setSimulatedDaughter('${d.name}')" style="margin-top:auto;padding:5px 8px;border-radius:6px;border:1px solid ${d.color};background:${role === 'on_air' ? d.color : 'transparent'};color:${role === 'on_air' ? '#04070e' : d.color};font-size:11px;font-weight:700;cursor:pointer;">
-                            ${role === 'on_air' ? '🎛️ Active on Decks' : '🎚️ Put On Decks'}
-                        </button>
+                        <div style="font-size:10.5px;color:#e2e8f0;font-weight:600;">${d.freqHz} Hz • ${d.bpm} BPM • <span style="color:#94a3b8;">${d.windowUtc}</span></div>
+                        <div style="font-size:10.5px;color:#94a3b8;line-height:1.3;">${d.genre}</div>
+                        <div style="display:flex;gap:5px;margin-top:auto;padding-top:4px;">
+                            <button type="button" onclick="setSimulatedDaughter('${d.name}')" style="flex:1;padding:5px 6px;border-radius:6px;border:1px solid ${d.color};background:${role === 'on_air' ? d.color : 'transparent'};color:${role === 'on_air' ? '#04070e' : d.color};font-size:10.5px;font-weight:700;cursor:pointer;">
+                                ${role === 'on_air' ? '🎛️ On Decks' : '🎚️ Shift Here'}
+                            </button>
+                            <button type="button" onclick="closeLiteFeatureModal();selectDaughterForTalk('${d.id}')" style="padding:5px 8px;border-radius:6px;border:1px solid #38bdf8;background:rgba(56,189,248,0.12);color:#7dd3fc;font-size:10.5px;font-weight:700;cursor:pointer;">💬 Talk</button>
+                        </div>
                     </div>
                 `;
             }).join('');
+        }
+
+        function renderRadioModalContents(focusDaughterId = '') {
+            const titleEl = document.getElementById('liteFeatureModalTitle');
+            const bodyEl = document.getElementById('liteFeatureModalBody');
+            const cardEl = document.getElementById('liteFeatureModalCard');
+            if (!titleEl || !bodyEl) return;
+            if (cardEl) cardEl.style.maxWidth = '920px';
+
+            const isHttps = location.protocol === 'https:';
+            const isLoopback = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+            const audioEl = document.getElementById('sirenPersistentAudio');
+            const defaultStream = (audioEl && audioEl.getAttribute('src')) || (isHttps || !isLoopback ? 'https://radio.tr7n7t7.com/live.mp3' : (radioStatusData?.stream_lan || 'http://10.0.0.60:8082/live.mp3'));
+            const activeM = getDaughterMeta(activeDaughterName);
+            const nextM = getDaughterMeta(nextDaughterName);
+            const np = radioStatusData?.now_playing || {};
+            const isLive = Boolean(radioStatusData?.live);
+            const isSim = Boolean(clientSimOverride);
+            const isStreamPlaying = Boolean(audioEl && !audioEl.paused && !audioEl.ended);
+            const listeners = radioStatusData?.listeners ?? radioStatusData?.listeners_active ?? 1;
+            const deckAPct = Math.round((1 - faderPosition) * 100);
+            const deckBPct = Math.round(faderPosition * 100);
+
+            titleEl.innerHTML = '📻 Theater 24/7 • Cyan Network Dual-Turntable Master Console';
 
             bodyEl.innerHTML = `
-                <div style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;color:#94a3b8;">
-                    <div style="background:linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,27,75,0.75));border:1px solid ${activeM.color};border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+                <div id="radioConsoleRoot" style="display:flex;flex-direction:column;gap:10px;font-size:12.5px;color:#94a3b8;">
+                    <div id="radioDynamicHeader" style="background:linear-gradient(135deg, rgba(15,23,42,0.96), rgba(30,27,75,0.78));border:1px solid ${activeM.color};border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
                         <div>
-                            <div style="font-size:10.5px;font-weight:700;color:${isSim ? '#fbbf24' : '#4ade80'};letter-spacing:0.05em;">
-                                ${isSim ? '● SIMULATED BOOTH SHIFT (PREVIEW)' : '● LIVE 24/7 BROADCASTER SYNC'} • 👂 ${listeners} LISTENING
+                            <div id="radioLiveBadge" style="font-size:10.5px;font-weight:800;color:${isSim ? '#fbbf24' : (isLive ? '#4ade80' : '#38bdf8')};letter-spacing:0.05em;">
+                                ${isSim ? '● SIMULATED HOST OVERRIDE' : (isLive ? `● LIVE THEATER 24/7 TELEMETRY (${escHtml(radioStatusData?.source_node || '10.0.0.60:8082')})` : '● PUBLIC STREAM FALLBACK')} • 👂 ${listeners} LISTENING
                             </div>
-                            <div style="font-size:16px;font-weight:800;color:#fff;margin-top:2px;">${activeM.avatar} ${activeM.name} — ${activeM.freqHz} Hz Solfeggio • ${activeM.bpm} BPM</div>
-                            <div style="font-size:11.5px;color:#cbd5e1;margin-top:2px;">${activeM.genre} (${activeM.windowUtc}) • Next Up: <b style="color:${nextM.color};">${nextM.avatar} ${nextM.name}</b></div>
+                            <div id="radioNowTitle" style="font-size:16px;font-weight:800;color:#fff;margin-top:2px;">♪ ${escHtml(np.title || (activeM.name + ' Live Mix'))}</div>
+                            <div id="radioNowSub" style="font-size:11.5px;color:#cbd5e1;margin-top:2px;">
+                                Host: <b style="color:${activeM.color};">${activeM.avatar} ${escHtml(np.live_broadcaster || (activeM.name + ' • ' + activeM.freqHz + ' Hz'))}</b> • Deck ${activeDeck} On Air &bull; Next: <b style="color:${nextM.color};">${nextM.avatar} ${nextM.name}</b>
+                            </div>
                         </div>
                         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                            <button type="button" onclick="setSimulatedDaughter(null)" style="padding:6px 10px;border-radius:6px;border:1px solid #38bdf8;background:rgba(56,189,248,0.12);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer;">🔄 Sync Live UTC</button>
-                            <button type="button" onclick="toggleAutoCycleDaughters()" style="padding:6px 10px;border-radius:6px;border:1px solid ${autoCycleTimer ? '#22c55e' : '#475569'};background:${autoCycleTimer ? 'rgba(34,197,94,0.18)' : 'transparent'};color:${autoCycleTimer ? '#86efac' : '#e2e8f0'};font-size:11px;font-weight:700;cursor:pointer;">${autoCycleTimer ? '⏸️ Stop Auto-Cycle' : '⏭️ Auto-Cycle Demo (15s)'}</button>
-                            <button type="button" onclick="focusRoom('radio'); closeLiteFeatureModal();" style="padding:6px 10px;border-radius:6px;border:1px solid #a855f7;background:rgba(168,85,247,0.14);color:#e9d5ff;font-size:11px;font-weight:700;cursor:pointer;">🎥 Focus DJ Booth</button>
+                            <button type="button" onclick="setSimulatedDaughter(null)" style="padding:6px 10px;border-radius:6px;border:1px solid #38bdf8;background:rgba(56,189,248,0.12);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer;">🔄 Sync Live Station</button>
+                            <button type="button" onclick="closeLiteFeatureModal();selectDaughterForTalk('${activeM.id}')" style="padding:6px 10px;border-radius:6px;border:1px solid #22c55e;background:rgba(34,197,94,0.14);color:#86efac;font-size:11px;font-weight:700;cursor:pointer;">💬 Talk to ${activeM.name}</button>
+                            <button type="button" onclick="focusRoom('radio'); closeLiteFeatureModal();" style="padding:6px 10px;border-radius:6px;border:1px solid #a855f7;background:rgba(168,85,247,0.14);color:#e9d5ff;font-size:11px;font-weight:700;cursor:pointer;">🎥 Focus 3D Booth</button>
                         </div>
                     </div>
 
-                    <form id="station-radio" onsubmit="event.preventDefault(); tuneSirenRadio();" style="background:#090d16;border:1px solid var(--border);border-radius:9px;padding:10px;display:grid;gap:8px;">
-                        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                            <input id="station-url" type="url" value="${defaultStream}" style="flex:1;min-width:220px;padding:7px 10px;background:#050811;border:1px solid #1e293b;border-radius:6px;color:#38bdf8;font-family:monospace;font-size:11.5px;" required>
+                    <form id="station-radio" onsubmit="event.preventDefault(); tuneSirenRadio();" style="background:#090d16;border:1px solid var(--border);border-radius:9px;padding:10px;display:grid;gap:7px;">
+                        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+                            <input id="station-url" type="url" value="${escHtml(defaultStream)}" style="flex:1;min-width:210px;padding:7px 10px;background:#050811;border:1px solid #1e293b;border-radius:6px;color:#38bdf8;font-family:monospace;font-size:11.5px;" required>
                             <button type="submit" style="padding:7px 14px;background:#a855f7;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:700;">▶️ Tune In Live</button>
                             <button type="button" onclick="pauseSirenRadio()" style="padding:7px 12px;background:#334155;color:#fff;border:none;border-radius:6px;cursor:pointer;">⏸️ Pause</button>
                             <button type="button" onclick="toggleSolfeggioSynth()" style="padding:7px 12px;border:1px solid ${solfeggioSynth ? '#22c55e' : '#38bdf8'};background:${solfeggioSynth ? 'rgba(34,197,94,0.18)' : 'rgba(56,189,248,0.1)'};color:${solfeggioSynth ? '#86efac' : '#7dd3fc'};border-radius:6px;cursor:pointer;font-weight:700;">${solfeggioSynth ? `🎹 Synth: ON (${activeM.freqHz}Hz)` : '🎹 Solfeggio Monitor'}</button>
                         </div>
-                        <output id="station-status" style="color:${isStreamPlaying ? '#4ade80' : '#38bdf8'};font-size:11.5px;">${isStreamPlaying ? `🔊 Persistent Stream Playing (${activeM.name} ${activeM.freqHz}Hz)` : 'Persistent audio ready — music keeps playing if you close this window.'}</output>
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <output id="station-status" style="color:${isStreamPlaying ? '#4ade80' : '#38bdf8'};font-size:11px;">${isStreamPlaying ? `🔊 Persistent Stream Playing (${escHtml(np.title || activeM.name)})` : 'Persistent audio ready — music keeps playing across workspace & studio tabs.'}</output>
+                            <div style="display:flex;gap:6px;">
+                                <button type="button" onclick="document.getElementById('station-url').value='https://radio.tr7n7t7.com/live.mp3';tuneSirenRadio();" style="padding:3px 8px;border-radius:5px;border:1px solid #334155;background:#0f172a;color:#cbd5e1;font-size:10px;cursor:pointer;">🌐 radio.tr7n7t7.com</button>
+                                ${!isHttps ? `<button type="button" onclick="document.getElementById('station-url').value='http://10.0.0.60:8082/live.mp3';tuneSirenRadio();" style="padding:3px 8px;border-radius:5px;border:1px solid #334155;background:#0f172a;color:#cbd5e1;font-size:10px;cursor:pointer;">📡 LAN 10.0.0.60</button>` : ''}
+                            </div>
+                        </div>
                     </form>
 
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:8px;">
-                        ${rosterCards}
+                    <div id="radioTelemetryGrid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:7px;">
+                        ${renderTelemetryRibbonHtml()}
+                    </div>
+
+                    <div id="radioDecksGrid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:10px;">
+                        ${renderDeckCardHtml('A')}
+                        ${renderDeckCardHtml('B')}
+                    </div>
+
+                    <div style="background:#060a14;border:1px solid #1e293b;border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:8px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;">
+                            <span style="color:#38bdf8;">DECK A: <span id="faderAPct">${deckAPct}%</span></span>
+                            <span id="radioCrossfaderReadout" style="color:#f8fafc;">MASTER CROSSFADER (${faderPosition.toFixed(2)})</span>
+                            <span style="color:#ec4899;">DECK B: <span id="faderBPct">${deckBPct}%</span></span>
+                        </div>
+                        <input id="radioCrossfaderSlider" type="range" min="0" max="1" step="0.02" value="${faderPosition}" oninput="setRadioCrossfader(parseFloat(this.value), 'MANUAL')" style="width:100%;accent-color:#a855f7;cursor:pointer;">
+                        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                            <button type="button" onclick="setRadioCrossfader(0.0, 'SNAP_A')" style="padding:5px 12px;border-radius:6px;border:1px solid #38bdf8;background:rgba(56,189,248,0.12);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer;">◀ FADE DECK A</button>
+                            <button type="button" onclick="triggerAutoDissolve10s()" style="padding:5px 14px;border-radius:6px;border:none;background:linear-gradient(90deg,#38bdf8,#a855f7,#ec4899);color:#fff;font-size:11px;font-weight:800;cursor:pointer;">⚡ AUTO 10s DISSOLVE</button>
+                            <button type="button" onclick="setRadioCrossfader(1.0, 'SNAP_B')" style="padding:5px 12px;border-radius:6px;border:1px solid #ec4899;background:rgba(236,72,153,0.12);color:#ec4899;font-size:11px;font-weight:700;cursor:pointer;">FADE DECK B ▶</button>
+                        </div>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:10px;">
+                        <div style="background:#060a14;border:1px solid #1e293b;border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:6px;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <strong style="color:#f8fafc;font-size:12px;">💿 Spotify & Cyan Crates (<span id="cratesCountLabel">${radioCrates.length}</span>)</strong>
+                                <span style="font-size:10px;color:#64748b;">crates.json</span>
+                            </div>
+                            <input id="cratesSearchInput" type="search" value="${escHtml(crateSearchQuery)}" oninput="filterRadioCrates(this.value)" placeholder="Filter 351 tracks by title or artist..." style="width:100%;padding:6px 9px;background:#03060d;border:1px solid #1e293b;border-radius:6px;color:#e2e8f0;font-size:11.5px;">
+                            <div id="cratesListContainer" style="max-height:210px;overflow-y:auto;border:1px solid #0f172a;border-radius:6px;">
+                                ${renderCratesListHtml()}
+                            </div>
+                        </div>
+
+                        <div style="background:#060a14;border:1px solid #1e293b;border-radius:9px;padding:10px;display:flex;flex-direction:column;gap:6px;">
+                            <strong style="color:#f8fafc;font-size:12px;">📜 Live Transmitter Event Log</strong>
+                            <div id="radioEventsWrap" style="max-height:248px;overflow-y:auto;border:1px solid #0f172a;border-radius:6px;">
+                                ${renderEventsListHtml()}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            <strong style="color:#e2e8f0;font-size:12px;">👸 Seven Daughters Broadcast Roster (Click Shift or Talk)</strong>
+                            <button type="button" onclick="toggleAutoCycleDaughters()" style="padding:4px 9px;border-radius:6px;border:1px solid ${autoCycleTimer ? '#22c55e' : '#334155'};background:${autoCycleTimer ? 'rgba(34,197,94,0.16)' : 'transparent'};color:${autoCycleTimer ? '#86efac' : '#94a3b8'};font-size:10.5px;font-weight:700;cursor:pointer;">${autoCycleTimer ? '⏸️ Stop Shift Auto-Cycle' : '⏭️ Demo Cycle Shifts'}</button>
+                        </div>
+                        <div id="radioRosterGrid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(195px, 1fr));gap:8px;">
+                            ${renderDaughterRosterHtml(focusDaughterId)}
+                        </div>
                     </div>
                 </div>
             `;
+        }
+
+        function updateRadioModalInPlace() {
+            const modal = document.getElementById('liteFeatureModal');
+            if (!modal || modal.style.display !== 'flex' || modal.getAttribute('data-feature') !== 'radio') return;
+            if (!document.getElementById('radioConsoleRoot')) {
+                renderRadioModalContents(modal.getAttribute('data-focus-daughter') || '');
+                return;
+            }
+            const activeM = getDaughterMeta(activeDaughterName);
+            const nextM = getDaughterMeta(nextDaughterName);
+            const np = radioStatusData?.now_playing || {};
+            const isLive = Boolean(radioStatusData?.live);
+            const isSim = Boolean(clientSimOverride);
+            const listeners = radioStatusData?.listeners ?? radioStatusData?.listeners_active ?? 1;
+
+            const header = document.getElementById('radioDynamicHeader');
+            if (header) header.style.borderColor = activeM.color;
+            const badge = document.getElementById('radioLiveBadge');
+            if (badge) {
+                badge.style.color = isSim ? '#fbbf24' : (isLive ? '#4ade80' : '#38bdf8');
+                badge.textContent = `${isSim ? '● SIMULATED HOST OVERRIDE' : (isLive ? `● LIVE THEATER 24/7 TELEMETRY (${radioStatusData?.source_node || '10.0.0.60:8082'})` : '● PUBLIC STREAM FALLBACK')} • 👂 ${listeners} LISTENING`;
+            }
+            const titleEl = document.getElementById('radioNowTitle');
+            if (titleEl) titleEl.textContent = `♪ ${np.title || (activeM.name + ' Live Mix')}`;
+            const subEl = document.getElementById('radioNowSub');
+            if (subEl) subEl.innerHTML = `Host: <b style="color:${activeM.color};">${activeM.avatar} ${escHtml(np.live_broadcaster || (activeM.name + ' • ' + activeM.freqHz + ' Hz'))}</b> • Deck ${activeDeck} On Air &bull; Next: <b style="color:${nextM.color};">${nextM.avatar} ${nextM.name}</b>`;
+
+            const telGrid = document.getElementById('radioTelemetryGrid');
+            if (telGrid) telGrid.innerHTML = renderTelemetryRibbonHtml();
+            const decksGrid = document.getElementById('radioDecksGrid');
+            if (decksGrid) decksGrid.innerHTML = `${renderDeckCardHtml('A')}${renderDeckCardHtml('B')}`;
+            const eventsWrap = document.getElementById('radioEventsWrap');
+            if (eventsWrap) eventsWrap.innerHTML = renderEventsListHtml();
+            const rosterGrid = document.getElementById('radioRosterGrid');
+            if (rosterGrid) rosterGrid.innerHTML = renderDaughterRosterHtml(modal.getAttribute('data-focus-daughter') || '');
+            const crateCount = document.getElementById('cratesCountLabel');
+            if (crateCount) crateCount.textContent = String(radioCrates.length);
+            const cratesWrap = document.getElementById('cratesListContainer');
+            if (cratesWrap && radioCrates.length > 0 && cratesWrap.textContent.includes('Loading')) {
+                cratesWrap.innerHTML = renderCratesListHtml();
+            }
+
+            const slider = document.getElementById('radioCrossfaderSlider');
+            if (slider && document.activeElement !== slider) slider.value = String(faderPosition);
+            const aPct = document.getElementById('faderAPct');
+            const bPct = document.getElementById('faderBPct');
+            const readEl = document.getElementById('radioCrossfaderReadout');
+            if (aPct) aPct.textContent = `${Math.round((1 - faderPosition) * 100)}%`;
+            if (bPct) bPct.textContent = `${Math.round(faderPosition * 100)}%`;
+            if (readEl) readEl.textContent = `MASTER CROSSFADER (${faderPosition.toFixed(2)})`;
+            updateRadioAudioStateUI();
+        }
+
+        function filterRadioCrates(query) {
+            crateSearchQuery = String(query || '');
+            const cratesWrap = document.getElementById('cratesListContainer');
+            if (cratesWrap) cratesWrap.innerHTML = renderCratesListHtml();
+        }
+
+        async function takeoverRadioDeck(deckLetter) {
+            const info = getDeckDisplayInfo(deckLetter);
+            activeDeck = deckLetter;
+            nextDeck = deckLetter === 'A' ? 'B' : 'A';
+            const faderTarget = deckLetter === 'A' ? 0.0 : 1.0;
+            faderPosition = faderTarget;
+            if (!radioStatusData) radioStatusData = { now_playing: {} };
+            radioStatusData.now_playing = radioStatusData.now_playing || {};
+            radioStatusData.now_playing.active_deck = activeDeck;
+            radioStatusData.now_playing.next_deck = nextDeck;
+            radioStatusData.now_playing.title = info.title;
+            radioStatusData.now_playing.artist = info.artist;
+            radioStatusData.now_playing.fader_position = faderTarget;
+            updateRadioModalInPlace();
+            assignDaughterBoothPositions(false);
+
+            await postRadioControl({
+                action: 'takeover',
+                title: info.title,
+                artist: info.artist,
+                source: 'KUROSHIO_OFFICE_DECK_' + deckLetter,
+                speaker: activeDaughterName
+            });
+            await postRadioCrossfader(faderTarget, 'TAKEOVER_DECK_' + deckLetter);
+            showToast(`⚡ Deck ${deckLetter} On Air: "${shortenTrackLabel(info.title, 28)}"`);
+            setTimeout(pollRadioStationStatus, 500);
+        }
+
+        async function cueCrateTrack(crateIdx, deckLetter = nextDeck) {
+            const track = radioCrates[crateIdx];
+            if (!track) return;
+            const trackObj = { title: track.title, artist: track.artist, cover_url: track.cover_url, bpm: track.bpm };
+            if (deckLetter === 'A') deckATrack = trackObj;
+            else deckBTrack = trackObj;
+            if (radioStatusData?.now_playing && deckLetter !== activeDeck) {
+                radioStatusData.now_playing.next_title = track.title;
+                radioStatusData.now_playing.next_artist = track.artist;
+                radioStatusData.now_playing.next_deck = deckLetter;
+            }
+            updateRadioModalInPlace();
+            assignDaughterBoothPositions(false);
+            await postRadioControl({ action: 'cue', title: track.title, artist: track.artist, deck: deckLetter });
+            showToast(`💿 Cued "${shortenTrackLabel(track.title, 28)}" to Deck ${deckLetter}`);
+            setTimeout(pollRadioStationStatus, 500);
+        }
+
+        async function spinCrateTrackNow(crateIdx) {
+            const track = radioCrates[crateIdx];
+            if (!track) return;
+            if (activeDeck === 'A') deckATrack = { title: track.title, artist: track.artist, cover_url: track.cover_url, bpm: track.bpm };
+            else deckBTrack = { title: track.title, artist: track.artist, cover_url: track.cover_url, bpm: track.bpm };
+            if (!radioStatusData) radioStatusData = { now_playing: {} };
+            radioStatusData.now_playing = radioStatusData.now_playing || {};
+            radioStatusData.now_playing.title = track.title;
+            radioStatusData.now_playing.artist = track.artist;
+            updateRadioModalInPlace();
+            assignDaughterBoothPositions(false);
+            await postRadioControl({
+                action: 'takeover',
+                title: track.title,
+                artist: track.artist,
+                source: 'KUROSHIO_CRATE_SPIN',
+                speaker: activeDaughterName
+            });
+            showToast(`🔥 Spinning "${shortenTrackLabel(track.title, 28)}" LIVE on Deck ${activeDeck}`);
+            setTimeout(pollRadioStationStatus, 500);
+        }
+
+        let crossfaderDebounce = null;
+        function setRadioCrossfader(pos, mode = 'MANUAL') {
+            faderPosition = Math.max(0, Math.min(1, Number(pos) || 0));
+            const aPct = document.getElementById('faderAPct');
+            const bPct = document.getElementById('faderBPct');
+            const readEl = document.getElementById('radioCrossfaderReadout');
+            const slider = document.getElementById('radioCrossfaderSlider');
+            if (aPct) aPct.textContent = `${Math.round((1 - faderPosition) * 100)}%`;
+            if (bPct) bPct.textContent = `${Math.round(faderPosition * 100)}%`;
+            if (readEl) readEl.textContent = `MASTER CROSSFADER (${faderPosition.toFixed(2)})`;
+            if (slider && mode !== 'MANUAL') slider.value = String(faderPosition);
+            clearTimeout(crossfaderDebounce);
+            crossfaderDebounce = setTimeout(() => {
+                postRadioCrossfader(faderPosition, mode);
+            }, mode === 'MANUAL' ? 180 : 10);
+        }
+
+        function triggerAutoDissolve10s() {
+            if (dissolveAnimInterval) {
+                clearInterval(dissolveAnimInterval);
+                dissolveAnimInterval = null;
+            }
+            const startPos = faderPosition;
+            const targetPos = faderPosition < 0.5 ? 1.0 : 0.0;
+            const durationMs = 10000;
+            const startedAt = performance.now();
+            transitionActive = true;
+            showToast(`⚡ 10s Auto-Dissolve started -> Deck ${targetPos === 1 ? 'B' : 'A'}`);
+            postRadioCrossfader(startPos, 'AUTO_10S_DISSOLVE_START');
+
+            dissolveAnimInterval = setInterval(() => {
+                const elapsed = performance.now() - startedAt;
+                const progress = Math.min(1, elapsed / durationMs);
+                faderPosition = startPos + (targetPos - startPos) * progress;
+                const aPct = document.getElementById('faderAPct');
+                const bPct = document.getElementById('faderBPct');
+                const readEl = document.getElementById('radioCrossfaderReadout');
+                const slider = document.getElementById('radioCrossfaderSlider');
+                if (aPct) aPct.textContent = `${Math.round((1 - faderPosition) * 100)}%`;
+                if (bPct) bPct.textContent = `${Math.round(faderPosition * 100)}%`;
+                if (readEl) readEl.textContent = `DISSOLVING (${Math.round(progress * 100)}%) • ${faderPosition.toFixed(2)}`;
+                if (slider) slider.value = String(faderPosition);
+                if (progress >= 1) {
+                    clearInterval(dissolveAnimInterval);
+                    dissolveAnimInterval = null;
+                    transitionActive = false;
+                    postRadioCrossfader(targetPos, 'AUTO_10S_DISSOLVE_COMPLETE').then(() => pollRadioStationStatus());
+                }
+            }, 250);
+        }
+
+        function updateRadioAudioStateUI() {
+            const audio = document.getElementById('sirenPersistentAudio');
+            const st = document.getElementById('station-status');
+            if (!audio || !st) return;
+            if (!audio.paused && !audio.ended) {
+                const title = radioStatusData?.now_playing?.title || activeDaughterName;
+                st.textContent = `🔊 Playing Theater 24/7 (${title})`;
+                st.style.color = '#4ade80';
+            }
         }
 
         function tuneSirenRadio() {
@@ -4530,15 +5331,28 @@
             if (audio.getAttribute('src') !== targetUrl) {
                 audio.setAttribute('src', targetUrl);
             }
-            if (st) st.textContent = 'Connecting persistent stream…';
+            if (st) {
+                st.textContent = `Connecting persistent stream (${targetUrl})…`;
+                st.style.color = '#38bdf8';
+            }
             audio.play().then(() => {
-                if (st) {
-                    st.textContent = `🔊 Playing Siren Radio (${activeDaughterName})`;
-                    st.style.color = '#4ade80';
-                }
-                showToast('📻 Siren Radio Live Stream Connected');
+                updateRadioAudioStateUI();
+                showToast('📻 Theater 24/7 Live Stream Connected');
             }).catch(() => {
-                if (st) {
+                if (targetUrl.includes('10.0.0.') || targetUrl.includes('127.0.0.1')) {
+                    const fallback = 'https://radio.tr7n7t7.com/live.mp3';
+                    urlInput.value = fallback;
+                    audio.setAttribute('src', fallback);
+                    audio.play().then(() => {
+                        updateRadioAudioStateUI();
+                        showToast('📻 Connected via radio.tr7n7t7.com');
+                    }).catch(() => {
+                        if (st) {
+                            st.textContent = 'Stream blocked or offline — try 🎹 Solfeggio Monitor or click Play again!';
+                            st.style.color = '#fbbf24';
+                        }
+                    });
+                } else if (st) {
                     st.textContent = 'Live MP3 stream unreachable — try 🎹 Solfeggio Monitor to audition frequency!';
                     st.style.color = '#fbbf24';
                 }
@@ -4597,9 +5411,40 @@
         }
         async function approvePendingDaemon() {
             const st = document.getElementById('appr-gate-status');
-            st.textContent = "✓ Daemon approved & registered in local node state";
-            st.style.color = '#00ff9d';
-            showToast('Service Approved & Signed by Officer DID');
+            const serviceId = document.getElementById('appr-service-id')?.value?.trim() || 'kokoro_tts_daemon';
+            const command = document.getElementById('appr-command')?.value?.trim() || '';
+            const workingDir = document.getElementById('appr-working-dir')?.value?.trim() || '';
+            const probeUrl = document.getElementById('appr-probe-url')?.value?.trim() || '';
+            const officerDid = document.getElementById('appr-officer-did')?.value?.trim() || 'did:atlantis:officer_master';
+            const apiBase = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname) ? "http://127.0.0.1:8081" : "https://node.tr7n7t7.com";
+            if (st) {
+                st.textContent = `Submitting ${serviceId} to ${apiBase}/api/service/approve...`;
+                st.style.color = '#38bdf8';
+            }
+            try {
+                const res = await fetch(`${apiBase}/api/service/approve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ service_id: serviceId, command, working_dir: workingDir, probe_url: probeUrl, officer_did: officerDid })
+                });
+                if (res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    if (st) {
+                        st.textContent = `✓ Approved on Home Node: ${data.service_id || serviceId}`;
+                        st.style.color = '#00ff9d';
+                    }
+                    showToast(`Service ${serviceId} approved & signed on Home Node`);
+                    return;
+                }
+                throw new Error(`HTTP ${res.status}`);
+            } catch (err) {
+                await sendAgentDirective('triton', `Approve Chrysalis service ${serviceId} (${command}) under ${officerDid}`, 'Officer_Approver');
+                if (st) {
+                    st.textContent = `✓ Home Node (:8081) unreachable (${err.message}); logged locally & dispatched to Triton`;
+                    st.style.color = '#fbbf24';
+                }
+                showToast(`Queued ${serviceId} approval with Triton`);
+            }
         }
 
         function buildExecutiveBlackboard(x, z) {
@@ -5450,12 +6295,177 @@
                 `;
                 if (d.is_splat) {
                     selectStudioEntity('colliders', studioManifest.colliders.length - 1);
+                    // Dynamically load PLY point cloud into studioGroup if PLYLoader is available
+                    if (window.THREE && THREE.PLYLoader && file.name.endsWith('.ply')) {
+                        try {
+                            const plyLoader = new THREE.PLYLoader();
+                            plyLoader.load(`/assets/splats/${encodeURIComponent(file.name)}`, (geometry) => {
+                                geometry.computeVertexNormals();
+                                const material = new THREE.PointsMaterial({ size: 0.08, vertexColors: geometry.hasAttribute('color') });
+                                const points = new THREE.Points(geometry, material);
+                                points.position.set(dropPos[0], dropPos[1], dropPos[2]);
+                                studioGroup.add(points);
+                            });
+                        } catch (err) {
+                            console.warn('PLY visual loading fallback to meshlet box:', err);
+                        }
+                    }
                 } else {
                     selectStudioEntity('totems', studioManifest.totems.length - 1);
+                    // Dynamically load GLTF/GLB into studioGroup if GLTFLoader is available
+                    if (window.THREE && THREE.GLTFLoader && (file.name.endsWith('.glb') || file.name.endsWith('.gltf'))) {
+                        try {
+                            const gltfLoader = new THREE.GLTFLoader();
+                            gltfLoader.load(`/assets/models/${encodeURIComponent(file.name)}`, (gltf) => {
+                                const model = gltf.scene;
+                                model.position.set(dropPos[0], dropPos[1], dropPos[2]);
+                                studioGroup.add(model);
+                            });
+                        } catch (err) {
+                            console.warn('GLTF visual loading fallback to stylized totem:', err);
+                        }
+                    }
                 }
                 showToast(`Baked ${file.name} (${d.meshlet_clusters} meshlets)`);
             } catch (e) {
                 showToast(`Queued ${file.name} in Kuroshio Studio`);
+            }
+        }
+
+        // ====================================================================
+        // BATON AUDIO CORE & SABINE STUDIO DSP HANDLERS
+        // ====================================================================
+
+        async function runBatonAutotuneTest() {
+            const freqInput = parseFloat(document.getElementById('audioTestFreq').value) || 445.0;
+            const scale = document.getElementById('audioScaleSelect').value || 'major';
+            const badge = document.getElementById('autotuneStatusBadge');
+            const resultBox = document.getElementById('autotuneResultBox');
+
+            badge.innerText = 'Tuning...';
+            badge.style.color = '#38bdf8';
+            try {
+                const res = await fetch('/api/audio/autotune', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        frequencies: [freqInput, freqInput + 2.0, freqInput - 2.0],
+                        scale_root: 0,
+                        scale_type: scale
+                    })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    badge.innerText = 'Snapping OK';
+                    badge.style.color = '#22c55e';
+                    resultBox.style.display = 'block';
+                    resultBox.innerHTML = `Input: <b>${d.input_hz.toFixed(2)} Hz</b> (MIDI ${d.input_midi.toFixed(1)})\nSnapped: <b>${d.corrected_hz.toFixed(2)} Hz</b> (MIDI ${d.corrected_midi.toFixed(1)})\nScale: <b>${d.scale}</b> (Root: C)\nCorrection: ${(d.correction_amount * 100).toFixed(0)}%`;
+                    showToast(`Autotuned ${freqInput}Hz -> ${d.corrected_hz.toFixed(1)}Hz in ${d.scale}`);
+                } else {
+                    badge.innerText = 'Error';
+                    badge.style.color = '#ef4444';
+                }
+            } catch (err) {
+                badge.innerText = 'Offline';
+                badge.style.color = '#eab308';
+            }
+        }
+
+        async function calculateSabineRT60() {
+            const vol = parseFloat(document.getElementById('audioRoomVol').value) || 500;
+            const area = parseFloat(document.getElementById('audioRoomArea').value) || 350;
+            const alpha = parseFloat(document.getElementById('audioAbsorptionAlpha').value) || 0.18;
+            const sirenFreq = parseFloat(document.getElementById('audioSolfeggioSelect').value) || 528;
+            const rt60Badge = document.getElementById('rt60Badge');
+
+            try {
+                const res = await fetch('/api/audio/spatial-sabine', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        volume_m3: vol,
+                        surface_area_m2: area,
+                        absorption_alpha: alpha,
+                        solfeggio_freq: sirenFreq
+                    })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    rt60Badge.innerText = `${d.sabine_rt60_seconds.toFixed(2)}s RT60`;
+                    showToast(`Sabine RT60: ${d.sabine_rt60_seconds.toFixed(2)}s | Solfeggio: ${sirenFreq}Hz`);
+                    // Update manifest acoustic profile in real-time
+                    if (studioManifest && studioManifest.acoustic_profiles && studioManifest.acoustic_profiles.length > 0) {
+                        studioManifest.acoustic_profiles[0].volume_m3 = vol;
+                        studioManifest.acoustic_profiles[0].surface_area_m2 = area;
+                        studioManifest.acoustic_profiles[0].average_absorption_alpha = alpha;
+                        studioManifest.acoustic_profiles[0].siren_frequency_hz = sirenFreq;
+                        rebuildStudioScene();
+                    }
+                }
+            } catch (err) {
+                rt60Badge.innerText = 'Error';
+            }
+        }
+
+        async function generateChordsBaton() {
+            const genre = document.getElementById('audioProgGenre').value || 'uplifting';
+            const root = document.getElementById('audioProgRoot').value || 'C';
+            const resultBox = document.getElementById('chordProgResult');
+
+            try {
+                const res = await fetch('/api/audio/progression', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        genre: genre,
+                        root_note: root
+                    })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    resultBox.style.display = 'block';
+                    resultBox.innerHTML = `🎹 ${d.style} (${d.scale}):<br><b>${d.chords.join(' ➔ ')}</b><br><span style="font-size:9.5px;color:#94a3b8;">Bass MIDI: [${d.midi_bass_notes.join(', ')}]</span>`;
+                    showToast(`Generated ${d.style} chords in ${root}`);
+                }
+            } catch (err) {
+                showToast('Failed to generate chords');
+            }
+        }
+
+        async function triggerTasteTraining() {
+            const epochs = parseInt(document.getElementById('audioTrainEpochs').value) || 15;
+            const user = document.getElementById('audioTrainUser').value || 'triton_lead';
+            const status = document.getElementById('tasteTrainStatus');
+            const btn = document.getElementById('btnTrainTaste');
+            const resultBox = document.getElementById('tasteTrainingResult');
+
+            status.innerText = 'Training...';
+            status.style.color = '#38bdf8';
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/audio/train-taste', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        epochs: epochs,
+                        user_id: user
+                    })
+                });
+                const d = await res.json();
+                if (d.success) {
+                    status.innerText = 'Saved';
+                    status.style.color = '#22c55e';
+                    resultBox.style.display = 'block';
+                    resultBox.innerHTML = `Checkpoint: <b>${d.checkpoint_name}</b>\nFinal Loss: <b>${d.final_loss.toFixed(4)}</b> (${epochs} epochs)\nTaste Vector: [${d.taste_vector.map(v => v.toFixed(2)).join(', ')}]\nAdapter Size: ${d.adapter_size_mb} MB (Ready)`;
+                    showToast(`Taste model saved: ${d.checkpoint_name}`);
+                } else {
+                    status.innerText = 'Failed';
+                    status.style.color = '#ef4444';
+                }
+            } catch (err) {
+                status.innerText = 'Offline';
+            } finally {
+                btn.disabled = false;
             }
         }
 
@@ -5671,12 +6681,62 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
         function generateLocalAgentReply(empId, directive) {
             const clean = (directive || '').trim();
             const lower = clean.toLowerCase();
-            const emp = WORKFORCE[empId] || { name: empId, role: 'Agent', room: 'tr7n7y7 Floor', node: 'Local Node' };
+            const prof = getTalkTargetProfile(empId);
+            const np = radioStatusData?.now_playing || {};
+            const liveSong = np.title ? `"${np.title}"` : 'Theater 24/7 Live Mix';
+            const liveWeather = np.weather || 'Houston Gulf Node nominal';
+            const liveHeadline = np.news_headline || 'Cyan Network wire active';
+
+            if (prof && prof.isDaughter) {
+                const m = prof.meta;
+                const slot = daughters3D[m.id]?.slotRole || 'green_room';
+                const slotText = slot === 'on_air' ? `currently ON AIR on Deck ${activeDeck}` : slot === 'on_deck' ? `cued NEXT UP on Deck ${nextDeck}` : 'on standby in the Siren Lounge';
+                if (lower.includes('weather')) {
+                    return {
+                        reply: `${m.name} (${m.freqHz} Hz) checking the transmitter wire: ${liveWeather}. Deck ${activeDeck} is spinning ${liveSong}.`,
+                        bubble: shortenTrackLabel(liveWeather, 24),
+                        activity: `Reporting weather • ${m.freqHz}Hz`,
+                        status: slot === 'on_air' ? 'working' : 'available'
+                    };
+                }
+                if (lower.includes('news') || lower.includes('headline') || lower.includes('bulletin')) {
+                    return {
+                        reply: `${m.name} on the Theater 24/7 wire — latest headline: "${liveHeadline}" (next bulletin in ${np.bulletin_countdown ?? '--'}s).`,
+                        bubble: 'Reading Wire Bulletin',
+                        activity: `Wire Bulletin • ${m.freqHz}Hz`,
+                        status: slot === 'on_air' ? 'working' : 'available'
+                    };
+                }
+                if (lower.includes('how are you') || lower === 'hi' || lower === 'hey' || lower.startsWith('hello') || lower.includes('song') || lower.includes('playing') || lower.includes('deck') || lower.includes('radio')) {
+                    return {
+                        reply: `Hey Operator! I'm ${m.name} (${m.freqHz} Hz • ${m.genre}), ${slotText}. Theater 24/7 is spinning ${liveSong} on Deck ${activeDeck}, cued next: "${np.next_title || 'Standby'}".`,
+                        bubble: `D${activeDeck}: ${shortenTrackLabel(np.title || m.genre, 18)}`,
+                        activity: `${slot === 'on_air' ? 'On Air' : 'Shift'} • ${liveSong}`,
+                        status: slot === 'on_air' ? 'working' : (slot === 'on_deck' ? 'waiting' : 'available')
+                    };
+                }
+                return {
+                    reply: `Copy that from ${m.name} (${m.freqHz} Hz, ${m.windowUtc}): handling "${clean}" in Kuroshio Office Studio right alongside Deck ${activeDeck} (${liveSong}).`,
+                    bubble: shortenTrackLabel(clean, 22),
+                    activity: `${m.name}: ${shortenTrackLabel(clean, 30)}`,
+                    status: slot === 'on_air' ? 'working' : 'available'
+                };
+            }
+
+            const emp = WORKFORCE[empId] || { name: empId, role: 'Agent', room: 'Kuroshio Office', node: 'Local Node' };
             const isRoamer = empId === 'echo' || empId === 'kraken';
             const isGreeting = lower.includes('how are you') || lower === 'hi' || lower === 'hey' || lower.startsWith('hello') || lower.includes('doing today') || lower.includes("what's up");
+            if (lower.includes('radio') || lower.includes('song') || lower.includes('station') || lower.includes('playing')) {
+                return {
+                    reply: `Theater 24/7 station (${radioStatusData?.source_node || '10.0.0.60:8082'}) is live with ${np.speaker || activeDaughterName}: spinning ${liveSong} on Deck ${activeDeck}, next "${np.next_title || 'Standby'}".`,
+                    bubble: `Radio: ${shortenTrackLabel(np.title || activeDaughterName, 18)}`,
+                    activity: `Syncing Theater 24/7 telemetry`,
+                    status: isRoamer ? 'available' : 'working'
+                };
+            }
             if (isGreeting) {
                 const reply = empId === 'echo'
-                    ? "Doing great! I'm roaming the tr7n7y7 studio right now working on Kuroshio Studio gizmos, .ply splat assets, and tr7n7t7.com brand design. What should we build next?"
+                    ? "Doing great! I'm roaming the Kuroshio Office studio right now working on Kuroshio Studio gizmos, .ply splat assets, and tr7n7t7.com brand design. What should we build next?"
                     : `Doing great! I'm ${emp.name} (${emp.role}) on ${emp.node}. Let me know what you need!`;
                 return {
                     reply,
@@ -5694,14 +6754,18 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
             };
         }
 
-        async function sendAgentDirective(targetId, directive, sender = 'Operator_Console') {
+        async function sendAgentDirective(targetId, directive, sender = 'Operator_Console', shouldAutoSpeak = autoSpeakReplies) {
             const msg = (directive || '').trim();
             if (!msg) return false;
-            const targets = targetId === '__ALL__' ? Object.keys(WORKFORCE) : [targetId];
+            const targets = targetId === '__ALL__' ? Object.keys(WORKFORCE) : [String(targetId).toLowerCase()];
             let latestReply = '';
+            let latestName = targetId;
             for (const tid of targets) {
+                const prof = getTalkTargetProfile(tid);
                 const localGen = generateLocalAgentReply(tid, msg);
                 let replyText = localGen.reply;
+                let bubbleText = localGen.bubble;
+                let activityText = localGen.activity;
                 try {
                     const res = await fetch('/api/dispatch', {
                         method: 'POST',
@@ -5712,6 +6776,8 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
                         const d = await res.json();
                         if (d.workforce) WORKFORCE = d.workforce;
                         if (d.reply) replyText = d.reply;
+                        if (d.speech) bubbleText = d.speech;
+                        if (d.activity) activityText = d.activity;
                     } else throw new Error('HTTP ' + res.status);
                 } catch (e) {
                     if (WORKFORCE[tid]) {
@@ -5722,10 +6788,28 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
                         WORKFORCE[tid].status = localGen.status;
                     }
                 }
+                if (prof && prof.isDaughter) {
+                    DAUGHTER_REPLIES[tid] = {
+                        last_directive: msg,
+                        last_reply: replyText,
+                        activity: activityText,
+                        speech: bubbleText
+                    };
+                    if (daughters3D[tid]) {
+                        daughters3D[tid].talkingUntil = performance.now() + 5500;
+                        setDaughterSpeech(daughters3D[tid], bubbleText || shortenTrackLabel(replyText, 22));
+                    }
+                    latestName = prof.meta.name;
+                } else {
+                    if (WORKFORCE[tid] && !WORKFORCE[tid].last_reply) {
+                        WORKFORCE[tid].last_reply = replyText;
+                    }
+                    latestName = WORKFORCE[tid]?.name || tid;
+                }
                 latestReply = replyText;
                 if (employees[tid] && WORKFORCE[tid]) {
                     employees[tid].data = WORKFORCE[tid];
-                    employees[tid].talkingUntil = Date.now() + 4500;
+                    employees[tid].talkingUntil = performance.now() + 5500;
                     refreshSpeechBubble(tid);
                 }
                 localChatFeed.push({
@@ -5737,17 +6821,23 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
                 });
             }
             populateOrgTree();
-            if (selectedEmpId && WORKFORCE[selectedEmpId]) {
-                const sel = WORKFORCE[selectedEmpId];
-                document.getElementById('cActivity').innerText = sel.activity;
-                document.getElementById('cLastDirective').innerText = sel.last_directive;
-                const replyEl = document.getElementById('cReply');
-                if (replyEl) replyEl.innerText = sel.last_reply || latestReply;
-                const stEl = document.getElementById('cStatus');
-                stEl.innerText = sel.status === 'available' ? '● AVAILABLE' : '● WORKING';
-                stEl.style.color = sel.status === 'available' ? 'var(--accent)' : 'var(--green)';
+            if (selectedEmpId && (targets.includes(selectedEmpId) || targetId === '__ALL__')) {
+                const updatedProf = getTalkTargetProfile(selectedEmpId);
+                if (updatedProf) {
+                    const sel = updatedProf.data;
+                    document.getElementById('cActivity').innerText = sel.activity;
+                    document.getElementById('cLastDirective').innerText = sel.last_directive;
+                    const replyEl = document.getElementById('cReply');
+                    if (replyEl) replyEl.innerText = sel.last_reply || latestReply;
+                    const stEl = document.getElementById('cStatus');
+                    stEl.innerText = sel.status === 'available' ? '● AVAILABLE' : (updatedProf.isDaughter ? '● ON AIR / ACTIVE' : '● WORKING');
+                    stEl.style.color = sel.status === 'available' ? 'var(--accent)' : 'var(--green)';
+                }
             }
-            showToast(targetId === '__ALL__' ? `Broadcasted to ${targets.length} agents` : `${WORKFORCE[targetId]?.name || targetId}: "${latestReply.slice(0, 68)}${latestReply.length > 68 ? '...' : ''}"`);
+            if (shouldAutoSpeak && targets.length === 1 && latestReply) {
+                speakAgentReply(latestReply, targets[0]);
+            }
+            showToast(targetId === '__ALL__' ? `Broadcasted to ${targets.length} agents` : `${latestName}: "${latestReply.slice(0, 68)}${latestReply.length > 68 ? '...' : ''}"`);
             return true;
         }
 
@@ -5769,7 +6859,7 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
             const working = Object.values(WORKFORCE).filter(a => a.status === 'working').length;
             const bbDone = blackboardItems.filter(c => c.status === 'done').length;
             const revText = document.getElementById('studioRevBadge')?.innerText || 'Rev #1';
-            openModalWith('tr7n7y7 Command Overview — tr7n7t7.com', `
+            openModalWith('Kuroshio Office Command Overview — tr7n7t7.com', `
                 <div class="ui-grid-3">
                     <div class="ui-card">
                         <div class="box-label">Active Workforce</div>
@@ -5792,9 +6882,9 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
                     <div style="display:flex;gap:8px;flex-wrap:wrap;">
                         <button class="ui-btn-solid" onclick="closeModal();enterStudioMode()">🎮 Launch Kuroshio Studio</button>
                         <button class="ui-btn" onclick="closeModal();openBlackboardModal()">📋 Open Strategy Blackboard</button>
-                        <button class="ui-btn" onclick="openChatModal()">💬 Team 7 Chat Console</button>
+                        <button class="ui-btn" onclick="openChatModal()">💬 Team 7 & DJ Chat</button>
                         <button class="ui-btn" onclick="openBusinessModal()">💼 Federal & Business Pipeline</button>
-                        <button class="ui-btn" onclick="openChannelsModal()">📻 24/7 Siren Radio</button>
+                        <button class="ui-btn" onclick="closeModal();openLiteFeatureModal('radio')">📻 Theater 24/7 Master Console</button>
                     </div>
                 </div>
                 <div class="ui-card">
@@ -5808,20 +6898,26 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
         }
 
         function openChatModal(preselectId) {
-            const target = preselectId || selectedEmpId || 'triton';
-            const opts = Object.values(WORKFORCE).map(a =>
+            const target = String(preselectId || selectedEmpId || 'triton').toLowerCase();
+            const teamOpts = Object.values(WORKFORCE).map(a =>
                 `<option value="${escHtml(a.id)}" ${a.id === target ? 'selected' : ''}>${a.avatar} ${escHtml(a.name)} — ${escHtml(a.role)}</option>`
             ).join('');
+            const daughterOpts = SEVEN_DAUGHTERS.map(d =>
+                `<option value="${escHtml(d.id)}" ${d.id === target ? 'selected' : ''}>${d.avatar} ${escHtml(d.name)} — ${d.freqHz} Hz (${escHtml(d.genre)})</option>`
+            ).join('');
             const historyHtml = localChatFeed.length
-                ? localChatFeed.slice().reverse().map(m => `
+                ? localChatFeed.slice().reverse().map(m => {
+                    const tName = getTalkTargetProfile(m.target_id)?.data?.name || m.target_id;
+                    return `
                     <div class="log-row" style="flex-direction:column;gap:4px;">
                         <div style="display:flex;justify-content:space-between;align-items:center;">
-                            <div style="color:var(--accent);font-weight:700;">${escHtml(m.sender)} → ${escHtml(WORKFORCE[m.target_id]?.name || m.target_id)}</div>
+                            <div style="color:var(--accent);font-weight:700;">${escHtml(m.sender)} → ${escHtml(tName)}</div>
                             <div style="color:var(--muted);font-size:11px;">${escHtml(m.time)}</div>
                         </div>
                         <div style="color:#cbd5e1;">“${escHtml(m.text)}”</div>
-                        ${m.reply ? `<div style="color:#4ade80;font-size:11.5px;border-left:2px solid #4ade80;padding-left:8px;margin-top:2px;"><b>${escHtml(WORKFORCE[m.target_id]?.name || m.target_id)}:</b> ${escHtml(m.reply)}</div>` : ''}
-                    </div>`).join('')
+                        ${m.reply ? `<div style="color:#4ade80;font-size:11.5px;border-left:2px solid #4ade80;padding-left:8px;margin-top:2px;"><b>${escHtml(tName)}:</b> ${escHtml(m.reply)}</div>` : ''}
+                    </div>`;
+                }).join('')
                 : Object.values(WORKFORCE).slice(0, 5).map(a => `
                     <div class="log-row">
                         <div>
@@ -5831,20 +6927,21 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
                         <button class="ui-btn" onclick="focusAgentFromModal('${escHtml(a.id)}')">Focus 3D</button>
                     </div>`).join('');
 
-            openModalWith('Team 7 Command Chat & Directive Dispatch', `
+            openModalWith('Kuroshio Office Two-Way Chat & Voice Dispatch', `
                 <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
                     <select id="chatModalTarget" class="studio-select" style="flex:1;min-width:220px;">
-                        <option value="__ALL__" ${target === '__ALL__' ? 'selected' : ''}>📢 ALL TEAM 7 AGENTS (Broadcast)</option>
-                        ${opts}
+                        <option value="__ALL__" ${target === '__all__' ? 'selected' : ''}>📢 ALL TEAM 7 AGENTS (Broadcast)</option>
+                        <optgroup label="🏢 Team 7 Command Workforce">${teamOpts}</optgroup>
+                        <optgroup label="🎧 Seven Daughters Radio Hosts">${daughterOpts}</optgroup>
                     </select>
-                    <button class="ui-btn" onclick="const id=document.getElementById('chatModalTarget').value; if(id!=='__ALL__') focusAgentFromModal(id);">🎯 Focus Agent in 3D</button>
+                    <button class="ui-btn" onclick="const id=document.getElementById('chatModalTarget').value; if(id!=='__ALL__') focusAgentFromModal(id);">🎯 Focus in 3D</button>
                 </div>
                 <div style="display:flex;gap:8px;">
-                    <input type="text" id="chatModalInput" class="studio-input" style="flex:1;" placeholder="Send live instruction to update agent speech bubble & activity..." onkeydown="if(event.key==='Enter') submitChatModal()">
+                    <input type="text" id="chatModalInput" class="studio-input" style="flex:1;" placeholder="Talk to any agent or Siren DJ host..." onkeydown="if(event.key==='Enter') submitChatModal()">
                     <button class="ui-btn" onclick="toggleWhisperFlow()">🎙️ Voice</button>
-                    <button class="ui-btn-solid" onclick="submitChatModal()">Send Directive</button>
+                    <button class="ui-btn-solid" onclick="submitChatModal()">Send &amp; Speak</button>
                 </div>
-                <div class="box-label" style="margin-top:4px;">Live Feed</div>
+                <div class="box-label" style="margin-top:4px;">Live Conversation Feed</div>
                 <div style="display:flex;flex-direction:column;gap:6px;">${historyHtml}</div>
             `);
         }
@@ -5899,13 +6996,14 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
         function openDriveModal() {
             const files = [
                 { name: 'heavenlybound_narrative_scene.json', kind: 'Kuroshio Scene', path: '/api/studio/heavenlybound', target: 'heavenlybound' },
-                { name: 'lemuria_manifest.json', kind: 'Lemuria Scene', path: '/api/studio/manifest', target: 'lemuria' },
+                { name: 'lemuria_manifest.json', kind: 'Lemuria Scene', path: '/api/studio/scene', target: 'lemuria' },
+                { name: 'crates.json', kind: 'Theater 24/7 Music Crates (351)', path: '/api/radio/crates', target: null },
                 { name: 'blackboard.json', kind: 'Strategy Data', path: '/api/blackboard', target: null },
                 { name: 'herdr_team7_manifest.toml', kind: 'Node Roster', path: '/api/workforce', target: null },
                 { name: 'cyberpunk_city.glb', kind: '3D Mesh Asset', path: null, target: 'heavenlybound' },
                 { name: 'INFRASTRUCTURE_CLOUDFLARE_GUIDE.md', kind: 'Cloudflare Docs', path: null, target: null }
             ];
-            openModalWith('tr7n7y7 Sovereign Drive & Asset Vault', `
+            openModalWith('Kuroshio Office Sovereign Drive & Asset Vault', `
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
                     <span style="font-size:12px;color:var(--muted);">Mount: <b>Kuroshio Gyre / Lemuria Assets & Node Data</b></span>
                     <button class="ui-btn-solid" onclick="closeModal();enterStudioMode();setTimeout(()=>document.getElementById('studioFileInput').click(),250)">📦 Upload .glb / .ply</button>
@@ -5937,7 +7035,8 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
                 const pretty = JSON.stringify(data, null, 2);
                 pane.innerHTML = `<div class="box-label">${escHtml(label)}</div><pre style="background:#05080f;border:1px solid var(--border);border-radius:8px;padding:10px;max-height:220px;overflow:auto;color:#38bdf8;font-size:11px;">${escHtml(pretty)}</pre>`;
             } catch (e) {
-                const fallback = endpoint.includes('blackboard') ? (blackboardItems.length ? blackboardItems : FALLBACK_BLACKBOARD)
+                const fallback = endpoint.includes('crates') ? radioCrates.slice(0, 25)
+                    : endpoint.includes('blackboard') ? (blackboardItems.length ? blackboardItems : FALLBACK_BLACKBOARD)
                     : endpoint.includes('heavenlybound') ? FALLBACK_HEAVENLYBOUND
                     : WORKFORCE;
                 pane.innerHTML = `<div class="box-label">${escHtml(label)} (Cached Snapshot)</div><pre style="background:#05080f;border:1px solid var(--border);border-radius:8px;padding:10px;max-height:220px;overflow:auto;color:#38bdf8;font-size:11px;">${escHtml(JSON.stringify(fallback, null, 2))}</pre>`;
@@ -6133,7 +7232,7 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
         }
 
         function openEmployeesModal() {
-            const cards = Object.values(WORKFORCE).map(a => `
+            const teamCards = Object.values(WORKFORCE).map(a => `
                 <div class="ui-card">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <strong style="color:#fff;">${a.avatar} ${escHtml(a.name)}</strong>
@@ -6142,12 +7241,33 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
                     <div style="font-size:11px;color:var(--accent);">${escHtml(a.team)} • ${escHtml(a.room)}</div>
                     <div style="font-size:11.5px;color:#cbd5e1;">${escHtml(a.role)}</div>
                     <div style="display:flex;gap:6px;margin-top:4px;">
-                        <button class="ui-btn-solid" onclick="focusAgentFromModal('${escHtml(a.id)}')">🎯 Focus 3D</button>
+                        <button class="ui-btn-solid" onclick="focusAgentFromModal('${escHtml(a.id)}')">🎯 Talk 3D</button>
                         <button class="ui-btn" onclick="openChatModal('${escHtml(a.id)}')">💬 Message</button>
                         <button class="ui-btn" onclick="openPersonaModal('${escHtml(a.id)}')">🎭 Persona</button>
                     </div>
                 </div>`).join('');
-            openModalWith('tr7n7y7 Employee Directory (10 Active Agents)', `<div class="ui-grid-2">${cards}</div>`);
+            const djCards = SEVEN_DAUGHTERS.map(d => {
+                const slot = daughters3D[d.id]?.slotRole || 'standby';
+                return `
+                <div class="ui-card" style="border-color:${d.color}44;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <strong style="color:${d.color};">${d.avatar} ${escHtml(d.name)}</strong>
+                        <span class="ui-badge" style="color:${slot==='on_air'?'#4ade80':'#cbd5e1'};">${slot === 'on_air' ? 'ON AIR' : d.freqHz + ' Hz'}</span>
+                    </div>
+                    <div style="font-size:11px;color:var(--accent);">Siren Radio DJ • ${escHtml(d.windowUtc)}</div>
+                    <div style="font-size:11.5px;color:#cbd5e1;">${escHtml(d.genre)}</div>
+                    <div style="display:flex;gap:6px;margin-top:4px;">
+                        <button class="ui-btn-solid" onclick="closeModal();selectDaughterForTalk('${escHtml(d.id)}')">💬 Talk 3D</button>
+                        <button class="ui-btn" onclick="closeModal();openLiteFeatureModal('radio','${escHtml(d.id)}')">📻 Radio Deck</button>
+                    </div>
+                </div>`;
+            }).join('');
+            openModalWith('Kuroshio Office Roster (Team 7 + Seven Daughters)', `
+                <div class="box-label">Team 7 Executive & Operations Agents (${Object.keys(WORKFORCE).length})</div>
+                <div class="ui-grid-2">${teamCards}</div>
+                <div class="box-label" style="margin-top:6px;">Seven Daughters Broadcast Hosts (${SEVEN_DAUGHTERS.length})</div>
+                <div class="ui-grid-2">${djCards}</div>
+            `);
         }
 
         function rallyAgentsToMeeting(gather) {
@@ -6287,7 +7407,7 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
         async function openLogsModal() {
             openModalWith('System Telemetry & Audit Event Feed (/api/logs)', `
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
-                    <span style="font-size:12px;color:var(--muted);">Live append-only audit log from tr7n7y7 Office backend</span>
+                    <span style="font-size:12px;color:var(--muted);">Live append-only audit log from Kuroshio Office backend</span>
                     <div style="display:flex;gap:6px;">
                         <button class="ui-btn" onclick="sendAgentDirective('triton','Quorum heartbeat & integrity ping','Audit_Console').then(()=>openLogsModal())">⚡ Log Test Ping</button>
                         <button class="ui-btn-solid" onclick="openLogsModal()">↻ Refresh</button>
@@ -6360,13 +7480,17 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
         }
 
         function openChannelsModal() {
-            openModalWith('Live Audio & Comms Channels (Siren Radio + WhisperFlow)', `
+            const np = radioStatusData?.now_playing || {};
+            openModalWith('Live Audio & Comms Channels (Theater 24/7 + WhisperFlow)', `
                 <div class="ui-card">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <strong style="color:#fff;">📻 Seven Daughters 24/7 Siren Radio</strong>
-                        <span class="ui-badge" style="color:#4ade80;">LIVE • 48kHz</span>
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                        <strong style="color:#fff;">📻 Theater 24/7 • Seven Daughters Radio</strong>
+                        <span class="ui-badge" style="color:#4ade80;">LIVE • ${escHtml(radioStatusData?.source_node || '10.0.0.60:8082')}</span>
                     </div>
-                    <div style="font-size:11.5px;color:var(--muted);">Stream Endpoint: <a href="https://radio.tr7n7t7.com/live.mp3" target="_blank" style="color:var(--accent);">https://radio.tr7n7t7.com/live.mp3</a></div>
+                    <div style="font-size:11.5px;color:#cbd5e1;">Now Playing: <b>${escHtml(np.title || activeDaughterName)}</b> • Stream: <a href="https://radio.tr7n7t7.com/live.mp3" target="_blank" style="color:var(--accent);">https://radio.tr7n7t7.com/live.mp3</a></div>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+                        <button class="ui-btn-solid" onclick="closeModal();openLiteFeatureModal('radio')">🎛️ Open Dual-Deck Master Console &amp; Crates</button>
+                    </div>
                     <audio controls preload="none" style="width:100%;margin-top:6px;">
                         <source src="https://radio.tr7n7t7.com/live.mp3" type="audio/mpeg">
                     </audio>
@@ -6374,7 +7498,7 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
                 <div class="ui-grid-2">
                     <div class="ui-card">
                         <strong style="color:#fff;">🎙️ WhisperFlow Voice Bridge</strong>
-                        <div style="font-size:11.5px;color:#cbd5e1;">Real-time browser WebSpeech dictation straight to /api/whisper.</div>
+                        <div style="font-size:11.5px;color:#cbd5e1;">Two-way WebSpeech dictation + Auto-Speak TTS straight to agents and DJ hosts.</div>
                         <button class="ui-btn-solid" style="margin-top:4px;" onclick="closeModal();toggleWhisperFlow(true)">Start Listening</button>
                     </div>
                     <div class="ui-card">
@@ -6391,7 +7515,7 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
         function openSettingsModal() {
             const fogVal = scene?.fog ? scene.fog.density : 0.011;
             const ambVal = ambientLightRef ? ambientLightRef.intensity : 0.95;
-            openModalWith('tr7n7y7 3D Engine & Platform Settings', `
+            openModalWith('Kuroshio Office 3D Engine & Platform Settings', `
                 <div class="ui-card">
                     <div class="box-label">3D Atmospheric Fog Density (${fogVal.toFixed(3)})</div>
                     <input type="range" min="0" max="0.03" step="0.002" value="${fogVal}" oninput="if(scene&&scene.fog){scene.fog.density=parseFloat(this.value);}">
@@ -6416,58 +7540,58 @@ pub fn boot_tr7n7y7_kuroshio_studio() -> Result<(), Box<dyn std::error::Error>> 
         }
 
         function exportFullStateJson() {
-            const payload = { company: 'tr7n7y7', domain: 'tr7n7t7.com', workforce: WORKFORCE, studio_target: studioSceneTarget, studio_manifest: studioManifest, blackboard: blackboardItems };
+            const payload = { office: 'Kuroshio Office', company: 'tr7n7y7', domain: 'tr7n7t7.com', workforce: WORKFORCE, studio_target: studioSceneTarget, studio_manifest: studioManifest, blackboard: blackboardItems };
             const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `tr7n7y7-state-${Date.now()}.json`;
+            a.download = `kuroshio-office-state-${Date.now()}.json`;
             a.click();
             URL.revokeObjectURL(url);
-            showToast('Exported tr7n7y7 state bundle JSON');
+            showToast('Exported Kuroshio Office state bundle JSON');
         }
 
         function openMarketplaceModal() {
-            openModalWith('tr7n7y7 & Kuroshio Storefront Marketplace', `
+            openModalWith('Kuroshio Office & tr7n7y7 Storefront Marketplace', `
                 <div class="ui-grid-2">
                     <div class="ui-card"><strong style="color:#fff;">🏬 Sovereign Virtual Storefronts</strong><div style="font-size:11.5px;color:#cbd5e1;">Drop mobile .ply scans into Kuroshio Studio & sell via double-entry Coral Escrow on tr7n7t7.com.</div><button class="ui-btn-solid" onclick="closeModal();enterStudioMode()">Open in Kuroshio Studio</button></div>
                     <div class="ui-card"><strong style="color:#fff;">🎫 Ed25519 Club DoorPass Packs</strong><div style="font-size:11.5px;color:#cbd5e1;">Issue verifiable guild badges and encrypted Home Node access keys for founding members.</div><button class="ui-btn" onclick="closeModal();openBlackboardModal()">View Guild Bounties</button></div>
-                    <div class="ui-card"><strong style="color:#fff;">🧊 Sovereign Club-in-a-Box Pi 5 Kit</strong><div style="font-size:11.5px;color:#cbd5e1;">Pre-flashed LUKS Pi 5 running tr7n7y7 3D Office, Siren Radio, and offline Studio baker.</div><button class="ui-btn" onclick="openBusinessModal()">Open SKU Economics</button></div>
+                    <div class="ui-card"><strong style="color:#fff;">🧊 Sovereign Club-in-a-Box Pi 5 Kit</strong><div style="font-size:11.5px;color:#cbd5e1;">Pre-flashed LUKS Pi 5 running Kuroshio Office, Theater 24/7 Radio, and offline Studio baker.</div><button class="ui-btn" onclick="openBusinessModal()">Open SKU Economics</button></div>
                     <div class="ui-card"><strong style="color:#fff;">🦀 lemuria_engine & Goose SDK</strong><div style="font-size:11.5px;color:#cbd5e1;">Export deterministic rollback netcode, HZB occlusion, and WebGPU/Quest 3 packages.</div><button class="ui-btn" onclick="closeModal();openRustSnippetModal()">Export Rust SDK</button></div>
                 </div>
             `);
         }
 
         function openCreditsModal() {
-            openModalWith('tr7n7y7 Cluster Compute & Node Credits', `
+            openModalWith('Kuroshio Office Cluster Compute & Node Credits', `
                 <div class="ui-card">
                     <div style="font-size:18px;font-weight:800;color:var(--accent);">504.9K Verified Node Compute Units • 100% Healthy</div>
                     <div style="font-size:12px;color:#cbd5e1;line-height:1.55;">
                         Zero-platform-tax cluster allocation across local workstations and Raspberry Pi edge nodes:<br>
                         • <b>10.0.0.58</b> (Seed Pi — OpenRaft Leader & Jupiter Sentinel)<br>
                         • <b>10.0.0.59</b> (Telemetry Relay & HeavenlyBound Ingress)<br>
-                        • <b>10.0.0.60 / 10.0.0.61</b> (Screen Wall & 24/7 Siren Radio DSP)
+                        • <b>10.0.0.60 / 10.0.0.61</b> (Screen Wall & Theater 24/7 Radio DSP)
                     </div>
                 </div>
             `);
         }
 
         function openHelpModal() {
-            openModalWith('tr7n7y7 3D Controls & Keyboard Shortcuts', `
+            openModalWith('Kuroshio Office 3D Controls & Keyboard Shortcuts', `
                 <div class="ui-grid-2">
-                    <div class="ui-card"><strong style="color:#fff;">🖱️ 3D Camera & Agents</strong><div style="font-size:12px;color:#cbd5e1;line-height:1.6;">• Left Drag: Orbit Camera<br>• Right Drag: Pan Floor<br>• Mouse Wheel / +/-: Zoom<br>• Click Any Robot: Focus & Open Chat Card<br>• Click 3D Blackboard: Open Strategy Board</div></div>
+                    <div class="ui-card"><strong style="color:#fff;">🖱️ 3D Camera & Agents</strong><div style="font-size:12px;color:#cbd5e1;line-height:1.6;">• Left Drag: Orbit Camera<br>• Right Drag: Pan Floor<br>• Mouse Wheel / +/-: Zoom<br>• Click Any Robot / DJ Host: Focus & Open Two-Way Talk Card<br>• Click 3D Blackboard: Open Strategy Board</div></div>
                     <div class="ui-card"><strong style="color:#fff;">🎮 Kuroshio Studio Gizmos</strong><div style="font-size:12px;color:#cbd5e1;line-height:1.6;">• <b>[W]</b>: Move X/Y/Z Axis Gizmo<br>• <b>[E]</b>: Rotate Axis Handle<br>• <b>[R]</b>: Scale Axis Handle<br>• Drop <b>.glb / .ply / .splat</b>: Auto-bake Meshlets & Convex Hull</div></div>
                 </div>
             `);
         }
 
         function openAccountModal() {
-            openModalWith('tr7n7y7 Operator Workspace & Account', `
+            openModalWith('Kuroshio Office Operator Workspace & Account', `
                 <div class="ui-card">
                     <div style="display:flex;align-items:center;gap:12px;">
                         <div class="user-avatar-badge" style="width:42px;height:42px;font-size:16px;">K</div>
                         <div>
-                            <div style="font-size:15px;font-weight:800;color:#fff;">Founder Operator • tr7n7y7</div>
+                            <div style="font-size:15px;font-weight:800;color:#fff;">Founder Operator • Kuroshio Office (tr7n7y7)</div>
                             <div style="font-size:12px;color:var(--muted);">Workspace: Kuroshio Gyre &bull; Domain: tr7n7t7.com</div>
                         </div>
                     </div>

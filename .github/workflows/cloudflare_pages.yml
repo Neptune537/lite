@@ -39,9 +39,9 @@ jobs:
           if [ "${{ steps.ws.outputs.has_hb }}" = "true" ]; then
             trunk build --release
           else
-            echo "Sibling ../heavenlyBound absent; packaging tr7n7y7 Lite & Kuroshio Studio static dist/"
+            echo "Sibling ../heavenlyBound absent; packaging Kuroshio Office, Lite & Studio static dist/"
             mkdir -p dist
-            cp -r index.html office.html platform-auth.js club-comms.js station-radio.js sonar-client.js auth-config.json sonar-config.json manifest.webmanifest _headers app-icons dist/
+            cp -r index.html office.html crates.json platform-auth.js club-comms.js station-radio.js sonar-client.js auth-config.json sonar-config.json manifest.webmanifest _headers app-icons dist/
           fi
 
       - name: Upload Packaged dist Artifact

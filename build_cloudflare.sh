@@ -11,9 +11,9 @@ if [ -d "../heavenlyBound" ]; then
   echo "=== Building HeavenlyBound Lite for Cloudflare Pages ==="
   trunk build --release
 else
-  echo "=== Sibling ../heavenlyBound absent; packaging tr7n7y7 Lite & Kuroshio Studio static dist/ ==="
+  echo "=== Sibling ../heavenlyBound absent; packaging Kuroshio Office, Lite & Studio static dist/ ==="
   mkdir -p dist
-  cp -r index.html office.html platform-auth.js club-comms.js station-radio.js sonar-client.js auth-config.json sonar-config.json manifest.webmanifest _headers app-icons dist/
+  cp -r index.html office.html crates.json platform-auth.js club-comms.js station-radio.js sonar-client.js auth-config.json sonar-config.json manifest.webmanifest _headers app-icons dist/
 fi
 
 echo "=== Build Complete! Output directory: dist/ ==="
